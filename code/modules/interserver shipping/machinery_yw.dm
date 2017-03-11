@@ -2,6 +2,7 @@
 /obj/machinery/intership
 	name = "You shouldn't see this"
 	desc = "delete dis"
+	density = 1
 	icon = 'icons/obj/machines/interservership.dmi'
 	var/obj/machinery/computer/interservershipping/linked_console = null
 
@@ -22,6 +23,7 @@
 	if(!isnull(inserted) && inserted.len >= index)
 		var/obj/structure/closet/crate/O = inserted[index]
 		return O.contents
+	return null
 
 /obj/machinery/intership/outbox/proc/PackageSent(var/index)
 	if(!isnull(inserted) && inserted.len >= index)
@@ -30,7 +32,7 @@
 		qdel(O)
 
 /obj/machinery/intership/inbox
-	name = "Bluespace package deployer"
+	name = "Bluespace package inbox"
 	desc = "Press button, watch crate appear, be amaze."
 	icon_state = "input"
 
