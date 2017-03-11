@@ -13,9 +13,30 @@
 	light_color = "#315ab4"
 	use_power = 1
 
+	var/obj/machinery/intership/outbox/linkedoutbox = null
+	var/obj/machinery/intership/inbox/linkedinbox = null
+
 	var/screen = SERVERS
 	var/datum/shippingservers/server = null
 	var/datum/shipping_request/request = null
+
+/obj/machinery/computer/interservershipping/New()
+	sync()
+	return ..()
+
+/obj/machinery/computer/interservershipping/proc/sync()
+	for(var/obj/machinery/intership/D in range(5, src))
+		if(D.linked_console != null || D.panel_open)
+			continue
+		if(istype(D, /obj/machinery/intership/outbox))
+			if(linkedoutbox == null)
+				linkedoutbox = D
+				D.linked_console = src
+		else if(istype(D, /obj/machinery/intership/inbox))
+			if(linkedinbox == null)
+				linkedinbox = D
+				D.linked_console = src
+	return
 
 /obj/machinery/computer/interservershipping/Destroy()
 	request = null
@@ -139,38 +160,3 @@
 
 	request = null
 	screen = RECEIVE
-
-
-
-
-/obj/machinery/intershipreceiver
-	name = "Bluespace package receiver"
-	desc = "Push crate in, be amaze."
-	var/list/inserted = list()
-
-/obj/machinery/intershipreceiver/Bumped(atom/movable/AM as mob)
-	if(istype(AM, /obj/structure/closet/crate))
-		inserted += AM
-		AM.forceMove(src)
-
-/obj/machinery/intershipreceiver/proc/GetItems(var/index)
-	if(!isnull(inserted) && inserted.len > index)
-		var/obj/structure/closet/crate/O = inserted[index]
-		return O.contents
-
-/obj/machinery/intershipreceiver/proc/PackageSent(var/index)
-	if(!isnull(inserted) && inserted.len > index)
-		var/obj/structure/closet/crate/O = inserted[index]
-		inserted.Remove(O)
-		qdel(O)
-
-
-
-/obj/machinery/intershipdeployer
-	name = "Bluespace package deployer"
-	desc = "Press button, watch crate appear, be amaze."
-
-/obj/machinery/intershipdeployer/proc/SpawnPackage(var/list/objs)
-	var/obj/structure/closet/crate/C = new/obj/structure/closet/crate
-	C.contents = objs
-	C.loc = src.loc
