@@ -11,6 +11,7 @@
 	desc = "Push crate in, be amaze."
 	icon_state = "output"
 	var/list/inserted = list()
+	var/list/stash = list()
 
 /obj/machinery/intership/outbox/Bumped(atom/movable/AM)
 	if(istype(AM, /obj/structure/closet/crate))

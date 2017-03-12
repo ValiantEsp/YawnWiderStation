@@ -8,6 +8,7 @@
 	var/static/last_rid = 0		// Static to iterate the outbound RID.
 	var/origin = "origin"		// The IP of the originating server. "origin" if it's us.
 	var/outbound = FALSE		// Showcases whether or not the request is an outbound or an incoming one.
+	var/datum/shippingservers/tgt	// For outbound requests, this is the target server's datum.
 	var/author_ckey = ""		// Original creator of the request, primarily for logging purposes.
 	var/list/items				// List of items to be sent or received. Specific format depends on circumstance.
 	var/time_created			// The time at which this request was created.
@@ -26,7 +27,7 @@
  *
  * Will raise @exception if insane arguments are sent.
  */
-/datum/shipping_request/New(_rid, _ckey, _items, _outbound, _origin)
+/datum/shipping_request/New(_rid, _ckey, _items, _outbound, _origin, var/datum/shippingservers/_tgt)
 	// Sanity check.
 	if (!_ckey || !_items)
 		throw EXCEPTION("Invalid arguments sent to shipping_request/New().")
@@ -36,8 +37,12 @@
 		throw EXCEPTION("Attempted to create a shipping_request with a bad origin.")
 
 	if (_outbound)
+		if (!_tgt || !istype(_tgt))
+			throw EXCEPTION("Attempted to create an outbound shipping_request with no target.")
+		tgt = _tgt
 		request_id = last_rid++
-	else if (!_rid)
+	// Standard only approves of numeric IDs. RIP.
+	else if (!isnum(_rid))
 		throw EXCEPTION("No request ID sent when creating a new shipping_request.")
 	else
 		request_id = text2num(_rid)
@@ -59,6 +64,7 @@
  */
 /datum/shipping_request/Destroy()
 	items = null
+	tgt = null
 	return ..()
 
 /**
@@ -109,6 +115,66 @@
 	return TRUE
 
 /**
+ * @name	outbound_send
+ *
+ * @desc	Only possible for outbound requests.
+ *			Will query the destination server with ship_send and attempt
+ *			to create a shipping request there. Returns FALSE if the end server
+ *			does not accept the query.
+ * @return	bool	TRUE if the destination server accepts the request and no errors are encountered.
+ *					FALSE if the destination server does not accept the request or an error is encountered.
+ */
+/datum/shipping_request/proc/outbound_send()
+	if (!outbound)
+		error_msg = "outbound_send called on an inbound request."
+		return FALSE
+
+	var/out_data = json_encode(list("query" = "ship_send", "auth" = config.shipping_auth,
+		"ckey" = author_ckey, "rid" = request_id, "items" = get_outbound_items()))
+	var/list/data = json_decode(world.Export("byond://[tgt.serverip]?[out_data]"))
+
+	if (!data)
+		error_msg = "outbound_send did not receive any data."
+		return FALSE
+
+	if (!data["statuscode"] || data["statuscode"] != 200)
+		error_msg = "Bad statuscode received. Response: [data["response"]]"
+		return FALSE
+
+	return TRUE
+
+/**
+ * @name	get_outbound_items
+ *
+ * @desc	Will go over the atoms in src.items and create a list of ship-id -> count.
+ *			For sending away stuff.
+ * @return	List of ship-id -> count describing the composition of src.items.
+ *			Empty list upon failure.
+ */
+/datum/shipping_request/proc/get_outbound_items()
+	if (!outbound || !items || !items.len)
+		return list()
+
+	var/list/data = list()
+	for (var/aa in items)
+		var/atom/A = aa
+		aa = global_shipping_paths[A.type]
+		if (!aa)
+			continue
+
+		if (!data[aa])
+			data[aa] = 1
+		else
+			data[aa]++
+
+	if (tgt.allowedshipids && tgt.allowedshipids.len)
+		for (var/id in data)
+			if (!(id in tgt.allowedshipids))
+				data -= id
+
+	return data
+
+/**
  * @name	inbound_accepted
  *
  * @desc	Only possible for inbound requests.
@@ -121,7 +187,8 @@
 		error_msg = "inbound_accepted called on an outbound request."
 		return FALSE
 
-	var/out_data = json_encode(list("query" = "ship_reply", "auth" = config.shipping_auth, ckey = accepting_ckey ? accepting_ckey : "server", "accept" = 1 , "rid" = request_id))
+	var/out_data = json_encode(list("query" = "ship_reply", "auth" = config.shipping_auth,
+		ckey = accepting_ckey ? accepting_ckey : "server", "accept" = 1, "rid" = request_id))
 	var/list/data = json_decode(world.Export("byond://[origin]?[out_data]"))
 
 	if (!data)
@@ -153,7 +220,7 @@
  * @return	bool	TRUE if everything goes well.
  *					FALSE if something fails.
  */
-/datum/shipping_request/proc/inbound_denied(var/accepting_ckey, var/port)
+/datum/shipping_request/proc/inbound_denied(var/accepting_ckey)
 	if (outbound)
 		error_msg = "inbound_denied called on an outbound request."
 		return FALSE
