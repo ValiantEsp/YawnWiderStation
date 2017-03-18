@@ -66,14 +66,33 @@
 			</div>
 		{{else data.screen == 4}}
 			<div class="itemLabel">
-				Sending
+				Sending to {{:data.server}}
 			</div>
 			<div class="itemContent">
-				TODO: Implement.
+				{{for data.containers}}
+					{{:helper.link('Send this', '', {'send' : 1, 'send_id' : value.index})}}
+					{{:helper.link('View contents', '', {'switch_menu' : 5, 'container' : value.index})}}
+					#{{:value.index}} - {{:value.name}}<br>
+				{{empty}}
+					<b>Outbox empty.</b>
+				{{/for}}
 				<br><br>
 				{{:helper.link('Back', '', {'switch_menu' : 0})}}
 			</div>
 		{{else data.screen == 5}}
+			<div class="itemLabel">
+				Viewing outbox container #{{data.container}}
+			</div>
+			<div class="itemContent">
+				{{for data.contents}}
+					{{value}}<br>
+				{{empty}}
+					<b>The container is empty.</b>
+				{{/for}}
+				<br><br>
+				{{:helper.link('Back', '', {'switch_menu' : 4})}}
+			</div>
+		{{else data.screen == 6}}
 			<div class="itemLabel">
 				Messaging
 			</div>

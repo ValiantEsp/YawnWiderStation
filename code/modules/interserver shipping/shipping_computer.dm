@@ -135,6 +135,8 @@
 				// Because GetItems returns null, not an empty list. :ree:
 				data["contents"] = temp
 		if (CHAT)
+			data["error"] = 1
+			data["error_msg"] = "Currently not supported"
 			// TODO: Implement CHAT
 		else
 			data["error"] = 1
