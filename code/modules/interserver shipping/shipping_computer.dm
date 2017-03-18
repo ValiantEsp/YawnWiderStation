@@ -88,7 +88,7 @@
 				var/list/temp = list()
 				if (requests && requests.len)
 					for (var/A in requests)
-						var/datum/shipping_request/req = A
+						var/datum/shipping_request/req = requests[A]
 						temp += list(list("id" = req.request_id, "item_count" = req.items.len, "ref" = "\ref[req]"))
 				data["requests"] = temp
 		if (REC_CONF)
@@ -189,6 +189,9 @@
 			src.visible_message("<span class='warning'><b>[src] pings!</b> It is unable to send the items required!</span>")
 		else
 			try
+				for (var/obj/A in items)
+					world << A.name
+
 				request = new(null, usr.ckey, items, 1, "origin", server)
 				if (!request.outbound_send())
 					src.visible_message("<span class='warning'><b>[src] pings!</b> Sending failed!</span>")

@@ -141,6 +141,7 @@
 		error_msg = "Bad statuscode received. Response: [data["response"]]"
 		return FALSE
 
+	shipping_contacts["origin"]["[request_id]"] = src
 	return TRUE
 
 /**
