@@ -158,7 +158,7 @@
 	var/list/data = list()
 	for (var/aa in items)
 		var/atom/A = aa
-		aa = global_shipping_paths[A.type]
+		aa = global_shipping_paths["[A.type]"]
 		if (!aa)
 			continue
 
