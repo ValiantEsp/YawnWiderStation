@@ -68,6 +68,7 @@
 					if (serv)
 						temp += list(list("name" = serv.servername, "ref" = "\ref[serv]"))
 				data["servers"] = temp
+
 		if (OPTIONS)
 			if (!server)
 				data["error"] = 1
@@ -78,6 +79,7 @@
 				if (shipping_contacts[server.serverip])
 					var/list/A = shipping_contacts[server.serverip]
 					data["requests"] = A.len
+
 		if (RECEIVE)
 			if (!server)
 				data["error"] = 1
@@ -91,6 +93,7 @@
 						var/datum/shipping_request/req = requests[A]
 						temp += list(list("id" = req.request_id, "item_count" = req.items.len, "ref" = "\ref[req]"))
 				data["requests"] = temp
+
 		if (REC_CONF)
 			if (!request || !server)
 				data["error"] = 1
@@ -102,6 +105,7 @@
 				for (var/A in request.items)
 					temp += list(list("id" = A, "count" = request.items[A]))
 				data["items"] = temp
+
 		if (SENDING)
 			if (!linkedoutbox)
 				data["error"] = 1
@@ -117,8 +121,8 @@
 				for (var/A in linkedoutbox.inserted)
 					var/atom/aa = A
 					temp += list(list("index" = i, "name" = aa.name))
-
 				data["containers"] = temp
+
 		if (CONTAINER_VIEW)
 			if (!container_index || !linkedoutbox)
 				container_index = 0
@@ -134,9 +138,14 @@
 						temp += aa.name
 				// Because GetItems returns null, not an empty list. :ree:
 				data["contents"] = temp
+
 		if (CHAT)
-			data["error"] = 1
-			data["error_msg"] = "Currently not supported"
+			if(!server)
+				data["error"] = 1
+				data["error_msg"] = "Station not found."
+			else
+				data["servertext"] = "Todo" //chatlogs or something
+
 			// TODO: Implement CHAT
 		else
 			data["error"] = 1
@@ -182,6 +191,10 @@
 		// Confirmation == TRUE or FALSE
 		var/confirmation = text2num(href_list["confirm"])
 		do_confirm(confirmation, usr)
+	else if (href_list["send_msg"])
+		var/input = sanitize(input(usr, "Please enter the message you want to send.", "What?", "") as message|null, extra = 0)
+
+
 	else if (href_list["send"])
 		var/list/items = linkedoutbox.GetItems(text2num(href_list["send_id"]))
 		if (!items || !items.len)

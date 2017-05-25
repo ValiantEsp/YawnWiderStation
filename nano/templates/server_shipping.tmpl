@@ -29,7 +29,7 @@
 			<div class="itemContent">
 				{{:helper.link('Send Shipment', '', {'switch_menu' : 4})}}
 				{{:helper.link('Receive Shipments (' + data.requests + ')', '', {'switch_menu' : 2})}}
-				{{:helper.link('Messaging', '', {'switch_menu' : 5})}}
+				{{:helper.link('Messaging', '', {'switch_menu' : 6})}}
 				<br><br>
 				{{:helper.link('Back', '', {'switch_menu' : 0})}}
 			</div>
@@ -95,9 +95,13 @@
 		{{else data.screen == 6}}
 			<div class="itemLabel">
 				Messaging
-			</div>
 			<div class="itemContent">
-				TODO: Implement.
+				<div style="overflow-y:scroll;height:370px;width:420px">
+					{{for data.servertext}}
+						{{:value}}<br>
+					{{/for}}
+				</div>
+				{{:helper.link('Send message', '', {'send_msg' : 0})}}
 				<br><br>
 				{{:helper.link('Back', '', {'switch_menu' : 0})}}
 			</div>
