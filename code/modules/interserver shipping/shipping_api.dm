@@ -171,9 +171,18 @@
 		statuscode = 500
 		response = "Message too long."
 		return 1
-
-	// PLACE HOLDER EFFECT.
-	world << "<b>Message from shipping port:</b> [sanitize(queryparams["msg"])]"
+	var/msg = sanitize(queryparams["msg"])
+	var/datum/shippingservers/server = config.authedservers[queryparams["addr"]]
+	if(!server)
+		statuscode = 500
+		response = "No such server authorized."
+		return 1
+	server.chathistory += msg
+	//update the machines UI if on the chat screen
+	for(var/sc in shipping_computers)
+		var/obj/machinery/computer/interservershipping/c = sc
+		if(c.screen == 6)
+			c.updateUsrDialog()
 	statuscode = 200
 	response = "Message delivered."
 	return 1

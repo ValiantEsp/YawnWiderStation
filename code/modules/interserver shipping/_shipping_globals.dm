@@ -9,3 +9,6 @@ var/list/global_shipping_paths = list()
 
 // The global list of received requests, sorted by their IP of origin.
 var/list/shipping_contacts = list("origin" = list())
+
+// List of all shipping computers
+var/list/shipping_computers = list()

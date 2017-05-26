@@ -22,7 +22,14 @@
 	var/container_index = 0
 
 /obj/machinery/computer/interservershipping/New()
+	shipping_computers += src
 	sync()
+	return ..()
+
+/obj/machinery/computer/interservershipping/Destroy()
+	shipping_computers -= src
+	request = null
+	server = null
 	return ..()
 
 /obj/machinery/computer/interservershipping/proc/sync()
@@ -38,11 +45,6 @@
 				linkedinbox = D
 				D.linked_console = src
 	return
-
-/obj/machinery/computer/interservershipping/Destroy()
-	request = null
-	server = null
-	return ..()
 
 /obj/machinery/computer/interservershipping/attack_ai(mob/user)
 	return attack_hand(user)
@@ -144,9 +146,7 @@
 				data["error"] = 1
 				data["error_msg"] = "Station not found."
 			else
-				data["servertext"] = "Todo" //chatlogs or something
-
-			// TODO: Implement CHAT
+				data["servertext"] = server.chathistory
 		else
 			data["error"] = 1
 			data["error_msg"] = "u wot m8"

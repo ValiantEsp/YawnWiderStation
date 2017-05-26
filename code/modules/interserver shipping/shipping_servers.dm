@@ -3,6 +3,7 @@
 	var/servername
 	var/serverauth
 	var/list/allowedshipids
+	var/list/chathistory
 
 /datum/shippingservers/New(_serverip, _servername, _serverauth)
 	if(!_serverip || !_servername || !_serverauth)
@@ -29,4 +30,5 @@
 
 	if (!data["statuscode"] || data["statuscode"] != 200)
 		return FALSE
+	chathistory += chatmsg
 	return TRUE
