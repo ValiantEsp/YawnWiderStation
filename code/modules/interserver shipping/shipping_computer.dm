@@ -193,7 +193,12 @@
 		do_confirm(confirmation, usr)
 	else if (href_list["send_msg"])
 		var/input = sanitize(input(usr, "Please enter the message you want to send.", "What?", "") as message|null, extra = 0)
-
+		input = usr.name + " " + input
+		if(input && server)
+			if(server.chat_send(input, usr.ckey))
+				src.visible_message("<span class='notice'><b>[src] pings!</b> Chat succeeded!</span>")
+			else
+				src.visible_message("<span class='warning'><b>[src] pings!</b> Chat failed!</span>")
 
 	else if (href_list["send"])
 		var/list/items = linkedoutbox.GetItems(text2num(href_list["send_id"]))

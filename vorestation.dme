@@ -1532,6 +1532,7 @@
 #include "code\modules\interserver shipping\shipping_hooks.dm"
 #include "code\modules\interserver shipping\shipping_machinery.dm"
 #include "code\modules\interserver shipping\shipping_requests.dm"
+#include "code\modules\interserver shipping\shipping_servers.dm"
 #include "code\modules\library\lib_items.dm"
 #include "code\modules\library\lib_machines.dm"
 #include "code\modules\library\lib_readme.dm"

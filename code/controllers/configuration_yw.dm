@@ -36,18 +36,3 @@
 
 		authedservers[ip] = new /datum/shippingservers(ip, name, auth)
 		world << "Added server: [ip] [name] [auth] to list"
-
-
-/datum/shippingservers
-	var/serverip
-	var/servername
-	var/serverauth
-	var/list/allowedshipids
-
-/datum/shippingservers/New(_serverip, _servername, _serverauth)
-	if(!_serverip || !_servername || !_serverauth)
-		throw EXCEPTION("Invalid arguments sent to shippingservers/New().")
-
-	serverip = _serverip
-	servername = _servername
-	serverauth = _serverauth

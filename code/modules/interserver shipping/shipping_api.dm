@@ -173,7 +173,7 @@
 		return 1
 
 	// PLACE HOLDER EFFECT.
-	world << "<b>Message from shipping port:</b> [queryparams["msg"]]"
+	world << "<b>Message from shipping port:</b> [sanitize(queryparams["msg"])]"
 	statuscode = 200
 	response = "Message delivered."
 	return 1

@@ -37,6 +37,9 @@
 	desc = "Press button, watch crate appear, be amaze."
 	icon_state = "input"
 
+/obj/machinery/intership/inbox/New()
+	shippping_return = loc
+
 /obj/machinery/intership/inbox/proc/SpawnPackage(var/list/objs)
 	var/obj/structure/closet/crate/C = new/obj/structure/closet/crate
 	C.contents = objs

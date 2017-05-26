@@ -240,3 +240,4 @@
 	// This shit may seem empty. But since it's a framework, people may want to handle this differently.
 	// So yes, it's a placeholder. items = null is already handled in Destroy(), which should be called after this.
 	return TRUE
+
