@@ -30,5 +30,8 @@
 
 	if (!data["statuscode"] || data["statuscode"] != 200)
 		return FALSE
+
+	if (!chathistory)
+		chathistory = list()
 	chathistory += "<b>[sendername]</b>: [chatmsg]"
 	return TRUE

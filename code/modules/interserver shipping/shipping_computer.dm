@@ -148,7 +148,7 @@
 			else
 				data["server"] = server.servername
 				data["servertext"] = list()
-				data["servertext"] += list(server.chathistory)
+				data["servertext"] += server.chathistory
 		else
 			data["error"] = 1
 			data["error_msg"] = "u wot m8"
@@ -194,9 +194,11 @@
 		var/confirmation = text2num(href_list["confirm"])
 		do_confirm(confirmation, usr)
 	else if (href_list["send_msg"])
-		var/input = sanitize(input(usr, "Please enter the message you want to send.", "What?", "") as message|null, extra = 0)
+		var/input = sanitize(input(usr, "Please enter the message you want to send. (250 chars max)", "Text", "") as message|null, extra = 0)
 		if(input && server)
-			if(server.chat_send(input, usr.ckey, usr.name))
+			if(length(input) > 250)
+				src.visible_message("<span class='warning'><b>[src] pings!</b> Character limit reached!</span>")
+			else if(server.chat_send(input, usr.ckey, usr.name))
 				src.visible_message("<span class='notice'><b>[src] pings!</b> Chat succeeded!</span>")
 			else
 				src.visible_message("<span class='warning'><b>[src] pings!</b> Chat failed!</span>")

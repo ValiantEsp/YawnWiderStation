@@ -181,6 +181,8 @@
 		statuscode = 500
 		response = "No such server authorized."
 		return 1
+	if(!server.chathistory)
+		server.chathistory = list()
 	server.chathistory += "<b>[sendername]</b>: [msg]"
 	//update the machines UI if on the chat screen
 	for(var/sc in shipping_computers)
