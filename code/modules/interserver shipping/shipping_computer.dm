@@ -146,7 +146,9 @@
 				data["error"] = 1
 				data["error_msg"] = "Station not found."
 			else
-				data["servertext"] = server.chathistory
+				data["server"] = server.servername
+				data["servertext"] = list()
+				data["servertext"] += list(server.chathistory)
 		else
 			data["error"] = 1
 			data["error_msg"] = "u wot m8"
@@ -163,7 +165,7 @@
 
 	if (href_list["switch_menu"])
 		var/new_menu = text2num(href_list["switch_menu"])
-		screen = sanitize_integer(new_menu, 0, 5, 0)
+		screen = sanitize_integer(new_menu, 0, 6, 0)
 
 		if (screen == REC_CONF)
 			if (href_list["shipment"])
@@ -193,9 +195,8 @@
 		do_confirm(confirmation, usr)
 	else if (href_list["send_msg"])
 		var/input = sanitize(input(usr, "Please enter the message you want to send.", "What?", "") as message|null, extra = 0)
-		input = usr.name + " " + input
 		if(input && server)
-			if(server.chat_send(input, usr.ckey))
+			if(server.chat_send(input, usr.ckey, usr.name))
 				src.visible_message("<span class='notice'><b>[src] pings!</b> Chat succeeded!</span>")
 			else
 				src.visible_message("<span class='warning'><b>[src] pings!</b> Chat failed!</span>")

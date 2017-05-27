@@ -21,8 +21,8 @@
  * @return	bool	TRUE if everything goes well.
  *					FALSE if something fails.
  */
-/datum/shippingservers/proc/chat_send(var/chatmsg, var/senderckey)
-	var/out_data = json_encode(list("query" = "ship_msg", "auth" = config.shipping_auth, ckey = senderckey, "msg" = chatmsg))
+/datum/shippingservers/proc/chat_send(var/chatmsg, var/senderckey, var/sendername)
+	var/out_data = json_encode(list("query" = "ship_msg", "auth" = config.shipping_auth, ckey = senderckey,"sendername" = sendername, "msg" = chatmsg))
 	var/list/data = json_decode(world.Export("byond://[serverip]?[out_data]"))
 
 	if (!data)
@@ -30,5 +30,5 @@
 
 	if (!data["statuscode"] || data["statuscode"] != 200)
 		return FALSE
-	chathistory += chatmsg
+	chathistory += "<b>[sendername]</b>: [chatmsg]"
 	return TRUE

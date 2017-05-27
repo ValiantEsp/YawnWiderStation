@@ -154,30 +154,34 @@
 /**
  * @name	ship_msg
  * @desc	Command used to send a message to the station's QM from abroad.
- * @param	str ckey	The ckey, canonical version, of the person who sent the message. For logging.
- * @param	str msg		The message to be sent.
+ * @param	str ckey		The ckey of the person sending the message. For logging.
+ * @param	str	sendername	The name of the person sending the message.
+ * @param	str msg			The message to be sent.
  */
 /datum/topic_command/ship_message
 	name = "ship_msg"
 	description = "Sends a message to the station's QM."
 	params = list(
-		"ckey" = list("name"="ckey","desc"="The ckey of the person replying to the shipping request. For logging.","req"=1,"type"="str"),
+		"ckey" = list("name"="ckey","desc"="The ckey of the person sending the message. For logging.","req"=1,"type"="str"),
+		"sendername" = list("name"="sendername","desc"="The name of the person sending the message.","req"=1,"type"="str"),
 		"msg" = list("name"="msg","desc"="The message you wish to send.","req"=1,"type"="str")
 	)
 
 /datum/topic_command/ship_message/run_command(queryparams)
 	// Gotcha.
-	if (length(queryparams["msg"]) > 1000)
+	if (length(queryparams["msg"]) > 1000 || length(queryparams["ckey"]) > 1000 || length(queryparams["sendername"]) > 1000)
 		statuscode = 500
 		response = "Message too long."
 		return 1
 	var/msg = sanitize(queryparams["msg"])
+	var/ckey = sanitize(queryparams["ckey"])
+	var/sendername = sanitize(queryparams["sendername"])
 	var/datum/shippingservers/server = config.authedservers[queryparams["addr"]]
 	if(!server)
 		statuscode = 500
 		response = "No such server authorized."
 		return 1
-	server.chathistory += msg
+	server.chathistory += "<b>[sendername]</b>: [msg]"
 	//update the machines UI if on the chat screen
 	for(var/sc in shipping_computers)
 		var/obj/machinery/computer/interservershipping/c = sc
