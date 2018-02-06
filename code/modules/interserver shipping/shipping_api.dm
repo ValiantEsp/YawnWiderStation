@@ -183,7 +183,7 @@
 		return 1
 	if(!server.chathistory)
 		server.chathistory = list()
-	server.chathistory += "<b>[sendername]</b>: [msg]"
+	server.chathistory += "<b>[sendername]</b>: [msg] - <b>ckey</b>: [ckey]"
 	//update the machines UI if on the chat screen
 	for(var/sc in shipping_computers)
 		var/obj/machinery/computer/interservershipping/c = sc

@@ -3,8 +3,11 @@
 	name = "You shouldn't see this"
 	desc = "delete dis"
 	density = 1
+	anchored = 1
 	icon = 'icons/obj/machines/interservership.dmi'
 	var/obj/machinery/computer/interservershipping/linked_console = null
+
+//-----OUTBOX-----//
 
 /obj/machinery/intership/outbox
 	name = "Bluespace package outbox"
@@ -20,6 +23,14 @@
 	else
 		return ..()
 
+/obj/machinery/intership/outbox/attack_hand(mob/user)
+	if(!isnull(inserted) && inserted.len >= 1)
+		while(inserted.len >= 1)
+			var/obj/structure/closet/crate/O = inserted[1]
+			O.loc = src.loc
+			inserted.Remove(O)
+		src.visible_message("<span class='warning'><b>[src] pings!</b>All items ejected!</span>")
+
 /obj/machinery/intership/outbox/proc/GetItems(var/index)
 	if(!isnull(inserted) && inserted.len >= index)
 		var/obj/structure/closet/crate/O = inserted[index]
@@ -31,6 +42,9 @@
 		var/obj/structure/closet/crate/O = inserted[index]
 		inserted.Remove(O)
 		qdel(O)
+
+
+//-----INBOX-----//
 
 /obj/machinery/intership/inbox
 	name = "Bluespace package inbox"

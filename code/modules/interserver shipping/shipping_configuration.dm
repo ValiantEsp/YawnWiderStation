@@ -2,11 +2,17 @@
 	var/shipping_auth = "memes"
 	var/list/authedservers = list()
 
-// Example line in the config:
+// Example line in the config: First line should be your shipping_auth password (the one others needs to ship with you)
+// The other lines should be what's below this line
 // 192.168.1.1:1234 ServerName;ServerPW (The PW of that server, ask them for it)
 /datum/configuration/proc/loadshippinglist(filename)
-	var/list/Lines = file2list(filename)
-	for (var/t in Lines)
+	var/list/L = file2list(filename)
+	for(var/i in 1 to L.len)
+		var/t = L[i]
+		if(i == 1)
+			shipping_auth = t
+			continue
+
 		if(!t)	continue
 		t = trim(t)
 		if (length(t) == 0)
