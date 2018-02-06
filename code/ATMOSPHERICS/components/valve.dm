@@ -38,13 +38,12 @@
 /obj/machinery/atmospherics/valve/hide(var/i)
 	update_underlays()
 
-/obj/machinery/atmospherics/valve/New()
+/obj/machinery/atmospherics/valve/init_dir()
 	switch(dir)
 		if(NORTH || SOUTH)
 			initialize_directions = NORTH|SOUTH
 		if(EAST || WEST)
 			initialize_directions = EAST|WEST
-	..()
 
 /obj/machinery/atmospherics/valve/network_expand(datum/pipe_network/new_network, obj/machinery/atmospherics/pipe/reference)
 	if(reference == node1)
@@ -72,7 +71,7 @@
 	return null
 
 /obj/machinery/atmospherics/valve/Destroy()
-	loc = null
+	. = ..()
 
 	if(node1)
 		node1.disconnect(src)
@@ -83,8 +82,6 @@
 
 	node1 = null
 	node2 = null
-
-	..()
 
 /obj/machinery/atmospherics/valve/proc/open()
 	if(open) return 0
@@ -143,7 +140,7 @@
 
 	return
 
-/obj/machinery/atmospherics/valve/initialize()
+/obj/machinery/atmospherics/valve/atmos_init()
 	normalize_dir()
 
 	var/node1_dir
@@ -232,6 +229,10 @@
 	var/id = null
 	var/datum/radio_frequency/radio_connection
 
+/obj/machinery/atmospherics/valve/digital/Destroy()
+	unregister_radio(src, frequency)
+	. = ..()
+
 /obj/machinery/atmospherics/valve/digital/attack_ai(mob/user as mob)
 	return src.attack_hand(user)
 
@@ -239,7 +240,7 @@
 	if(!powered())
 		return
 	if(!src.allowed(user))
-		user << "<span class='warning'>Access denied.</span>"
+		to_chat(user, "<span class='warning'>Access denied.</span>")
 		return
 	..()
 
@@ -292,17 +293,15 @@
 	if (!istype(W, /obj/item/weapon/wrench))
 		return ..()
 	if (istype(src, /obj/machinery/atmospherics/valve/digital) && !src.allowed(user))
-		user << "<span class='warning'>Access denied.</span>"
+		to_chat(user, "<span class='warning'>Access denied.</span>")
 		return 1
-	var/datum/gas_mixture/int_air = return_air()
-	var/datum/gas_mixture/env_air = loc.return_air()
-	if ((int_air.return_pressure()-env_air.return_pressure()) > 2*ONE_ATMOSPHERE)
-		user << "<span class='warning'>You cannot unwrench \the [src], it is too exerted due to internal pressure.</span>"
+	if(!can_unwrench())
+		to_chat(user, "<span class='warning'>You cannot unwrench \the [src], it is too exerted due to internal pressure.</span>")
 		add_fingerprint(user)
 		return 1
-	playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
-	user << "<span class='notice'>You begin to unfasten \the [src]...</span>"
-	if (do_after(user, 40))
+	playsound(src, W.usesound, 50, 1)
+	to_chat(user, "<span class='notice'>You begin to unfasten \the [src]...</span>")
+	if (do_after(user, 40 * W.toolspeed))
 		user.visible_message( \
 			"<span class='notice'>\The [user] unfastens \the [src].</span>", \
 			"<span class='notice'>You have unfastened \the [src].</span>", \

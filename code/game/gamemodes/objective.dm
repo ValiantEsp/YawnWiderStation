@@ -149,7 +149,7 @@ datum/objective/anti_revolution/demote
 
 			if(!istype(I)) return 1
 
-			if(I.assignment == "Assistant")
+			if(I.assignment == USELESS_JOB) //VOREStation Edit - Visitor not Assistant
 				return 1
 			else
 				return 0
@@ -440,7 +440,7 @@ datum/objective/steal
 		"a chief medical officer's jumpsuit" = /obj/item/clothing/under/rank/chief_medical_officer,
 		"a head of security's jumpsuit" = /obj/item/clothing/under/rank/head_of_security,
 		"a head of personnel's jumpsuit" = /obj/item/clothing/under/rank/head_of_personnel,
-		"the hypospray" = /obj/item/weapon/reagent_containers/hypospray,
+		"the hypospray" = /obj/item/weapon/reagent_containers/hypospray/vial,
 		"the colony director's pinpointer" = /obj/item/weapon/pinpointer,
 		"an ablative armor vest" = /obj/item/clothing/suit/armor/laserproof,
 	)

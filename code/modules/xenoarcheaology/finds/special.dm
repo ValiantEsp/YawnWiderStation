@@ -87,7 +87,7 @@
 	if(charges >= 3)
 		if(prob(5))
 			charges -= 1
-			var/spawn_type = pick(/mob/living/simple_animal/hostile/vore/creature)  // Vorestation Edit
+			var/spawn_type = pick(/mob/living/simple_animal/hostile/creature/vore)  // Vorestation Edit
 			new spawn_type(pick(view(1,src)))
 			playsound(src.loc, pick('sound/hallucinations/growl1.ogg','sound/hallucinations/growl2.ogg','sound/hallucinations/growl3.ogg'), 50, 1, -3)
 
@@ -99,7 +99,7 @@
 
 	if(charges >= 0.1)
 		if(prob(5))
-			src.visible_message("\red \icon[src] [src]'s eyes glow ruby red for a moment!")
+			src.visible_message("<font color='red'>\icon[src] [src]'s eyes glow ruby red for a moment!</font>")
 			charges -= 0.1
 
 	//check on our shadow wights
@@ -129,7 +129,7 @@
 
 		var/target = pick(M.organs_by_name)
 		M.apply_damage(rand(5, 10), BRUTE, target)
-		M << "\red The skin on your [parse_zone(target)] feels like it's ripping apart, and a stream of blood flies out."
+		M << "<font color='red'>The skin on your [parse_zone(target)] feels like it's ripping apart, and a stream of blood flies out.</font>"
 		var/obj/effect/decal/cleanable/blood/splatter/animated/B = new(M.loc)
 		B.target_turf = pick(range(1, src))
 		B.blood_DNA = list()
@@ -200,4 +200,4 @@
 		processing_objects.Remove(src)
 
 /obj/effect/shadow_wight/Bump(var/atom/obstacle)
-	obstacle << "\red You feel a chill run down your spine!"
+	obstacle << "<font color='red'>You feel a chill run down your spine!</font>"

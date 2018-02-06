@@ -18,7 +18,7 @@
 
 	var/fabricator_tag = "Upper Level"
 	var/drone_progress = 0
-	var/produce_drones = 1
+	var/produce_drones = 2
 	var/time_last_drone = 500
 	var/drone_type = /mob/living/silicon/robot/drone
 
@@ -27,8 +27,13 @@
 
 /obj/machinery/drone_fabricator/derelict
 	name = "construction drone fabricator"
-	fabricator_tag = "Depths"
+	fabricator_tag = "Upper Level Construction"
 	drone_type = /mob/living/silicon/robot/drone/construction
+
+/obj/machinery/drone_fabricator/mining
+	name = "mining drone fabricator"
+	fabricator_tag = "Upper Level Mining"
+	drone_type = /mob/living/silicon/robot/drone/mining
 
 /obj/machinery/drone_fabricator/New()
 	..()
@@ -80,7 +85,7 @@
 
 	time_last_drone = world.time
 	if(player.mob && player.mob.mind) player.mob.mind.reset()
-	var/mob/living/silicon/robot/drone/new_drone = PoolOrNew(drone_type, get_turf(src))
+	var/mob/living/silicon/robot/drone/new_drone = new drone_type(get_turf(src))
 	new_drone.transfer_personality(player)
 	new_drone.master_fabricator = src
 
@@ -124,9 +129,9 @@
 		pluralcheck = " [deathtimeminutes] minutes and"
 	var/deathtimeseconds = round((deathtime - deathtimeminutes * 600) / 10,1)
 
-	if (deathtime < 600)
+	if (deathtime < 6000)
 		usr << "You have been dead for[pluralcheck] [deathtimeseconds] seconds."
-		usr << "You must wait 1 minute to respawn as a drone!"
+		usr << "You must wait 10 minutes to respawn as a drone!"
 		return
 
 	var/list/all_fabricators = list()

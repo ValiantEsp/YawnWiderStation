@@ -21,11 +21,14 @@
 	var/icon_old = null
 	var/pathweight = 1          // How much does it cost to pathfind over this turf?
 	var/blessed = 0             // Has the turf been blessed?
-	var/dynamic_lighting = 1    // Does the turf use dynamic lighting?
 
 	var/list/decals
 
 	var/movement_cost = 0       // How much the turf slows down movement, if any.
+
+	var/list/footstep_sounds = null
+
+	var/block_tele = FALSE      // If true, most forms of teleporting to or from this turf tile will fail.
 
 /turf/New()
 	..()
@@ -46,6 +49,7 @@
 /turf/Destroy()
 	turfs -= src
 	..()
+	return QDEL_HINT_IWILLGC
 
 /turf/ex_act(severity)
 	return 0
@@ -79,6 +83,24 @@ turf/attackby(obj/item/weapon/W as obj, mob/user as mob)
 		if(S.use_to_pickup && S.collection_mode)
 			S.gather_all(src, user)
 	return ..()
+
+/turf/MouseDrop_T(atom/movable/O as mob|obj, mob/user as mob)
+	var/turf/T = get_turf(user)
+	var/area/A = T.loc
+	if((istype(A) && !(A.has_gravity)) || (istype(T,/turf/space)))
+		return
+	if(istype(O, /obj/screen))
+		return
+	if(user.restrained() || user.stat || user.stunned || user.paralysis || (!user.lying && !istype(user, /mob/living/silicon/robot)))
+		return
+	if((!(istype(O, /atom/movable)) || O.anchored || !Adjacent(user) || !Adjacent(O) || !user.Adjacent(O)))
+		return
+	if(!isturf(O.loc) || !isturf(user.loc))
+		return
+	if(isanimal(user) && O != user)
+		return
+	if (do_after(user, 25 + (5 * user.weakened)) && !(user.stat))
+		step_towards(O, src)
 
 /turf/Enter(atom/movable/mover as mob|obj, atom/forget as mob|obj|turf|area)
 	if(movement_disabled && usr.ckey != movement_disabled_exception)
@@ -143,9 +165,14 @@ var/const/enterloopsanity = 100
 			M.lastarea = get_area(M.loc)
 		if(M.lastarea.has_gravity == 0)
 			inertial_drift(M)
+		if(M.flying) //VORESTATION Edit Start. This overwrites the above is_space without touching it all that much.
+			M.make_floating(1) //VOREStation Edit End.
 		else if(!is_space())
 			M.inertia_dir = 0
 			M.make_floating(0)
+		if(isliving(M))
+			var/mob/living/L = M
+			L.handle_footstep(src)
 	..()
 	var/objects = 0
 	if(A && (A.flags & PROXMOVE))
@@ -244,3 +271,11 @@ var/const/enterloopsanity = 100
 /turf/proc/update_blood_overlays()
 	return
 
+// Called when turf is hit by a thrown object
+/turf/hitby(atom/movable/AM as mob|obj, var/speed)
+	if(src.density)
+		spawn(2)
+			step(AM, turn(AM.last_move, 180))
+		if(isliving(AM))
+			var/mob/living/M = AM
+			M.turf_collision(src, speed)

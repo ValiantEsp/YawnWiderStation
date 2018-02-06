@@ -9,6 +9,7 @@
 	mrate_static = TRUE
 	affects_dead = 1 //so you can pump blood into someone before defibbing them
 	color = "#C80000"
+	var/volume_mod = 1	// So if you add different subtypes of blood, you can affect how much vessel blood each unit of reagent adds
 
 	glass_name = "tomato juice"
 	glass_desc = "Are you sure this is tomato juice?"
@@ -41,10 +42,19 @@
 	var/effective_dose = dose
 	if(issmall(M)) effective_dose *= 2
 
+	var/is_vampire = 0 //VOREStation Edit START
+	if(ishuman(M))
+		var/mob/living/carbon/human/H = M
+		if(H.species.gets_food_nutrition == 0)
+			H.nutrition += removed
+			is_vampire = 1 //VOREStation Edit END
+
 	if(effective_dose > 5)
-		M.adjustToxLoss(removed)
+		if(is_vampire == 0) //VOREStation Edit.
+			M.adjustToxLoss(removed) //VOREStation Edit.
 	if(effective_dose > 15)
-		M.adjustToxLoss(removed)
+		if(is_vampire == 0) //VOREStation Edit.
+			M.adjustToxLoss(removed) //VOREStation Edit.
 	if(data && data["virus2"])
 		var/list/vlist = data["virus2"]
 		if(vlist.len)
@@ -69,8 +79,20 @@
 		M.antibodies |= data["antibodies"]
 
 /datum/reagent/blood/affect_blood(var/mob/living/carbon/M, var/alien, var/removed)
-	M.inject_blood(src, volume)
+	M.inject_blood(src, volume * volume_mod)
 	remove_self(volume)
+
+/datum/reagent/blood/synthblood
+	name = "Synthetic blood"
+	id = "synthblood"
+	color = "#999966"
+	volume_mod = 2
+
+/datum/reagent/blood/synthblood/initialize_data(var/newdata)
+	..()
+	if(data && !data["blood_type"])
+		data["blood_type"] = "O-"
+	return
 
 // pure concentrated antibodies
 /datum/reagent/antibodies
@@ -96,7 +118,6 @@
 	reagent_state = LIQUID
 	color = "#0064C877"
 	metabolism = REM * 10
-	mrate_static = TRUE
 
 	glass_name = "water"
 	glass_desc = "The father of all refreshments."
@@ -125,30 +146,28 @@
 	else if(volume >= 10)
 		T.wet_floor(1)
 
-/datum/reagent/water/touch_obj(var/obj/O)
+/datum/reagent/water/touch_obj(var/obj/O, var/amount)
 	if(istype(O, /obj/item/weapon/reagent_containers/food/snacks/monkeycube))
 		var/obj/item/weapon/reagent_containers/food/snacks/monkeycube/cube = O
 		if(!cube.wrapped)
 			cube.Expand()
+	else
+		O.water_act(amount / 5)
 
 /datum/reagent/water/touch_mob(var/mob/living/L, var/amount)
 	if(istype(L))
+		// First, kill slimes.
+		if(istype(L, /mob/living/simple_animal/slime))
+			var/mob/living/simple_animal/slime/S = L
+			S.adjustToxLoss(15 * amount)
+			S.visible_message("<span class='warning'>[S]'s flesh sizzles where the water touches it!</span>", "<span class='danger'>Your flesh burns in the water!</span>")
+
+		// Then extinguish people on fire.
 		var/needed = L.fire_stacks * 5
 		if(amount > needed)
 			L.ExtinguishMob()
 		L.adjust_fire_stacks(-(amount / 5))
 		remove_self(needed)
-
-/datum/reagent/water/affect_touch(var/mob/living/carbon/M, var/alien, var/removed)
-	if(istype(M, /mob/living/carbon/slime))
-		var/mob/living/carbon/slime/S = M
-		S.adjustToxLoss(15 * removed) // Babies have 150 health, adults have 200; So, 10 units and 13.5
-		if(!S.client)
-			if(S.Target) // Like cats
-				S.Target = null
-				++S.Discipline
-		if(dose == removed)
-			S.visible_message("<span class='warning'>[S]'s flesh sizzles where the water touches it!</span>", "<span class='danger'>Your flesh burns in the water!</span>")
 
 /datum/reagent/fuel
 	name = "Welding fuel"
@@ -162,7 +181,7 @@
 	glass_desc = "Unless you are an industrial tool, this is probably not safe for consumption."
 
 /datum/reagent/fuel/touch_turf(var/turf/T, var/amount)
-	new /obj/effect/decal/cleanable/liquid_fuel(T, amount)
+	new /obj/effect/decal/cleanable/liquid_fuel(T, amount, FALSE)
 	remove_self(amount)
 	return
 
@@ -173,4 +192,3 @@
 /datum/reagent/fuel/touch_mob(var/mob/living/L, var/amount)
 	if(istype(L))
 		L.adjust_fire_stacks(amount / 10) // Splashing people with welding fuel to make them easy to ignite!
-

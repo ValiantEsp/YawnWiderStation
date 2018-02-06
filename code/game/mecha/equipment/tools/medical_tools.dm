@@ -7,9 +7,9 @@
 	energy_drain = 20
 	range = MELEE
 	equip_cooldown = 50
-	var/mob/living/carbon/occupant = null
+	var/mob/living/carbon/human/occupant = null
 	var/datum/global_iterator/pr_mech_sleeper
-	var/inject_amount = 10
+	var/inject_amount = 5
 	required_type = /obj/mecha/medical
 	salvageable = 0
 
@@ -28,7 +28,7 @@
 	Exit(atom/movable/O)
 		return 0
 
-	action(var/mob/living/carbon/target)
+	action(var/mob/living/carbon/human/target)
 		if(!action_checks(target))
 			return
 		if(!istype(target))
@@ -39,8 +39,8 @@
 		if(occupant)
 			occupant_message("The sleeper is already occupied")
 			return
-		for(var/mob/living/carbon/slime/M in range(1,target))
-			if(M.Victim == target)
+		for(var/mob/living/simple_animal/slime/M in range(1,target))
+			if(M.victim == target)
 				occupant_message("[target] will not fit into the sleeper because they have a slime latched onto their head.")
 				return
 		occupant_message("You start putting [target] into [src].")
@@ -56,6 +56,7 @@
 			target.forceMove(src)
 			occupant = target
 			target.reset_view(src)
+			occupant.Stasis(3)
 			/*
 			if(target.client)
 				target.client.perspective = EYE_PERSPECTIVE
@@ -80,6 +81,7 @@
 			occupant.client.eye = occupant.client.mob
 			occupant.client.perspective = MOB_PERSPECTIVE
 		*/
+		occupant.Stasis(0)
 		occupant = null
 		pr_mech_sleeper.stop()
 		set_ready_state(1)
@@ -103,15 +105,15 @@
 
 	Topic(href,href_list)
 		..()
-		var/datum/topic_input/filter = new /datum/topic_input(href,href_list)
-		if(filter.get("eject"))
+		var/datum/topic_input/top_filter = new /datum/topic_input(href,href_list)
+		if(top_filter.get("eject"))
 			go_out()
-		if(filter.get("view_stats"))
+		if(top_filter.get("view_stats"))
 			chassis.occupant << browse(get_occupant_stats(),"window=msleeper")
 			onclose(chassis.occupant, "msleeper")
 			return
-		if(filter.get("inject"))
-			inject_reagent(filter.getType("inject",/datum/reagent),filter.getObj("source"))
+		if(top_filter.get("inject"))
+			inject_reagent(top_filter.getType("inject",/datum/reagent),top_filter.getObj("source"))
 		return
 
 	proc/get_occupant_stats()
@@ -183,10 +185,14 @@
 		if(!R || !occupant || !SG || !(SG in chassis.equipment))
 			return 0
 		var/to_inject = min(R.volume, inject_amount)
-		if(to_inject && occupant.reagents.get_reagent_amount(R.id) + to_inject <= inject_amount*2)
+		if(to_inject && occupant.reagents.get_reagent_amount(R.id) + to_inject > inject_amount*4)
+			occupant_message("Sleeper safeties prohibit you from injecting more than [inject_amount*4] units of [R.name].")
+		else
 			occupant_message("Injecting [occupant] with [to_inject] units of [R.name].")
 			log_message("Injecting [occupant] with [to_inject] units of [R.name].")
-			SG.reagents.trans_id_to(occupant,R.id,to_inject)
+			//SG.reagents.trans_id_to(occupant,R.id,to_inject)
+			SG.reagents.remove_reagent(R.id,to_inject)
+			occupant.reagents.add_reagent(R.id,to_inject)
 			update_equip_info()
 		return
 
@@ -197,6 +203,19 @@
 			send_byjax(chassis.occupant,"msleeper.browser","injectwith",get_available_reagents())
 			return 1
 		return
+
+/obj/item/mecha_parts/mecha_equipment/tool/sleeper/verb/eject()
+	set name = "Sleeper Eject"
+	set category = "Exosuit Interface"
+	set src = usr.loc
+	set popup_menu = 0
+	if(usr!=src.occupant || usr.stat == 2)
+		return
+	to_chat(usr,"<span class='notice'>Release sequence activated. This will take one minute.</span>")
+	sleep(600)
+	if(!src || !usr || !occupant || (occupant != usr)) //Check if someone's released/replaced/bombed him already
+		return
+	go_out()//and release him from the eternal prison.
 
 /datum/global_iterator/mech_sleeper
 
@@ -471,19 +490,19 @@
 
 	Topic(href,href_list)
 		..()
-		var/datum/topic_input/filter = new (href,href_list)
-		if(filter.get("toggle_mode"))
+		var/datum/topic_input/top_filter = new (href,href_list)
+		if(top_filter.get("toggle_mode"))
 			mode = !mode
 			update_equip_info()
 			return
-		if(filter.get("select_reagents"))
+		if(top_filter.get("select_reagents"))
 			processed_reagents.len = 0
 			var/m = 0
 			var/message
 			for(var/i=1 to known_reagents.len)
 				if(m>=synth_speed)
 					break
-				var/reagent = filter.get("reagent_[i]")
+				var/reagent = top_filter.get("reagent_[i]")
 				if(reagent && (reagent in known_reagents))
 					message = "[m ? ", " : null][known_reagents[reagent]]"
 					processed_reagents += reagent
@@ -495,14 +514,14 @@
 				occupant_message("Reagent processing started.")
 				log_message("Reagent processing started.")
 			return
-		if(filter.get("show_reagents"))
+		if(top_filter.get("show_reagents"))
 			chassis.occupant << browse(get_reagents_page(),"window=msyringegun")
-		if(filter.get("purge_reagent"))
-			var/reagent = filter.get("purge_reagent")
+		if(top_filter.get("purge_reagent"))
+			var/reagent = top_filter.get("purge_reagent")
 			if(reagent)
 				reagents.del_reagent(reagent)
 			return
-		if(filter.get("purge_all"))
+		if(top_filter.get("purge_all"))
 			reagents.clear_reagents()
 			return
 		return

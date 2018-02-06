@@ -352,6 +352,18 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 	var/broadcasting = 1
 	var/receiving = 1
 
+// VOREStation Edit - Make sure constructed relays keep relaying for their current Z when moved by shuttles.
+/obj/machinery/telecomms/relay/proc/update_z()
+	if (initial(listening_level) == 0)
+		var/turf/T = get_turf(src)
+		listening_level = T.z
+
+/area/shuttle_arrived()
+	. = ..()
+	for(var/obj/machinery/telecomms/relay/R in contents)
+		R.update_z()
+// VOREStation Edit End
+
 /obj/machinery/telecomms/relay/receive_information(datum/signal/signal, obj/machinery/telecomms/machine_from)
 
 	// Add our level and send it back
@@ -547,8 +559,7 @@ var/global/list/obj/machinery/telecomms/telecomms_list = list()
 					race = "[H.species.name]"
 					log.parameters["intelligible"] = 1
 				else if(isbrain(M))
-					var/mob/living/carbon/brain/B = M
-					race = "[B.species.name]"
+					race = "Brain"
 					log.parameters["intelligible"] = 1
 				else if(M.isMonkey())
 					race = "Monkey"

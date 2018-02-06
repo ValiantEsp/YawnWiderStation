@@ -94,6 +94,10 @@
 				else
 					return 0
 
+	for(var/modifier_type in R.genetic_modifiers)	//Can't be cloned, even if they had a previous scan
+		if(istype(modifier_type, /datum/modifier/no_clone))
+			return 0
+
 	attempting = 1 //One at a time!!
 	locked = 1
 
@@ -117,7 +121,7 @@
 
 	clonemind.transfer_to(H)
 	H.ckey = R.ckey
-	H << "<span class='notice'><b>Consciousness slowly creeps over you as your body regenerates.</b><br><i>So this is what cloning feels like?</i></span>"
+	to_chat(H, "<span class='warning'><b>Consciousness slowly creeps over you as your body regenerates.</b><br><b><font size='3'>Your recent memories are fuzzy, and it's hard to remember anything from today...</font></b></span><br><span class='notice'><i>So this is what cloning feels like?</i></span>")
 
 	// -- Mode/mind specific stuff goes here
 	callHook("clone", list(H))
@@ -139,6 +143,25 @@
 	H.set_cloned_appearance()
 	update_icon()
 
+	// A modifier is added which makes the new clone be unrobust.
+	var/modifier_lower_bound = 25 MINUTES
+	var/modifier_upper_bound = 40 MINUTES
+
+	// Upgraded cloners can reduce the time of the modifier, up to 80%
+	var/clone_sickness_length = abs(((heal_level - 20) / 100 ) - 1)
+	clone_sickness_length = between(0.2, clone_sickness_length, 1.0) // Caps it off just incase.
+	modifier_lower_bound = round(modifier_lower_bound * clone_sickness_length, 1)
+	modifier_upper_bound = round(modifier_upper_bound * clone_sickness_length, 1)
+
+	H.add_modifier(H.species.cloning_modifier, rand(modifier_lower_bound, modifier_upper_bound))
+
+	// Modifier that doesn't do anything.
+	H.add_modifier(/datum/modifier/cloned)
+
+	// This is really stupid.
+	for(var/modifier_type in R.genetic_modifiers)
+		H.add_modifier(modifier_type)
+
 	for(var/datum/language/L in R.languages)
 		H.add_language(L.name)
 	H.flavor_texts = R.flavor.Copy()
@@ -148,6 +171,15 @@
 
 //Grow clones to maturity then kick them out.  FREELOADERS
 /obj/machinery/clonepod/process()
+
+	var/visible_message = 0
+	for(var/obj/item/weapon/reagent_containers/food/snacks/meat/meat in range(1, src))
+		qdel(meat)
+		biomass += 50
+		visible_message = 1 // Prevent chatspam when multiple meat are near
+
+	if(visible_message)
+		visible_message("<span class = 'notice'>[src] sucks in and processes the nearby biomass.</span>")
 
 	if(stat & NOPOWER) //Autoeject if power is lost
 		if(occupant)
@@ -181,7 +213,7 @@
 			use_power(7500) //This might need tweaking.
 			return
 
-		else if((occupant.health >= heal_level) && (!eject_wait))
+		else if((occupant.health >= heal_level || occupant.health == occupant.getMaxHealth()) && (!eject_wait))
 			playsound(src.loc, 'sound/machines/ding.ogg', 50, 1)
 			audible_message("\The [src] signals that the cloning process is complete.")
 			connected_message("Cloning Process Complete.")
@@ -234,7 +266,7 @@
 				connected = null
 			else
 				anchored = 1
-			playsound(src.loc, 'sound/items/Ratchet.ogg', 100, 1)
+			playsound(src, W.usesound, 100, 1)
 			if(anchored)
 				user.visible_message("[user] secures [src] to the floor.", "You secure [src] to the floor.")
 			else
@@ -243,6 +275,7 @@
 		var/obj/item/device/multitool/M = W
 		M.connecting = src
 		user << "<span class='notice'>You load connection data from [src] to [M].</span>"
+		M.update_icon()
 		return
 	else
 		..()
@@ -309,7 +342,10 @@
 		occupant.client.perspective = MOB_PERSPECTIVE
 	occupant.loc = src.loc
 	eject_wait = 0 //If it's still set somehow.
-	domutcheck(occupant) //Waiting until they're out before possible transforming.
+	if(ishuman(occupant)) //Need to be safe.
+		var/mob/living/carbon/human/patient = occupant
+		if(!(patient.species.flags & NO_SCAN)) //If, for some reason, someone makes a genetically-unalterable clone, let's not make them permanently disabled.
+			domutcheck(occupant) //Waiting until they're out before possible transforming.
 	occupant = null
 
 	biomass -= CLONE_BIOMASS

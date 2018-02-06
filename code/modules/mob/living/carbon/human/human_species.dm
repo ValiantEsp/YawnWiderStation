@@ -1,6 +1,7 @@
 /mob/living/carbon/human/dummy
 	real_name = "Test Dummy"
 	status_flags = GODMODE|CANPUSH
+	has_huds = FALSE
 
 /mob/living/carbon/human/dummy/mannequin/New()
 	..()
@@ -10,7 +11,7 @@
 	delete_inventory()
 
 /mob/living/carbon/human/skrell/New(var/new_loc)
-	h_style = "Skrell Male Tentacles"
+	h_style = "Skrell Short Tentacles"
 	..(new_loc, "Skrell")
 
 /mob/living/carbon/human/tajaran/New(var/new_loc)
@@ -31,6 +32,9 @@
 /mob/living/carbon/human/teshari/New(var/new_loc)
 	h_style = "Teshari Default"
 	..(new_loc, "Teshari")
+
+/mob/living/carbon/human/promethean/New(var/new_loc)
+	..(new_loc, "Promethean")
 
 /mob/living/carbon/human/machine/New(var/new_loc)
 	h_style = "blue IPC screen"

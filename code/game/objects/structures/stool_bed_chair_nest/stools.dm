@@ -4,7 +4,7 @@ var/global/list/stool_cache = list() //haha stool
 /obj/item/weapon/stool
 	name = "stool"
 	desc = "Apply butt."
-	icon = 'icons/obj/furniture.dmi'
+	icon = 'icons/obj/furniture_vr.dmi' //VOREStation Edit - new Icons
 	icon_state = "stool_preview" //set for the map
 	force = 10
 	throwforce = 10
@@ -72,7 +72,7 @@ var/global/list/stool_cache = list() //haha stool
 /obj/item/weapon/stool/attack(mob/M as mob, mob/user as mob)
 	if (prob(5) && istype(M,/mob/living))
 		user.visible_message("<span class='danger'>[user] breaks [src] over [M]'s back!</span>")
-		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+		user.setClickCooldown(user.get_attack_speed())
 		user.do_attack_animation(M)
 
 		user.drop_from_inventory(src)
@@ -109,7 +109,7 @@ var/global/list/stool_cache = list() //haha stool
 
 /obj/item/weapon/stool/attackby(obj/item/weapon/W as obj, mob/user as mob)
 	if(istype(W, /obj/item/weapon/wrench))
-		playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
+		playsound(src, W.usesound, 50, 1)
 		dismantle()
 		qdel(src)
 	else if(istype(W,/obj/item/stack))
@@ -143,7 +143,7 @@ var/global/list/stool_cache = list() //haha stool
 			user << "\The [src] has no padding to remove."
 			return
 		user << "You remove the padding from \the [src]."
-		playsound(src, 'sound/items/Wirecutter.ogg', 100, 1)
+		playsound(src.loc, W.usesound, 50, 1)
 		remove_padding()
 	else
 		..()

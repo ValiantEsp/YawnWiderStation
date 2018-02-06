@@ -52,7 +52,7 @@
 		/obj/item/device/radio/headset,
 		/obj/item/device/robotanalyzer,
 		/obj/item/weapon/material/minihoe,
-		/obj/item/weapon/material/hatchet,
+		/obj/item/weapon/material/knife/machete/hatchet,
 		/obj/item/device/analyzer/plant_analyzer,
 		/obj/item/weapon/extinguisher/mini,
 		/obj/item/weapon/tape_roll,
@@ -76,6 +76,22 @@
 	new /obj/item/weapon/crowbar(src)
 	new /obj/item/weapon/wirecutters(src)
 	new /obj/item/device/t_scanner(src)
+
+/obj/item/weapon/storage/belt/utility/chief
+	name = "chief engineer's toolbelt"
+	desc = "Holds tools, looks snazzy."
+	icon_state = "utilitybelt_ce"
+	item_state = "utility_ce"
+
+/obj/item/weapon/storage/belt/utility/chief/full/New()
+	..()
+	new /obj/item/weapon/screwdriver/power(src)
+	new /obj/item/weapon/crowbar/power(src)
+	new /obj/item/weapon/weldingtool/experimental(src)
+	new /obj/item/device/multitool(src)
+	new /obj/item/stack/cable_coil(src,30,pick("red","yellow","orange"))
+	new /obj/item/weapon/extinguisher/mini(src)
+	new /obj/item/device/analyzer(src)
 
 /obj/item/weapon/storage/belt/medical
 	name = "medical belt"
@@ -124,7 +140,7 @@
 		/obj/item/weapon/handcuffs,
 		/obj/item/device/flash,
 		/obj/item/clothing/glasses,
-		/obj/item/ammo_casing/shotgun,
+		/obj/item/ammo_casing/a12g,
 		/obj/item/ammo_magazine,
 		/obj/item/weapon/cell/device,
 		/obj/item/weapon/reagent_containers/food/snacks/donut/,
@@ -144,6 +160,7 @@
 		/obj/item/weapon/melee,
 		/obj/item/clothing/accessory/badge,
 		/obj/item/weapon/gun/projectile/sec,
+		/obj/item/weapon/gun/projectile/p92x,
 		/obj/item/taperoll,
 		/obj/item/weapon/gun/projectile/colt/detective
 		)
@@ -208,6 +225,68 @@
 	new /obj/item/device/soulstone(src)
 	new /obj/item/device/soulstone(src)
 
+/obj/item/weapon/storage/belt/utility/alien
+	name = "alien belt"
+	desc = "A belt(?) that can hold things."
+	icon = 'icons/obj/abductor.dmi'
+	icon_state = "belt"
+	item_state = "security"
+
+/obj/item/weapon/storage/belt/utility/alien/full/New()
+	..()
+	new /obj/item/weapon/screwdriver/alien(src)
+	new /obj/item/weapon/wrench/alien(src)
+	new /obj/item/weapon/weldingtool/alien(src)
+	new /obj/item/weapon/crowbar/alien(src)
+	new /obj/item/weapon/wirecutters/alien(src)
+	new /obj/item/device/multitool/alien(src)
+	new /obj/item/stack/cable_coil/alien(src)
+
+/obj/item/weapon/storage/belt/medical/alien
+	name = "alien belt"
+	desc = "A belt(?) that can hold things."
+	icon = 'icons/obj/abductor.dmi'
+	icon_state = "belt"
+	item_state = "security"
+	storage_slots = 8
+	can_hold = list(
+		/obj/item/device/healthanalyzer,
+		/obj/item/weapon/dnainjector,
+		/obj/item/weapon/reagent_containers/dropper,
+		/obj/item/weapon/reagent_containers/glass/beaker,
+		/obj/item/weapon/reagent_containers/glass/bottle,
+		/obj/item/weapon/reagent_containers/pill,
+		/obj/item/weapon/reagent_containers/syringe,
+		/obj/item/weapon/flame/lighter/zippo,
+		/obj/item/weapon/storage/fancy/cigarettes,
+		/obj/item/weapon/storage/pill_bottle,
+		/obj/item/stack/medical,
+		/obj/item/device/radio/headset,
+		/obj/item/device/pda,
+		/obj/item/taperoll,
+		/obj/item/device/megaphone,
+		/obj/item/clothing/mask/surgical,
+		/obj/item/clothing/head/surgery,
+		/obj/item/clothing/gloves,
+		/obj/item/weapon/reagent_containers/hypospray,
+		/obj/item/clothing/glasses,
+		/obj/item/weapon/crowbar,
+		/obj/item/device/flashlight,
+		/obj/item/weapon/cell/device,
+		/obj/item/weapon/extinguisher/mini,
+		/obj/item/weapon/surgical
+		)
+
+/obj/item/weapon/storage/belt/medical/alien/New()
+	..()
+	new /obj/item/weapon/surgical/scalpel/alien(src)
+	new /obj/item/weapon/surgical/hemostat/alien(src)
+	new /obj/item/weapon/surgical/retractor/alien(src)
+	new /obj/item/weapon/surgical/circular_saw/alien(src)
+	new /obj/item/weapon/surgical/FixOVein/alien(src)
+	new /obj/item/weapon/surgical/bone_clamp/alien(src)
+	new /obj/item/weapon/surgical/cautery/alien(src)
+	new /obj/item/weapon/surgical/surgicaldrill/alien(src)
 
 /obj/item/weapon/storage/belt/champion
 	name = "championship belt"

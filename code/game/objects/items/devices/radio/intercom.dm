@@ -1,6 +1,7 @@
 /obj/item/device/radio/intercom
 	name = "station intercom (General)"
 	desc = "Talk through this."
+	icon = 'icons/obj/radio_vr.dmi' //VOREStation Edit - New Icon
 	icon_state = "intercom"
 	anchored = 1
 	w_class = ITEMSIZE_LARGE
@@ -27,6 +28,8 @@
 /obj/item/device/radio/intercom/specops
 	name = "\improper Spec Ops intercom"
 	frequency = ERT_FREQ
+	subspace_transmission = 1
+	centComm = 1
 
 /obj/item/device/radio/intercom/department
 	canhear_range = 5
@@ -35,12 +38,12 @@
 
 /obj/item/device/radio/intercom/department/medbay
 	name = "station intercom (Medbay)"
-	icon_state = "secintercom"
+	icon_state = "medintercom"
 	frequency = MED_I_FREQ
 
 /obj/item/device/radio/intercom/department/security
 	name = "station intercom (Security)"
-	icon_state = "medintercom"
+	icon_state = "secintercom"
 	frequency = SEC_I_FREQ
 
 /obj/item/device/radio/intercom/entertainment
@@ -81,9 +84,20 @@
 	..()
 	internal_channels[num2text(SYND_FREQ)] = list(access_syndicate)
 
+/obj/item/device/radio/intercom/raider
+	name = "illicit intercom"
+	desc = "Pirate radio, but not in the usual sense of the word."
+	frequency = RAID_FREQ
+	subspace_transmission = 1
+	syndie = 1
+
+/obj/item/device/radio/intercom/raider/New()
+	..()
+	internal_channels[num2text(RAID_FREQ)] = list(access_syndicate)
+
 /obj/item/device/radio/intercom/Destroy()
 	processing_objects -= src
-	..()
+	return ..()
 
 /obj/item/device/radio/intercom/attack_ai(mob/user as mob)
 	src.add_fingerprint(user)
@@ -100,6 +114,7 @@
 	if(istype(W, /obj/item/weapon/screwdriver))  // Opening the intercom up.
 		wiresexposed = !wiresexposed
 		user << "The wires have been [wiresexposed ? "exposed" : "unexposed"]"
+		playsound(src, W.usesound, 50, 1)
 		if(wiresexposed)
 			if(!on)
 				icon_state = "intercom-p_open"
@@ -110,7 +125,7 @@
 		return
 	if(wiresexposed && istype(W, /obj/item/weapon/wirecutters))
 		user.visible_message("<span class='warning'>[user] has cut the wires inside \the [src]!</span>", "You have cut the wires inside \the [src].")
-		playsound(src.loc, 'sound/items/Wirecutter.ogg', 50, 1)
+		playsound(src, W.usesound, 50, 1)
 		new/obj/item/stack/cable_coil(get_turf(src), 5)
 		var/obj/structure/frame/A = new /obj/structure/frame(src.loc)
 		var/obj/item/weapon/circuitboard/M = circuit

@@ -7,6 +7,7 @@
 	around the entity is merely a hologram used to allow the user to know if the creature is safe or not."
 	cost = 100
 	obj_path = /obj/item/weapon/spell/control
+	ability_icon_state = "tech_control"
 	category = UTILITY_SPELLS
 
 /mob/living/carbon/human/proc/technomancer_control()
@@ -32,20 +33,18 @@
 		/mob/living/simple_animal/mouse,
 		/mob/living/simple_animal/parrot,
 		/mob/living/simple_animal/slime,
-		/mob/living/simple_animal/adultslime,
+//		/mob/living/simple_animal/adultslime,
 		/mob/living/simple_animal/tindalos,
 		/mob/living/simple_animal/yithian,
-		/mob/living/simple_animal/hostile/vore/bear,
-		/mob/living/simple_animal/hostile/vore/carp,
 		/mob/living/simple_animal/hostile/scarybat,
 		/mob/living/simple_animal/hostile/viscerator,
-		/mob/living/simple_animal/hostile/retaliate/malf_drone,
+		/mob/living/simple_animal/hostile/malf_drone,
 		/mob/living/simple_animal/hostile/giant_spider,
 		/mob/living/simple_animal/hostile/hivebot,
 		/mob/living/simple_animal/hostile/diyaab, //Doubt these will get used but might as well,
 		/mob/living/simple_animal/hostile/samak,
 		/mob/living/simple_animal/hostile/shantak
-		) // Vorestation edits to add vore versions.
+		)
 
 //This unfortunately is gonna be rather messy due to the various mobtypes involved.
 /obj/item/weapon/spell/control/proc/select(var/mob/living/L)
@@ -108,7 +107,7 @@
 	for(var/mob/living/simple_animal/hostile/SM in controlled_mobs)
 		deselect(SM)
 	controlled_mobs = list()
-	..()
+	return ..()
 
 /obj/item/weapon/spell/control/on_use_cast(mob/living/user)
 	if(controlled_mobs.len != 0)

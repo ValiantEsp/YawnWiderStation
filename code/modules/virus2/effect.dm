@@ -121,13 +121,11 @@
 	stage = 4
 	badness = 3
 	activate(var/mob/living/carbon/mob,var/multiplier)
-		mob.suiciding = 1
+		mob.suiciding = 30
 		//instead of killing them instantly, just put them at -175 health and let 'em gasp for a while
-		viewers(mob) << "\red <b>[mob.name] is holding \his breath. It looks like \he's trying to commit suicide.</b>"
+		viewers(mob) << "<font color='red'><b>[mob.name] is holding \his breath. It looks like \he's trying to commit suicide.</b></font>"
 		mob.adjustOxyLoss(175 - mob.getToxLoss() - mob.getFireLoss() - mob.getBruteLoss() - mob.getOxyLoss())
 		mob.updatehealth()
-		spawn(200) //in case they get revived by cryo chamber or something stupid like that, let them suicide again in 20 seconds
-			mob.suiciding = 0
 
 /datum/disease2/effect/killertoxins
 	name = "Toxification Syndrome"
@@ -159,7 +157,7 @@
 				H << "<span class='notice'>You can't feel your [E.name] anymore...</span>"
 				for (var/obj/item/organ/external/C in E.children)
 					C.status |= ORGAN_DEAD
-			H.update_body(1)
+			H.update_icons_body()
 		mob.adjustToxLoss(15*multiplier)
 
 	deactivate(var/mob/living/carbon/mob,var/multiplier)
@@ -169,7 +167,7 @@
 				E.status &= ~ORGAN_DEAD
 				for (var/obj/item/organ/external/C in E.children)
 					C.status &= ~ORGAN_DEAD
-			H.update_body(1)
+			H.update_icons_body()
 
 /datum/disease2/effect/immortal
 	name = "Longevity Syndrome"
@@ -266,7 +264,7 @@
 	stage = 3
 	activate(var/mob/living/carbon/mob,var/multiplier)
 		mob << "<span class='notice'>You have trouble telling right and left apart all of a sudden.</span>"
-		mob.confused += 10
+		mob.Confuse(10)
 
 /datum/disease2/effect/mutation
 	name = "DNA Degradation"

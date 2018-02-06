@@ -23,28 +23,27 @@
 		..()
 
 /obj/item/weapon/spell/spawner/pulsar/on_throw_cast(atom/hit_atom, mob/user)
-	empulse(hit_atom, 1, 1, log=1)
+	empulse(hit_atom, 1, 1, 1, 1, log=1)
 
 /obj/effect/temporary_effect/pulsar
 	name = "pulsar"
 	desc = "Not a real pulsar, but still emits loads of EMP."
-	icon = 'icons/effects/effects.dmi'
 	icon_state = "shield2"
 	time_to_die = null
-	invisibility = 0
-	new_light_range = 4
-	new_light_power = 5
-	new_light_color = "#2ECCFA"
+	light_range = 4
+	light_power = 5
+	light_color = "#2ECCFA"
 	var/pulses_remaining = 3
 
 /obj/effect/temporary_effect/pulsar/New()
 	..()
-	pulse_loop()
+	spawn(0)
+		pulse_loop()
 
 /obj/effect/temporary_effect/pulsar/proc/pulse_loop()
 	while(pulses_remaining)
 		sleep(2 SECONDS)
-		empulse(src, heavy_range = 1, light_range = 2, log = 1)
+		empulse(src, 1, 1, 2, 2, log = 1)
 		pulses_remaining--
 	qdel(src)
 

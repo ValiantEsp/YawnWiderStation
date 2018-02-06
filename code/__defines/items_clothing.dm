@@ -22,6 +22,19 @@
 #define SLOT_TIE        0x4000
 #define SLOT_HOLSTER	0x8000 //16th bit - higher than this will overflow
 
+#define ACCESSORY_SLOT_UTILITY  "Utility"
+#define ACCESSORY_SLOT_ARMBAND  "Armband"
+#define ACCESSORY_SLOT_RANK     "Rank"
+#define ACCESSORY_SLOT_DEPT		"Department"
+#define ACCESSORY_SLOT_DECOR    "Decor"
+#define ACCESSORY_SLOT_MEDAL    "Medal"
+#define ACCESSORY_SLOT_INSIGNIA "Insignia"
+#define ACCESSORY_SLOT_ARMOR_C  "Chest armor"
+#define ACCESSORY_SLOT_ARMOR_A  "Arm armor"
+#define ACCESSORY_SLOT_ARMOR_L  "Leg armor"
+#define ACCESSORY_SLOT_ARMOR_S  "Armor storage"
+#define ACCESSORY_SLOT_ARMOR_M  "Misc armor"
+
 // Flags bitmasks.
 #define NOBLUDGEON         0x1    // When an item has this it produces no "X has been hit by Y with Z" message with the default handler.
 #define CONDUCT            0x2   // Conducts electricity. (metal etc.)
@@ -33,7 +46,7 @@
 #define PROXMOVE           0x80  // Does this object require proximity checking in Enter()?
 
 //Flags for items (equipment)
-#define THICKMATERIAL          0x1  // Prevents syringes, parapens and hyposprays if equiped to slot_suit or slot_head.
+#define THICKMATERIAL          0x1  // Prevents syringes, parapens and hyposprays if equipped to slot_suit or slot_head.
 #define STOPPRESSUREDAMAGE     0x2  // Counts towards pressure protection. Note that like temperature protection, body_parts_covered is considered here as well.
 #define AIRTIGHT               0x4  // Functions with internals.
 #define NOSLIP                 0x8  // Prevents from slipping on wet floors, in space, etc.
@@ -44,6 +57,7 @@
 #define PASSTABLE  0x1
 #define PASSGLASS  0x2
 #define PASSGRILLE 0x4
+#define PASSBLOB   0x8
 
 // Bitmasks for the flags_inv variable. These determine when a piece of clothing hides another, i.e. a helmet hiding glasses.
 // WARNING: The following flags apply only to the external suit!

@@ -13,6 +13,10 @@
 	var/icobase = 'icons/mob/human_races/r_human.dmi'    // Normal icon set.
 	var/deform = 'icons/mob/human_races/r_def_human.dmi' // Mutated icon set.
 
+	var/speech_bubble_appearance = "normal"              // Part of icon_state to use for speech bubbles when talking.  See talk.dmi for available icons.
+	var/fire_icon_state = "humanoid"                     // The icon_state used inside OnFire.dmi for when on fire.
+	var/suit_storage_icon = 'icons/mob/belt_mirror.dmi'  // Icons used for worn items in suit storage slot.
+
 	// Damage overlay and masks.
 	var/damage_overlays = 'icons/mob/human_races/masks/dam_human.dmi'
 	var/damage_mask = 'icons/mob/human_races/masks/dam_mask_human.dmi'
@@ -27,6 +31,8 @@
 	var/tail_animation                                   // If set, the icon to obtain tail animation states from.
 	var/tail_hair
 
+	var/icon_scale = 1                                   // Makes the icon larger/smaller.
+
 	var/race_key = 0       	                             // Used for mob icon cache string.
 	var/icon/icon_template                               // Used for mob icon generation for non-32x32 species.
 	var/mob_size	= MOB_MEDIUM
@@ -34,6 +40,7 @@
 	var/virus_immune
 	var/short_sighted                                    // Permanent weldervision.
 	var/blood_volume = 560                               // Initial blood volume.
+	var/bloodloss_rate = 1								 // Multiplier for how fast a species bleeds out. Higher = Faster
 	var/hunger_factor = 0.05                             // Multiplier for hunger.
 
 	var/taste_sensitivity = TASTE_NORMAL                 // How sensitive the species is to minute tastes.
@@ -44,11 +51,21 @@
 	// Language/culture vars.
 	var/default_language = LANGUAGE_GALCOM // Default language is used when 'say' is used without modifiers.
 	var/language = LANGUAGE_GALCOM         // Default racial language, if any.
+	var/species_language = LANGUAGE_GALCOM	// Used on the Character Setup screen
 	var/list/secondary_langs = list()        // The names of secondary languages that are available to this species.
 	var/list/speech_sounds                   // A list of sounds to potentially play when speaking.
 	var/list/speech_chance                   // The likelihood of a speech sound playing.
 	var/num_alternate_languages = 0          // How many secondary languages are available to select at character creation
 	var/name_language = LANGUAGE_GALCOM    // The language to use when determining names for this species, or null to use the first name/last name generator
+
+	//Soundy emotey things.
+	var/scream_verb = "screams"
+	var/male_scream_sound //= 'sound/goonstation/voice/male_scream.ogg' Removed due to licensing, replace!
+	var/female_scream_sound //= 'sound/goonstation/voice/female_scream.ogg' Removed due to licensing, replace!
+	var/male_cough_sounds = list('sound/effects/mob_effects/m_cougha.ogg','sound/effects/mob_effects/m_coughb.ogg', 'sound/effects/mob_effects/m_coughc.ogg')
+	var/female_cough_sounds = list('sound/effects/mob_effects/f_cougha.ogg','sound/effects/mob_effects/f_coughb.ogg')
+	var/male_sneeze_sound = 'sound/effects/mob_effects/sneeze.ogg'
+	var/female_sneeze_sound = 'sound/effects/mob_effects/f_sneeze.ogg'
 
 	// Combat vars.
 	var/total_health = 100                   // Point at which the mob will enter crit.
@@ -63,6 +80,7 @@
 	var/toxins_mod =    1                    // Toxloss modifier
 	var/radiation_mod = 1                    // Radiation modifier
 	var/flash_mod =     1                    // Stun from blindness modifier.
+	var/chemOD_mod =	1					 // Damage modifier for overdose
 	var/vision_flags = SEE_SELF              // Same flags as glasses.
 
 	// Death vars.
@@ -73,39 +91,57 @@
 	var/death_sound
 	var/death_message = "seizes up and falls limp, their eyes dead and lifeless..."
 	var/knockout_message = "has been knocked unconscious!"
+	var/cloning_modifier = /datum/modifier/cloning_sickness
 
 	// Environment tolerance/life processes vars.
 	var/reagent_tag                                   //Used for metabolizing reagents.
 	var/breath_type = "oxygen"                        // Non-oxygen gas breathed, if any.
 	var/poison_type = "phoron"                        // Poisonous air.
 	var/exhale_type = "carbon_dioxide"                // Exhaled gas type.
+
+	var/body_temperature = 310.15	                  // Species will try to stabilize at this temperature. (also affects temperature processing)
+
+	// Cold
 	var/cold_level_1 = 260                            // Cold damage level 1 below this point.
 	var/cold_level_2 = 200                            // Cold damage level 2 below this point.
 	var/cold_level_3 = 120                            // Cold damage level 3 below this point.
+
+	var/breath_cold_level_1 = 240					  // Cold gas damage level 1 below this point.
+	var/breath_cold_level_2 = 180					  // Cold gas damage level 2 below this point.
+	var/breath_cold_level_3 = 100					  // Cold gas damage level 3 below this point.
+
+	var/cold_discomfort_level = 285                   // Aesthetic messages about feeling chilly.
+	var/list/cold_discomfort_strings = list(
+		"You feel chilly.",
+		"You shiver suddenly.",
+		"Your chilly flesh stands out in goosebumps."
+		)
+
+	// Hot
 	var/heat_level_1 = 360                            // Heat damage level 1 above this point.
 	var/heat_level_2 = 400                            // Heat damage level 2 above this point.
 	var/heat_level_3 = 1000                           // Heat damage level 3 above this point.
+
+	var/breath_heat_level_1 = 380					  // Heat gas damage level 1 below this point.
+	var/breath_heat_level_2 = 450					  // Heat gas damage level 2 below this point.
+	var/breath_heat_level_3 = 1250					  // Heat gas damage level 3 below this point.
+
+	var/heat_discomfort_level = 315                   // Aesthetic messages about feeling warm.
+	var/list/heat_discomfort_strings = list(
+		"You feel sweat drip down your neck.",
+		"You feel uncomfortably warm.",
+		"Your skin prickles in the heat."
+		)
+
+
 	var/passive_temp_gain = 0		                  // Species will gain this much temperature every second
 	var/hazard_high_pressure = HAZARD_HIGH_PRESSURE   // Dangerously high pressure.
 	var/warning_high_pressure = WARNING_HIGH_PRESSURE // High pressure warning.
 	var/warning_low_pressure = WARNING_LOW_PRESSURE   // Low pressure warning.
 	var/hazard_low_pressure = HAZARD_LOW_PRESSURE     // Dangerously low pressure.
 	var/light_dam                                     // If set, mob will be damaged in light over this value and heal in light below its negative.
-	var/body_temperature = 310.15	                  // Species will try to stabilize at this temperature.
-	                                                  // (also affects temperature processing)
+	var/minimum_breath_pressure = 16				  // Minimum required pressure for breath, in kPa
 
-	var/heat_discomfort_level = 315                   // Aesthetic messages about feeling warm.
-	var/cold_discomfort_level = 285                   // Aesthetic messages about feeling chilly.
-	var/list/heat_discomfort_strings = list(
-		"You feel sweat drip down your neck.",
-		"You feel uncomfortably warm.",
-		"Your skin prickles in the heat."
-		)
-	var/list/cold_discomfort_strings = list(
-		"You feel chilly.",
-		"You shiver suddenly.",
-		"Your chilly flesh stands out in goosebumps."
-		)
 
 	var/metabolic_rate = 1
 
@@ -122,8 +158,17 @@
 	var/flags = 0                 // Various specific features.
 	var/appearance_flags = 0      // Appearance/display related features.
 	var/spawn_flags = 0           // Flags that specify who can spawn as this species
+
 	var/slowdown = 0              // Passive movement speed malus (or boost, if negative)
-	var/slowdown_fixed = 0		  // If this is on, they're not affected by object related slowdown (positive or negative)
+	var/obj/effect/decal/cleanable/blood/tracks/move_trail = /obj/effect/decal/cleanable/blood/tracks/footprints // What marks are left when walking
+	var/list/skin_overlays = list()
+	var/has_floating_eyes = 0     // Whether the eyes can be shown above other icons
+	var/has_glowing_eyes = 0      // Whether the eyes are shown above all lighting
+	var/water_movement = 0		  // How much faster or slower the species is in water
+	var/snow_movement = 0		  // How much faster or slower the species is on snow
+
+
+	var/item_slowdown_mod = 1	  // How affected by item slowdown the species is.
 	var/primitive_form            // Lesser form, if any (ie. monkey for humans)
 	var/greater_form              // Greater form, if any, ie. human for monkeys.
 	var/holder_type
@@ -156,6 +201,7 @@
 		)
 
 	var/list/genders = list(MALE, FEMALE)
+	var/ambiguous_genders = FALSE // If true, people examining a member of this species whom are not also the same species will see them as gender neutral.  Because aliens.
 
 	// Bump vars
 	var/bump_flag = HUMAN	// What are we considered to be when bumped?
@@ -183,13 +229,13 @@
 			inherent_verbs = list()
 		inherent_verbs |= /mob/living/carbon/human/proc/regurgitate
 
-/datum/species/proc/sanitize_name(var/name)
-	return sanitizeName(name)
+/datum/species/proc/sanitize_name(var/name, var/robot = 0)
+	return sanitizeName(name, MAX_NAME_LEN, robot)
 
 /datum/species/proc/equip_survival_gear(var/mob/living/carbon/human/H,var/extendedtank = 1)
 	var/boxtype = /obj/item/weapon/storage/box/survival //Default survival box
 	if(H.isSynthetic())
-		boxtype = /obj/item/weapon/storage/box //Empty box for synths
+		boxtype = /obj/item/weapon/storage/box/synth //VOREStation Edit - Synth survival box on Tether
 	else if(extendedtank)
 		boxtype = /obj/item/weapon/storage/box/engineer //Special box for engineers
 
@@ -237,20 +283,30 @@
 	var/t_him = "them"
 	if(ishuman(target))
 		var/mob/living/carbon/human/T = target
-		switch(T.identifying_gender)
-			if(MALE)
-				t_him = "him"
-			if(FEMALE)
-				t_him = "her"
+		if(!T.species.ambiguous_genders || (T.species.ambiguous_genders && H.species == T.species))
+			switch(T.identifying_gender)
+				if(MALE)
+					t_him = "him"
+				if(FEMALE)
+					t_him = "her"
+		else
+			t_him = "them"
 	else
 		switch(target.gender)
 			if(MALE)
 				t_him = "him"
 			if(FEMALE)
 				t_him = "her"
-
-	H.visible_message("<span class='notice'>[H] hugs [target] to make [t_him] feel better!</span>", \
-					"<span class='notice'>You hug [target] to make [t_him] feel better!</span>")
+	if(H.zone_sel.selecting == "head") //VOREStation Edit - Headpats and Handshakes.
+		H.visible_message( \
+			"<span class='notice'>[H] pats [target] on the head.</span>", \
+			"<span class='notice'>You pat [target] on the head.</span>", )
+	else if(H.zone_sel.selecting == "r_hand" || H.zone_sel.selecting == "l_hand")
+		H.visible_message( \
+			"<span class='notice'>[H] shakes [target]'s hand.</span>", \
+			"<span class='notice'>You shake [target]'s hand.</span>", )
+	else H.visible_message("<span class='notice'>[H] hugs [target] to make [t_him] feel better!</span>", \
+					"<span class='notice'>You hug [target] to make [t_him] feel better!</span>") //End VOREStation Edit
 
 /datum/species/proc/remove_inherent_verbs(var/mob/living/carbon/human/H)
 	if(inherent_verbs)
@@ -314,4 +370,32 @@
 
 // Called when lying down on a water tile.
 /datum/species/proc/can_breathe_water()
+	return FALSE
+
+// Impliments different trails for species depending on if they're wearing shoes.
+/datum/species/proc/get_move_trail(var/mob/living/carbon/human/H)
+	if( H.shoes || ( H.wear_suit && (H.wear_suit.body_parts_covered & FEET) ) )
+		return /obj/effect/decal/cleanable/blood/tracks/footprints
+	else
+		return move_trail
+
+/datum/species/proc/update_skin(var/mob/living/carbon/human/H)
+	return
+
+/datum/species/proc/get_eyes(var/mob/living/carbon/human/H)
+	return
+
+/datum/species/proc/can_overcome_gravity(var/mob/living/carbon/human/H)
+	return FALSE
+
+// Used for any extra behaviour when falling and to see if a species will fall at all.
+/datum/species/proc/can_fall(var/mob/living/carbon/human/H)
+	return TRUE
+
+// Used to find a special target for falling on, such as pouncing on someone from above.
+/datum/species/proc/find_fall_target_special(src, landing)
+	return FALSE
+
+// Used to override normal fall behaviour. Use only when the species does fall down a level.
+/datum/species/proc/fall_impact_special(var/mob/living/carbon/human/H, var/atom/A)
 	return FALSE

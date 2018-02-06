@@ -13,17 +13,18 @@
 /obj/item/weapon/spell/aura/fire
 	name = "Fire Storm"
 	desc = "Things are starting to heat up."
-	icon_state = "generic"
+	icon_state = "fire_bolt"
 	aspect = ASPECT_FIRE
 	glow_color = "#FF6A00"
 
 /obj/item/weapon/spell/aura/fire/process()
 	if(!pay_energy(100))
 		qdel(src)
-	var/list/nearby_things = range(calculate_spell_power(4),owner)
+	var/list/nearby_things = range(round(calculate_spell_power(4)),owner)
 
-	var/temp_change = calculate_spell_power(80)
-	var/temp_cap = calculate_spell_power(600)
+	var/temp_change = calculate_spell_power(25)
+	var/datum/species/baseline = all_species["Human"]
+	var/temp_cap = baseline.heat_level_3 * 1.5
 	var/fire_power = calculate_spell_power(2)
 
 	if(check_for_scepter())
@@ -35,10 +36,11 @@
 		if(is_ally(H))
 			continue
 
-		var/protection = H.get_heat_protection(1000)
+		var/protection = H.get_heat_protection(500)
 		if(protection < 1)
 			var/heat_factor = abs(protection - 1)
-			H.bodytemperature = min( (H.bodytemperature + temp_change) * heat_factor, temp_cap)
+			temp_change *= heat_factor
+			H.bodytemperature = min(H.bodytemperature + temp_change, temp_cap)
 
 	turf_check:
 		for(var/turf/simulated/T in nearby_things)
@@ -46,7 +48,7 @@
 				for(var/mob/living/carbon/human/H in T)
 					if(is_ally(H))
 						continue turf_check
-				T.hotspot_expose(1000, 50, 1)
+				T.hotspot_expose(500, 50, 1)
 				T.create_fire(fire_power)
 
-	adjust_instability(1)
+	adjust_instability(3)

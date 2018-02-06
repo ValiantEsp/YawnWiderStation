@@ -40,6 +40,7 @@
 	name = "Exotic seeds crate"
 	contains = list(
 			/obj/item/seeds/replicapod = 2,
+			/obj/item/seeds/ambrosiavulgarisseed = 2,
 			/obj/item/seeds/libertymycelium,
 			/obj/item/seeds/reishimycelium,
 			/obj/item/seeds/random = 6,
@@ -50,3 +51,16 @@
 	containername = "Exotic Seeds crate"
 	access = access_hydroponics
 
+/datum/supply_packs/sci/integrated_circuit_printer
+	name = "Integrated circuit printer"
+	contains = list(/obj/item/device/integrated_circuit_printer = 2)
+	cost = 15
+	containertype = /obj/structure/closet/crate
+	containername = "Integrated circuit crate"
+
+/datum/supply_packs/sci/integrated_circuit_printer_upgrade
+	name = "Integrated circuit printer upgrade - advanced designs"
+	contains = list(/obj/item/weapon/disk/integrated_circuit/upgrade/advanced)
+	cost = 30
+	containertype = /obj/structure/closet/crate
+	containername = "Integrated circuit crate"

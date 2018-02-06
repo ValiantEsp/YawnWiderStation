@@ -16,6 +16,8 @@
 
 // This is not great.
 /turf/simulated/proc/wet_floor(var/wet_val = 1)
+	if(wet > 2)	//Can't mop up ice
+		return
 	spawn(0)
 		wet = wet_val
 		if(wet_overlay)
@@ -24,8 +26,8 @@
 		wet_overlay = image('icons/effects/water.dmi',src,"wet_floor")
 		overlays += wet_overlay
 		sleep(800)
-		if(wet >= 2)
-			return
+		if(wet == 2)
+			sleep(3200)
 		wet = 0
 		if(wet_overlay)
 			overlays -= wet_overlay
@@ -59,16 +61,6 @@
 
 /turf/simulated/proc/initialize()
 	return
-
-/turf/simulated/proc/check_destroy_override()
-	if(destroy_floor_override) //Don't bother doing the additional checks if we don't have to.
-		var/area/my_area = get_area(src)
-//		my_area = my_area.master
-		if(is_type_in_list(my_area, destroy_floor_override_ignore_areas))
-			return 0
-		if(z in destroy_floor_override_z_levels)
-			return 1
-	return 0
 
 /turf/simulated/proc/AddTracks(var/typepath,var/bloodDNA,var/comingdir,var/goingdir,var/bloodcolor="#A10808")
 	var/obj/effect/decal/cleanable/blood/tracks/tracks = locate(typepath) in src
@@ -117,10 +109,10 @@
 					H.track_blood--
 
 			if (bloodDNA)
-				src.AddTracks(/obj/effect/decal/cleanable/blood/tracks/footprints,bloodDNA,H.dir,0,bloodcolor) // Coming
+				src.AddTracks(H.species.get_move_trail(H),bloodDNA,H.dir,0,bloodcolor) // Coming
 				var/turf/simulated/from = get_step(H,reverse_direction(H.dir))
 				if(istype(from) && from)
-					from.AddTracks(/obj/effect/decal/cleanable/blood/tracks/footprints,bloodDNA,0,H.dir,bloodcolor) // Going
+					from.AddTracks(H.species.get_move_trail(H),bloodDNA,0,H.dir,bloodcolor) // Going
 
 				bloodDNA = null
 
@@ -178,3 +170,5 @@
 		this.blood_DNA["UNKNOWN BLOOD"] = "X*"
 	else if( istype(M, /mob/living/silicon/robot ))
 		new /obj/effect/decal/cleanable/blood/oil(src)
+	else if(ishuman(M))
+		add_blood(M)

@@ -2,7 +2,7 @@
 #define LIQUID 2
 #define GAS 3
 
-#define REAGENTS_PER_SHEET 20
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,27 +47,27 @@
 
 /obj/machinery/chem_master/attackby(var/obj/item/weapon/B as obj, var/mob/user as mob)
 
-	if(istype(B, /obj/item/weapon/reagent_containers/glass))
+	if(istype(B, /obj/item/weapon/reagent_containers/glass) || istype(B, /obj/item/weapon/reagent_containers/food))
 
 		if(src.beaker)
-			user << "A beaker is already loaded into the machine."
+			user << "\A [beaker] is already loaded into the machine."
 			return
 		src.beaker = B
 		user.drop_item()
 		B.loc = src
-		user << "You add the beaker to the machine!"
+		user << "You add \the [B] to the machine!"
 		icon_state = "mixer1"
 
 	else if(istype(B, /obj/item/weapon/storage/pill_bottle))
 
 		if(src.loaded_pill_bottle)
-			user << "A pill bottle is already loaded into the machine."
+			user << "A \the [loaded_pill_bottle] s already loaded into the machine."
 			return
 
 		src.loaded_pill_bottle = B
 		user.drop_item()
 		B.loc = src
-		user << "You add the pill bottle into the dispenser slot!"
+		user << "You add \the [loaded_pill_bottle] into the dispenser slot!"
 	return
 
 /obj/machinery/chem_master/attack_hand(mob/user as mob)
@@ -288,13 +288,20 @@
 	var/obj/item/weapon/reagent_containers/beaker = null
 	var/limit = 10
 	var/list/holdingitems = list()
-	var/list/sheet_reagents = list(
-		/obj/item/stack/material/iron = "iron",
-		/obj/item/stack/material/uranium = "uranium",
-		/obj/item/stack/material/phoron = "phoron",
-		/obj/item/stack/material/gold = "gold",
-		/obj/item/stack/material/silver = "silver",
-		/obj/item/stack/material/mhydrogen = "hydrogen"
+	var/list/sheet_reagents = list( //have a number of reageents divisible by REAGENTS_PER_SHEET (default 20) unless you like decimals,
+		/obj/item/stack/material/iron = list("iron"),
+		/obj/item/stack/material/uranium = list("uranium"),
+		/obj/item/stack/material/phoron = list("phoron"),
+		/obj/item/stack/material/gold = list("gold"),
+		/obj/item/stack/material/silver = list("silver"),
+		/obj/item/stack/material/platinum = list("platinum"),
+		/obj/item/stack/material/mhydrogen = list("hydrogen"),
+		/obj/item/stack/material/steel = list("iron", "carbon"),
+		/obj/item/stack/material/plasteel = list("iron", "iron", "carbon", "carbon", "platinum"), //8 iron, 8 carbon, 4 platinum,
+		/obj/item/stack/material/snow = list("water"),
+		/obj/item/stack/material/sandstone = list("silicon", "oxygen"),
+		/obj/item/stack/material/glass = list("silicon"),
+		/obj/item/stack/material/glass/phoronglass = list("platinum", "silicon", "silicon", "silicon"), //5 platinum, 15 silicon,
 		)
 
 /obj/machinery/reagentgrinder/New()
@@ -362,6 +369,17 @@
 		src.updateUsrDialog()
 		return 0
 
+	if(istype(O,/obj/item/weapon/gripper))
+		var/obj/item/weapon/gripper/B = O	//B, for Borg.
+		if(!B.wrapped)
+			user << "\The [B] is not holding anything."
+			return 0
+		else
+			var/B_held = B.wrapped
+			user << "You use \the [B] to load \the [src] with \the [B_held]."
+
+		return 0
+
 	if(!sheet_reagents[O.type] && (!O.reagents || !O.reagents.total_volume))
 		user << "\The [O] is not suitable for blending."
 		return 1
@@ -370,9 +388,6 @@
 	O.loc = src
 	holdingitems += O
 	src.updateUsrDialog()
-	return 0
-
-/obj/machinery/reagentgrinder/attack_ai(mob/user as mob)
 	return 0
 
 /obj/machinery/reagentgrinder/attack_hand(mob/user as mob)
@@ -488,12 +503,18 @@
 		if(sheet_reagents[O.type])
 			var/obj/item/stack/stack = O
 			if(istype(stack))
+				var/list/sheet_components = sheet_reagents[stack.type]
 				var/amount_to_take = max(0,min(stack.amount,round(remaining_volume/REAGENTS_PER_SHEET)))
 				if(amount_to_take)
 					stack.use(amount_to_take)
-					if(deleted(stack))
+					if(QDELETED(stack))
 						holdingitems -= stack
-					beaker.reagents.add_reagent(sheet_reagents[stack.type], (amount_to_take*REAGENTS_PER_SHEET))
+					if(islist(sheet_components))
+						amount_to_take = (amount_to_take/(sheet_components.len))
+						for(var/i in sheet_components)
+							beaker.reagents.add_reagent(i, (amount_to_take*REAGENTS_PER_SHEET))
+					else
+						beaker.reagents.add_reagent(sheet_components, (amount_to_take*REAGENTS_PER_SHEET))
 					continue
 
 		if(O.reagents)
@@ -503,5 +524,3 @@
 				qdel(O)
 			if (beaker.reagents.total_volume >= beaker.reagents.maximum_volume)
 				break
-
-#undef REAGENTS_PER_SHEET

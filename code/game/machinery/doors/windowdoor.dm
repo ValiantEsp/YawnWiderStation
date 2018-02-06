@@ -60,7 +60,7 @@
 /obj/machinery/door/window/Destroy()
 	density = 0
 	update_nearby_tiles()
-	..()
+	return ..()
 
 /obj/machinery/door/window/Bumped(atom/movable/AM as mob|obj)
 	if (!( ismob(AM) ))
@@ -161,7 +161,7 @@
 			playsound(src.loc, 'sound/effects/Glasshit.ogg', 75, 1)
 			visible_message("<span class='danger'>[user] smashes against the [src.name].</span>", 1)
 			user.do_attack_animation(src)
-			user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+			user.setClickCooldown(user.get_attack_speed())
 			take_damage(25)
 			return
 	return src.attackby(user, user)
@@ -180,6 +180,21 @@
 	if (src.operating == 1)
 		return
 
+	// Fixing.
+	if(istype(I, /obj/item/weapon/weldingtool) && user.a_intent == I_HELP)
+		var/obj/item/weapon/weldingtool/WT = I
+		if(health < maxhealth)
+			if(WT.remove_fuel(1 ,user))
+				to_chat(user, "<span class='notice'>You begin repairing [src]...</span>")
+				playsound(src, WT.usesound, 50, 1)
+				if(do_after(user, 40 * WT.toolspeed, target = src))
+					health = maxhealth
+					update_icon()
+					to_chat(user, "<span class='notice'>You repair [src].</span>")
+		else
+			to_chat(user, "<span class='warning'>[src] is already in good condition!</span>")
+		return
+
 	//Emags and ninja swords? You may pass.
 	if (istype(I, /obj/item/weapon/melee/energy/blade))
 		if(emag_act(10, user))
@@ -193,9 +208,9 @@
 
 	//If it's opened/emagged, crowbar can pry it out of its frame.
 	if (!density && istype(I, /obj/item/weapon/crowbar))
-		playsound(src.loc, 'sound/items/Crowbar.ogg', 100, 1)
+		playsound(src, I.usesound, 50, 1)
 		user.visible_message("[user] begins prying the windoor out of the frame.", "You start to pry the windoor out of the frame.")
-		if (do_after(user,40))
+		if (do_after(user,40 * I.toolspeed))
 			to_chat(user,"<span class='notice'>You pried the windoor out of the frame!</span>")
 
 			var/obj/structure/windoor_assembly/wa = new/obj/structure/windoor_assembly(src.loc)
@@ -231,7 +246,7 @@
 
 	//If it's a weapon, smash windoor. Unless it's an id card, agent card, ect.. then ignore it (Cards really shouldnt damage a door anyway)
 	if(src.density && istype(I, /obj/item/weapon) && !istype(I, /obj/item/weapon/card))
-		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+		user.setClickCooldown(user.get_attack_speed(I))
 		var/aforce = I.force
 		playsound(src.loc, 'sound/effects/Glasshit.ogg', 75, 1)
 		visible_message("<span class='danger'>[src] was hit by [I].</span>")

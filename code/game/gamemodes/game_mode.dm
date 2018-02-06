@@ -405,6 +405,8 @@ var/global/list/additional_antag_types = list()
 				candidates += player.mind
 				players -= player
 
+		// Below is commented out as an attempt to solve an issue of too little people wanting to join the round due to wanting to have cake and eat it too.
+		/*
 		// If we don't have enough antags, draft people who voted for the round.
 		if(candidates.len < required_enemies)
 			for(var/mob/new_player/player in players)
@@ -413,6 +415,7 @@ var/global/list/additional_antag_types = list()
 					candidates += player.mind
 					players -= player
 					break
+		*/
 
 	return candidates		// Returns: The number of people who had the antagonist role set to yes, regardless of recomended_enemies, if that number is greater than required_enemies
 							//			required_enemies if the number of people with that role set to yes is less than recomended_enemies,
@@ -511,9 +514,9 @@ proc/get_nt_opposed()
 	var/list/dudes = list()
 	for(var/mob/living/carbon/human/man in player_list)
 		if(man.client)
-			if(man.client.prefs.nanotrasen_relation == COMPANY_OPPOSED)
+			if(man.client.prefs.economic_status == CLASS_LOWER)
 				dudes += man
-			else if(man.client.prefs.nanotrasen_relation == COMPANY_SKEPTICAL && prob(50))
+			else if(man.client.prefs.economic_status == CLASS_LOWMID && prob(50))
 				dudes += man
 	if(dudes.len == 0) return null
 	return pick(dudes)

@@ -26,7 +26,8 @@
 	var/touch_met = 0
 	var/dose = 0
 	var/max_dose = 0
-	var/overdose = 0
+	var/overdose = 0		//Amount at which overdose starts
+	var/overdose_mod = 2	//Modifier to overdose damage
 	var/scannable = 0 // Shows up on health analyzers.
 	var/affects_dead = 0
 	var/cup_icon_state = null
@@ -43,7 +44,8 @@
 	var/list/glass_special = null // null equivalent to list()
 
 /datum/reagent/proc/remove_self(var/amount) // Shortcut
-	holder.remove_reagent(id, amount)
+	if(holder)
+		holder.remove_reagent(id, amount)
 
 // This doesn't apply to skin contact - this is for, e.g. extinguishers and sprays. The difference is that reagent is not directly on the mob's skin - it might just be on their clothing.
 /datum/reagent/proc/touch_mob(var/mob/M, var/amount)
@@ -60,11 +62,15 @@
 		return
 	if(!affects_dead && M.stat == DEAD)
 		return
-	if(overdose && (volume > overdose) && (location != CHEM_TOUCH))
-		overdose(M, alien)
 	var/removed = metabolism
 	if(!mrate_static == TRUE)
+		// Modifiers
+		for(var/datum/modifier/mod in M.modifiers)
+			if(!isnull(mod.metabolism_percent))
+				removed *= mod.metabolism_percent
+		// Species
 		removed *= M.species.metabolic_rate
+
 	if(ingest_met && (location == CHEM_INGEST))
 		removed = ingest_met
 	if(touch_met && (location == CHEM_TOUCH))
@@ -80,6 +86,8 @@
 				affect_ingest(M, alien, removed)
 			if(CHEM_TOUCH)
 				affect_touch(M, alien, removed)
+	if(overdose && (volume > overdose) && (location != CHEM_TOUCH))
+		overdose(M, alien, removed)
 	remove_self(removed)
 	return
 
@@ -93,9 +101,13 @@
 /datum/reagent/proc/affect_touch(var/mob/living/carbon/M, var/alien, var/removed)
 	return
 
-/datum/reagent/proc/overdose(var/mob/living/carbon/M, var/alien) // Overdose effect. Doesn't happen instantly.
-	M.adjustToxLoss(REM)
-	return
+/datum/reagent/proc/overdose(var/mob/living/carbon/M, var/alien, var/removed) // Overdose effect. Doesn't happen instantly.
+	if(alien == IS_DIONA)
+		return
+	if(ishuman(M))
+		var/mob/living/carbon/human/H = M
+		overdose_mod *= H.species.chemOD_mod
+	M.adjustToxLoss(removed * overdose_mod)
 
 /datum/reagent/proc/initialize_data(var/newdata) // Called when the reagent is created.
 	if(!isnull(newdata))
@@ -113,8 +125,20 @@
 	return null
 
 /datum/reagent/Destroy() // This should only be called by the holder, so it's already handled clearing its references
-	..()
 	holder = null
+	. = ..()
+
+// Called when reagents are removed from a container, most likely after metabolizing in a mob
+/datum/reagent/proc/on_remove(var/atom/A)
+	return
+
+// Called when a mob dies
+/datum/reagent/proc/on_mob_death(var/mob/M)
+ 	return
+
+ //on transfer to new container, return 1 to allow it to continue
+/datum/reagent/proc/on_transfer(var/volume)
+	return 1
 
 /* DEPRECATED - TODO: REMOVE EVERYWHERE */
 
@@ -126,3 +150,5 @@
 
 /datum/reagent/proc/reaction_mob(var/mob/target)
 	touch_mob(target)
+
+

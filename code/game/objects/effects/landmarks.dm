@@ -5,6 +5,7 @@
 	anchored = 1.0
 	unacidable = 1
 	simulated = 0
+	invisibility = 100
 	var/delete_me = 0
 
 /obj/effect/landmark/New()
@@ -21,9 +22,9 @@
 			newplayer_start += loc
 			delete_me = 1
 			return
-		if("JoinLate")
-			latejoin += loc
-			delete_me = 1
+		if("JoinLate") // Bit difference, since we need the spawn point to move.
+			latejoin += src
+		//	delete_me = 1
 			return
 		if("JoinLateGateway")
 			latejoin_gateway += loc
@@ -87,9 +88,11 @@
 	if(delete_me)
 		qdel(src)
 
-/obj/effect/landmark/Destroy()
-	landmarks_list -= src
-	return ..()
+/obj/effect/landmark/Destroy(var/force = FALSE)
+	if(delete_me || force)
+		landmarks_list -= src
+		return ..()
+	return QDEL_HINT_LETMELIVE
 
 /obj/effect/landmark/start
 	name = "start"
@@ -102,6 +105,18 @@
 	tag = "start*[name]"
 	invisibility = 101
 
+	return 1
+
+/obj/effect/landmark/virtual_reality
+	name = "virtual_reality"
+	icon = 'icons/mob/screen1.dmi'
+	icon_state = "x"
+	anchored = 1.0
+
+/obj/effect/landmark/virtual_reality/New()
+	..()
+	tag = "virtual_reality*[name]"
+	invisibility = 101
 	return 1
 
 //Costume spawner landmarks
@@ -194,7 +209,7 @@
 	new /obj/item/clothing/under/waiter(src.loc)
 	var/CHOICE= pick( /obj/item/clothing/head/kitty, /obj/item/clothing/head/rabbitears)
 	new CHOICE(src.loc)
-	new /obj/item/clothing/suit/apron(src.loc)
+	new /obj/item/clothing/suit/storage/apron(src.loc)
 	delete_me = 1
 
 /obj/effect/landmark/costume/pirate/New()

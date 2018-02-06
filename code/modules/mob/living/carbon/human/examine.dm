@@ -1,4 +1,5 @@
 /mob/living/carbon/human/examine(mob/user)
+
 	var/skipgloves = 0
 	var/skipsuitstorage = 0
 	var/skipjumpsuit = 0
@@ -16,6 +17,10 @@
 	var/skiplegs = 0
 	var/skiparms = 0
 	var/skipfeet = 0
+
+	if(alpha <= 50)
+		src.loc.examine(user)
+		return
 
 	var/looks_synth = looksSynthetic()
 
@@ -79,9 +84,25 @@
 
 	var/list/msg = list("<span class='info'>*---------*\nThis is ")
 
+
 	var/datum/gender/T = gender_datums[get_gender()]
+
 	if(skipjumpsuit && skipface) //big suits/masks/helmets make it hard to tell their gender
 		T = gender_datums[PLURAL]
+
+	else if(species && species.ambiguous_genders)
+		var/can_detect_gender = FALSE
+		if(isobserver(user)) // Ghosts are all knowing.
+			can_detect_gender = TRUE
+		if(issilicon(user)) // Borgs are too because science.
+			can_detect_gender = TRUE
+		else if(ishuman(user))
+			var/mob/living/carbon/human/H = user
+			if(H.species && istype(species, H.species))
+				can_detect_gender = TRUE
+
+		if(!can_detect_gender)
+			T = gender_datums[PLURAL] // Species with ambiguous_genders will not show their true gender upon examine if the examiner is not also the same species.
 	else
 		if(icon)
 			msg += "\icon[icon] " //fucking BYOND: this should stop dreamseeker crashing if we -somehow- examine somebody before their icon is generated
@@ -268,7 +289,7 @@
 			msg += "<span class='warning'>[T.He] [T.is] twitching ever so slightly.</span>\n"
 
 	//splints
-	for(var/organ in list(BP_L_LEG, BP_R_LEG, BP_L_ARM, BP_R_ARM))
+	for(var/organ in BP_ALL)
 		var/obj/item/organ/external/o = get_organ(organ)
 		if(o && o.splinted && o.splinted.loc == o)
 			msg += "<span class='warning'>[T.He] [T.has] \a [o.splinted] on [T.his] [o.name]!</span>\n"
@@ -279,6 +300,9 @@
 	msg += attempt_vr(src,"examine_weight",args) //VOREStation Code
 	msg += attempt_vr(src,"examine_nutrition",args) //VOREStation Code
 	msg += attempt_vr(src,"examine_bellies",args) //VOREStation Code
+	msg += attempt_vr(src,"examine_pickup_size",args) //VOREStation Code
+	msg += attempt_vr(src,"examine_step_size",args) //VOREStation Code
+	msg += attempt_vr(src,"nif_examine",args) //VOREStation Code
 
 	if(mSmallsize in mutations)
 		msg += "[T.He] [T.is] small halfling!\n"
@@ -440,7 +464,8 @@
 		msg += "<span class = 'deptradio'>Medical records:</span> <a href='?src=\ref[src];medrecord=`'>\[View\]</a> <a href='?src=\ref[src];medrecordadd=`'>\[Add comment\]</a>\n"
 
 
-	if(print_flavor_text()) msg += "[print_flavor_text()]\n"
+	if(print_flavor_text())
+		msg += "[print_flavor_text()]\n"
 
 	// VOREStation Start
 	if(ooc_notes)
@@ -471,9 +496,9 @@
 		var/mob/living/silicon/robot/R = M
 		switch(hudtype)
 			if("security")
-				return istype(R.module_state_1, /obj/item/borg/sight/hud/sec) || istype(R.module_state_2, /obj/item/borg/sight/hud/sec) || istype(R.module_state_3, /obj/item/borg/sight/hud/sec)
+				return R.hudmode == "Security"
 			if("medical")
-				return istype(R.module_state_1, /obj/item/borg/sight/hud/med) || istype(R.module_state_2, /obj/item/borg/sight/hud/med) || istype(R.module_state_3, /obj/item/borg/sight/hud/med)
+				return R.hudmode == "Medical"
 			else
 				return 0
 	else

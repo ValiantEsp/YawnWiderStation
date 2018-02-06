@@ -1,6 +1,6 @@
 /mob/living/bot/cleanbot
 	name = "Cleanbot"
-	desc = "A little cleaning robot, he looks so excited!"
+	desc = "A little cleaning robot, it looks so excited!"
 	icon_state = "cleanbot0"
 	req_one_access = list(access_robotics, access_janitor)
 	botcard_access = list(access_janitor, access_maint_tunnels)
@@ -12,7 +12,6 @@
 	var/cleaning = 0
 	var/screwloose = 0
 	var/oddbutton = 0
-	var/should_patrol = 0
 	var/blood = 1
 	var/list/target_types = list()
 
@@ -22,7 +21,8 @@
 
 /mob/living/bot/cleanbot/handleIdle()
 	if(!screwloose && !oddbutton && prob(5))
-		custom_emote(2, "makes an excited beeping booping sound!")
+		custom_emote(2, "makes an excited booping sound!")
+		playsound(src.loc, 'sound/machines/synth_yes.ogg', 50, 0)
 
 	if(screwloose && prob(5)) // Make a mess
 		if(istype(loc, /turf/simulated))
@@ -30,11 +30,13 @@
 			T.wet_floor()
 
 	if(oddbutton && prob(5)) // Make a big mess
-		visible_message("Something flies out of [src]. He seems to be acting oddly.")
+		visible_message("Something flies out of [src]. It seems to be acting oddly.")
 		var/obj/effect/decal/cleanable/blood/gibs/gib = new /obj/effect/decal/cleanable/blood/gibs(loc)
-		ignore_list += gib
+		// TODO - I have a feeling weakrefs will not work in ignore_list, verify this ~Leshana
+		var/weakref/g = weakref(gib)
+		ignore_list += g
 		spawn(600)
-			ignore_list -= gib
+			ignore_list -= g
 
 /mob/living/bot/cleanbot/lookForTargets()
 	for(var/obj/effect/decal/cleanable/D in view(world.view, src)) // There was some odd code to make it start with nearest decals, it's unnecessary, this works
@@ -110,7 +112,7 @@
 	dat += "Maintenance panel is [open ? "opened" : "closed"]"
 	if(!locked || issilicon(user))
 		dat += "<BR>Cleans Blood: <A href='?src=\ref[src];operation=blood'>[blood ? "Yes" : "No"]</A><BR>"
-		dat += "<BR>Patrol station: <A href='?src=\ref[src];operation=patrol'>[should_patrol ? "Yes" : "No"]</A><BR>"
+		dat += "<BR>Patrol station: <A href='?src=\ref[src];operation=patrol'>[will_patrol ? "Yes" : "No"]</A><BR>"
 	if(open && !locked)
 		dat += "Odd looking screw twiddled: <A href='?src=\ref[src];operation=screw'>[screwloose ? "Yes" : "No"]</A><BR>"
 		dat += "Weird button pressed: <A href='?src=\ref[src];operation=oddbutton'>[oddbutton ? "Yes" : "No"]</A>"
@@ -134,7 +136,7 @@
 			blood = !blood
 			get_targets()
 		if("patrol")
-			should_patrol = !should_patrol
+			will_patrol = !will_patrol
 			patrol_path = null
 		if("screw")
 			screwloose = !screwloose
@@ -149,6 +151,7 @@
 	if(!screwloose || !oddbutton)
 		if(user)
 			user << "<span class='notice'>The [src] buzzes and beeps.</span>"
+			playsound(src.loc, 'sound/machines/buzzbeep.ogg', 50, 0)
 		oddbutton = 1
 		screwloose = 1
 		return 1

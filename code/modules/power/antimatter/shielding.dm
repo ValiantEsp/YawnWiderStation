@@ -68,7 +68,7 @@ proc/cardinalrange(var/center)
 /obj/machinery/am_shielding/Destroy()
 	if(control_unit)	control_unit.remove_shielding(src)
 	if(processing)	shutdown_core()
-	visible_message("\red The [src.name] melts!")
+	visible_message("<font color='red'>The [src.name] melts!</font>")
 	//Might want to have it leave a mess on the floor but no sprites for now
 	..()
 	return
@@ -151,7 +151,7 @@ proc/cardinalrange(var/center)
 
 /obj/machinery/am_shielding/proc/setup_core()
 	processing = 1
-	machines.Add(src)
+	START_MACHINE_PROCESSING(src)
 	if(!control_unit)	return
 	control_unit.linked_cores.Add(src)
 	control_unit.reported_core_efficiency += efficiency

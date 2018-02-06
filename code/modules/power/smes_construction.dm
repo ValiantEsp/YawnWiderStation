@@ -1,6 +1,6 @@
 // BUILDABLE SMES(Superconducting Magnetic Energy Storage) UNIT
 //
-// Last Change 1.1.2015 by Atlantis - Happy New Year!
+// Last Change 1.26.2018 by Neerti. Also signing this is dumb.
 //
 // This is subtype of SMES that should be normally used. It can be constructed, deconstructed and hacked.
 // It also supports RCON System which allows you to operate it remotely, if properly set.
@@ -55,8 +55,10 @@
 	component_parts += new /obj/item/weapon/smes_coil(src)
 	recalc_coils()
 
-
-
+// Pre-installed and pre-charged SMES hidden from the station, for use in submaps.
+/obj/machinery/power/smes/buildable/point_of_interest/New()
+	..(1)
+	charge = 1e6 // Should be enough for an individual POI.
 
 
 
@@ -85,7 +87,7 @@
 // Proc: process()
 // Parameters: None
 // Description: Uses parent process, but if grounding wire is cut causes sparks to fly around.
-// This also causes the SMES to quickly discharge, and has small chance of damaging output APCs.
+// This also causes the SMES to quickly discharge, and has small chance of breaking lights connected to APCs in the powernet.
 /obj/machinery/power/smes/buildable/process()
 	if(!grounding && (Percentage() > 5))
 		var/datum/effect/effect/system/spark_spread/s = new /datum/effect/effect/system/spark_spread
@@ -93,7 +95,7 @@
 		s.start()
 		charge -= (output_level_max * SMESRATE)
 		if(prob(1)) // Small chance of overload occuring since grounding is disabled.
-			apcs_overload(5,10)
+			apcs_overload(0,10)
 
 	..()
 
@@ -212,7 +214,7 @@
 				h_user.adjustFireLoss(rand(10,25))
 				h_user.Paralyse(5)
 			spawn(0)
-				empulse(src.loc, 2, 4)
+				empulse(src.loc, 1, 2, 3, 4)
 			charge = 0
 
 		if (36 to 60)
@@ -229,7 +231,7 @@
 				h_user.adjustFireLoss(rand(35,75))
 				h_user.Paralyse(12)
 			spawn(0)
-				empulse(src.loc, 8, 16)
+				empulse(src.loc, 6, 8, 12, 16)
 			charge = 0
 			apcs_overload(1, 10)
 			src.ping("Caution. Output regulators malfunction. Uncontrolled discharge detected.")
@@ -335,17 +337,20 @@
 				user << "<span class='warning'>You have to disassemble the terminal first!</span>"
 				return
 
-			playsound(get_turf(src), 'sound/items/Crowbar.ogg', 50, 1)
+			playsound(get_turf(src), W.usesound, 50, 1)
 			user << "<span class='warning'>You begin to disassemble the [src]!</span>"
-			if (do_after(usr, 100 * cur_coils)) // More coils = takes longer to disassemble. It's complex so largest one with 5 coils will take 50s
+			if (do_after(usr, (100 * cur_coils) * W.toolspeed)) // More coils = takes longer to disassemble. It's complex so largest one with 5 coils will take 50s with a normal crowbar
 
 				if (failure_probability && prob(failure_probability))
 					total_system_failure(failure_probability, user)
 					return
 
-				usr << "\red You have disassembled the SMES cell!"
+				usr << "<font color='red'>You have disassembled the SMES cell!</font>"
 				var/obj/structure/frame/M = new /obj/structure/frame(src.loc)
-				M.frame_type = "machine"
+				M.frame_type = new /datum/frame/frame_types/machine
+				M.anchored = 1
+				var/obj/item/weapon/circuitboard/C = new /obj/item/weapon/circuitboard/smes
+				M.circuit = C
 				M.state = 2
 				M.icon_state = "machine_1"
 				for(var/obj/I in component_parts)
@@ -369,7 +374,7 @@
 				W.loc = src
 				recalc_coils()
 			else
-				usr << "\red You can't insert more coils to this SMES unit!"
+				usr << "<font color='red'>You can't insert more coils to this SMES unit!</font>"
 
 // Proc: toggle_input()
 // Parameters: None

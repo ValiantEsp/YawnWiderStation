@@ -9,8 +9,9 @@
 	var/size_multiplier = RESIZE_NORMAL
 	// Body weight stuff.
 	var/weight_vr = 137		// bodyweight of character (pounds, because I'm not doing the math again -Spades)
-	var/weight_gain = 100	// bodyweight of character (pounds, because I'm not doing the math again -Spades)
-	var/weight_loss = 50	// bodyweight of character (pounds, because I'm not doing the math again -Spades)
+	var/weight_gain = 100	// Weight gain rate.
+	var/weight_loss = 50	// Weight loss rate.
+	var/fuzzy = 0			// Preference toggle for sharp/fuzzy icon. Default sharp.
 
 // Definition of the stuff for Sizing
 /datum/category_item/player_setup_item/vore/size
@@ -22,30 +23,35 @@
 	S["weight_vr"]			>> pref.weight_vr
 	S["weight_gain"]		>> pref.weight_gain
 	S["weight_loss"]		>> pref.weight_loss
+	S["fuzzy"]				>> pref.fuzzy
 
 /datum/category_item/player_setup_item/vore/size/save_character(var/savefile/S)
 	S["size_multiplier"]	<< pref.size_multiplier
 	S["weight_vr"]			<< pref.weight_vr
 	S["weight_gain"]		<< pref.weight_gain
 	S["weight_loss"]		<< pref.weight_loss
+	S["fuzzy"]				<< pref.fuzzy
 
 /datum/category_item/player_setup_item/vore/size/sanitize_character()
-	var/valid_scales = list(RESIZE_HUGE, RESIZE_BIG, RESIZE_NORMAL, RESIZE_SMALL, RESIZE_TINY);
-	pref.size_multiplier	= sanitize_inlist(pref.size_multiplier, valid_scales, initial(pref.size_multiplier))
-
-	pref.weight_vr		= sanitize_integer(pref.weight_vr, WEIGHT_MIN, WEIGHT_MAX, initial(pref.weight_vr))
-	pref.weight_gain	= sanitize_integer(pref.weight_gain, WEIGHT_CHANGE_MIN, WEIGHT_CHANGE_MAX, initial(pref.weight_gain))
-	pref.weight_loss	= sanitize_integer(pref.weight_loss, WEIGHT_CHANGE_MIN, WEIGHT_CHANGE_MAX, initial(pref.weight_loss))
+	pref.weight_vr			= sanitize_integer(pref.weight_vr, WEIGHT_MIN, WEIGHT_MAX, initial(pref.weight_vr))
+	pref.weight_gain		= sanitize_integer(pref.weight_gain, WEIGHT_CHANGE_MIN, WEIGHT_CHANGE_MAX, initial(pref.weight_gain))
+	pref.weight_loss		= sanitize_integer(pref.weight_loss, WEIGHT_CHANGE_MIN, WEIGHT_CHANGE_MAX, initial(pref.weight_loss))
+	pref.fuzzy				= sanitize_integer(pref.fuzzy, 0, 1, initial(pref.fuzzy))
+	if(pref.size_multiplier == null || pref.size_multiplier < RESIZE_TINY || pref.size_multiplier > RESIZE_HUGE)
+		pref.size_multiplier = initial(pref.size_multiplier)
 
 /datum/category_item/player_setup_item/vore/size/copy_to_mob(var/mob/living/carbon/human/character)
-	character.size_multiplier	= pref.size_multiplier
+	character.resize(pref.size_multiplier, FALSE)
 	character.weight			= pref.weight_vr
 	character.weight_gain		= pref.weight_gain
 	character.weight_loss		= pref.weight_loss
+	character.fuzzy				= pref.fuzzy
+	character.appearance_flags	-= pref.fuzzy*PIXEL_SCALE
 
 /datum/category_item/player_setup_item/vore/size/content(var/mob/user)
 	. += "<br>"
 	. += "<b>Scale:</b> <a href='?src=\ref[src];size_multiplier=1'>[round(pref.size_multiplier*100)]%</a><br>"
+	. += "<b>Scaled Appearance:</b> <a [pref.fuzzy ? "" : ""] href='?src=\ref[src];toggle_fuzzy=1'><b>[pref.fuzzy ? "Fuzzy" : "Sharp"]</b></a><br>"
 	. += "<br>"
 	. += "<b>Relative Weight:</b>  <a href='?src=\ref[src];weight=1'>[pref.weight_vr]</a><br>"
 	. += "<b>Weight Gain Rate:</b> <a href='?src=\ref[src];weight_gain=1'>[pref.weight_gain]</a><br>"
@@ -53,11 +59,18 @@
 
 /datum/category_item/player_setup_item/vore/size/OnTopic(var/href, var/list/href_list, var/mob/user)
 	if(href_list["size_multiplier"])
-		var/list/size_types = player_sizes_list
-		var/new_size = input(user, "Choose your character's size:", "Character Preference", pref.size_multiplier) as null|anything in size_types
-		if(new_size)
-			pref.size_multiplier = size_types[new_size]
+		var/new_size = input(user, "Choose your character's size, ranging from 25% to 200%", "Set Size") as num|null
+		if (!IsInRange(new_size,25,200))
+			pref.size_multiplier = 1
+			user << "<span class='notice'>Invalid size.</span>"
 			return TOPIC_REFRESH_UPDATE_PREVIEW
+		else if(new_size)
+			pref.size_multiplier = (new_size/100)
+			return TOPIC_REFRESH_UPDATE_PREVIEW
+
+	else if(href_list["toggle_fuzzy"])
+		pref.fuzzy = pref.fuzzy ? 0 : 1;
+		return TOPIC_REFRESH
 
 	else if(href_list["weight"])
 		var/new_weight = input(user, "Choose your character's relative body weight.\n\

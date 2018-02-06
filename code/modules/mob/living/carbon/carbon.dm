@@ -80,7 +80,7 @@
 		M.loc = src.loc
 		for(var/mob/N in viewers(src, null))
 			if(N.client)
-				N.show_message(text("\red <B>[M] bursts out of [src]!</B>"), 2)
+				N.show_message(text("<font color='red'><B>[M] bursts out of [src]!</B></font>"), 2)
 	..()
 
 /mob/living/carbon/attack_hand(mob/M as mob)
@@ -91,13 +91,16 @@
 		if (H.hand)
 			temp = H.organs_by_name["l_hand"]
 		if(temp && !temp.is_usable())
-			H << "\red You can't use your [temp.name]"
+			H << "<font color='red'>You can't use your [temp.name]</font>"
 			return
 
 	return
 
 /mob/living/carbon/electrocute_act(var/shock_damage, var/obj/source, var/siemens_coeff = 1.0, var/def_zone = null, var/stun = 1)
 	if(status_flags & GODMODE)	return 0	//godmode
+	if(def_zone == "l_hand" || def_zone == "r_hand") //Diona (And any other potential plant people) hands don't get shocked.
+		if(species.flags & IS_PLANT)
+			return 0
 	shock_damage *= siemens_coeff
 	if (shock_damage<1)
 		return 0
@@ -106,19 +109,27 @@
 	playsound(loc, "sparks", 50, 1, -1)
 	if (shock_damage > 15)
 		src.visible_message(
-			"\red [src] was shocked by \the [source]!", \
-			"\red <B>You feel a powerful shock course through your body!</B>", \
-			"\red You hear a heavy electrical crack." \
+			"<span class='warning'>[src] was electrocuted[source ? " by the [source]" : ""]!</span>", \
+			"<span class='danger'>You feel a powerful shock course through your body!</span>", \
+			"<span class='warning'>You hear a heavy electrical crack.</span>" \
 		)
-		if(stun)
-			Stun(10)//This should work for now, more is really silly and makes you lay there forever
-			Weaken(10)
 	else
 		src.visible_message(
-			"\red [src] was mildly shocked by \the [source].", \
-			"\red You feel a mild shock course through your body.", \
-			"\red You hear a light zapping." \
+			"<span class='warning'>[src] was shocked[source ? " by the [source]" : ""].</span>", \
+			"<span class='warning'>You feel a shock course through your body.</span>", \
+			"<span class='warning'>You hear a zapping sound.</span>" \
 		)
+
+	if(stun)
+		switch(shock_damage)
+			if(16 to 20)
+				Stun(2)
+			if(21 to 25)
+				Weaken(2)
+			if(26 to 30)
+				Weaken(5)
+			if(31 to INFINITY)
+				Weaken(10) //This should work for now, more is really silly and makes you lay there forever
 
 	var/datum/effect/effect/system/spark_spread/s = new /datum/effect/effect/system/spark_spread
 	s.set_up(5, 1, loc)
@@ -158,8 +169,8 @@
 		if(src == M && istype(src, /mob/living/carbon/human))
 			var/mob/living/carbon/human/H = src
 			src.visible_message( \
-				text("\blue [src] examines [].",src.gender==MALE?"himself":"herself"), \
-				"\blue You check yourself for injuries." \
+				text("<font color='blue'>[src] examines [].</font>",src.gender==MALE?"himself":"herself"), \
+				"<font color='blue'>You check yourself for injuries.</font>" \
 				)
 
 			for(var/obj/item/organ/external/org in H.organs)
@@ -217,15 +228,15 @@
 				M.visible_message("<span class='warning'>[M] tries to pat out [src]'s flames!</span>",
 				"<span class='warning'>You try to pat out [src]'s flames! Hot!</span>")
 				if(do_mob(M, src, 15))
-					src.fire_stacks -= 0.5
+					src.adjust_fire_stacks(-0.5)
 					if (prob(10) && (M.fire_stacks <= 0))
-						M.fire_stacks += 1
+						M.adjust_fire_stacks(1)
 					M.IgniteMob()
 					if (M.on_fire)
 						M.visible_message("<span class='danger'>The fire spreads from [src] to [M]!</span>",
 						"<span class='danger'>The fire spreads to you as well!</span>")
 					else
-						src.fire_stacks -= 0.5 //Less effective than stop, drop, and roll - also accounting for the fact that it takes half as long.
+						src.adjust_fire_stacks(-0.5) //Less effective than stop, drop, and roll - also accounting for the fact that it takes half as long.
 						if (src.fire_stacks <= 0)
 							M.visible_message("<span class='warning'>[M] successfully pats out [src]'s flames.</span>",
 							"<span class='warning'>You successfully pat out [src]'s flames.</span>")
@@ -251,18 +262,29 @@
 				src.sleeping = max(0,src.sleeping-5)
 				if(src.sleeping == 0)
 					src.resting = 0
+				if(H) H.in_stasis = 0 //VOREStation Add - Just In Case
 				M.visible_message("<span class='notice'>[M] shakes [src] trying to wake [t_him] up!</span>", \
 									"<span class='notice'>You shake [src] trying to wake [t_him] up!</span>")
 			else
 				var/mob/living/carbon/human/hugger = M
-				if(istype(hugger))
+				if(M.resting == 1) //Are they resting on the ground?
+					M.visible_message("<span class='notice'>[M] grabs onto [src] and pulls \himself up</span>", \
+							"<span class='notice'>You grip onto [src] and pull yourself up off the ground!</span>") //AHHH gender checks are hard, but this should work
+					if(M.fire_stacks >= (src.fire_stacks + 3)) //Fire checks.
+						src.adjust_fire_stacks(1)
+						M.adjust_fire_stacks(-1)
+					if(M.on_fire)
+						src.IgniteMob()
+					if(do_after(M, 0.5 SECONDS)) //.5 second delay. Makes it a bit stronger than just typing rest.
+						M.resting = 0 //Hoist yourself up up off the ground. No para/stunned/weakened removal.
+				else if(istype(hugger))
 					hugger.species.hug(hugger,src)
 				else
 					M.visible_message("<span class='notice'>[M] hugs [src] to make [t_him] feel better!</span>", \
 								"<span class='notice'>You hug [src] to make [t_him] feel better!</span>")
 				if(M.fire_stacks >= (src.fire_stacks + 3))
-					src.fire_stacks += 1
-					M.fire_stacks -= 1
+					src.adjust_fire_stacks(1)
+					M.adjust_fire_stacks(-1)
 				if(M.on_fire)
 					src.IgniteMob()
 			AdjustParalysis(-3)
@@ -298,7 +320,8 @@
 				H.bloody_hands = 0
 				H.update_inv_gloves(0)
 			H.germ_level = 0
-	update_icons()	//apply the now updated overlays to the mob
+	update_icons_layers(FALSE)	//apply the now updated overlays to the mob
+	update_icons_body()
 
 //Throwing stuff
 /mob/proc/throw_item(atom/target)
@@ -418,7 +441,7 @@
 	set category = "IC"
 
 	if(usr.sleeping)
-		usr << "\red You are already sleeping"
+		usr << "<font color='red'>You are already sleeping</font>"
 		return
 	if(alert(src,"You sure you want to sleep for a while?","Sleep","Yes","No") == "Yes")
 		usr.sleeping = 20 //Short nap

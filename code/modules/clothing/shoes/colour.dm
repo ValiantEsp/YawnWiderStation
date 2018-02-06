@@ -54,6 +54,7 @@
 	name = "white flats"
 	desc = "Shiny white flats."
 	icon_state = "flatswhite"
+	addblends = "flatswhite_a"
 	item_state_slots = list(slot_r_hand_str = "white", slot_l_hand_str = "white")
 
 /obj/item/clothing/shoes/flats/white/color
@@ -122,3 +123,40 @@
 	..()
 	if (istype(H, /obj/item/weapon/handcuffs))
 		attach_cuffs(H, user)
+
+/obj/item/clothing/shoes/hitops
+	name = "white high-tops"
+	desc = "A pair of shoes that extends past the ankle. Based on a centuries-old, timeless design."
+	icon_state = "whitehi"
+
+/obj/item/clothing/shoes/hitops/red
+	name = "red high-tops"
+	icon_state = "redhi"
+
+/obj/item/clothing/shoes/hitops/brown
+	name = "brown high-tops"
+	icon_state = "brownhi"
+
+/obj/item/clothing/shoes/hitops/black
+	name = "black high-tops"
+	icon_state = "blackhi"
+
+/obj/item/clothing/shoes/hitops/orange
+	name = "orange high-tops"
+	icon_state = "orangehi"
+
+/obj/item/clothing/shoes/hitops/blue
+	name = "blue high-tops"
+	icon_state = "bluehi"
+
+/obj/item/clothing/shoes/hitops/green
+	name = "green high-tops"
+	icon_state = "greenhi"
+
+/obj/item/clothing/shoes/hitops/purple
+	name = "purple high-tops"
+	icon_state = "purplehi"
+
+/obj/item/clothing/shoes/hitops/yellow
+	name = "yellow high-tops"
+	icon_state = "yellowhi"

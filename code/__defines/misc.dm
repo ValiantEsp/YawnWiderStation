@@ -69,6 +69,11 @@
 #define COLOR_PALE_RED_GRAY		"#CC9090"
 #define COLOR_PALE_PURPLE_GRAY	"#BDA2BA"
 #define COLOR_PURPLE_GRAY 		"#A2819E"
+#define COLOR_RED_LIGHT         "#FF3333"
+#define COLOR_DEEP_SKY_BLUE     "#00e1ff"
+
+
+
 
 //	Shuttles.
 
@@ -82,6 +87,11 @@
 #define SHUTTLE_IDLE      0
 #define SHUTTLE_WARMUP    1
 #define SHUTTLE_INTRANSIT 2
+
+// Sound defines for shuttles.
+#define HYPERSPACE_WARMUP    0
+#define HYPERSPACE_PROGRESS  1
+#define HYPERSPACE_END       2
 
 // Ferry shuttle processing status.
 #define IDLE_STATE   0
@@ -110,17 +120,6 @@
 
 //Area flags, possibly more to come
 #define RAD_SHIELDED 1 //shielded from radiation, clearly
-// VOREStation Edit Begin
-#define BLUE_SHIELDED 2 // shield from bluespace teleportation (telescience)
-// VOREStation Edit End
-
-// Custom layer definitions, supplementing the default TURF_LAYER, MOB_LAYER, etc.
-#define DOOR_OPEN_LAYER 2.7		//Under all objects if opened. 2.7 due to tables being at 2.6
-#define DOOR_CLOSED_LAYER 3.1	//Above most items if closed
-#define LIGHTING_LAYER 11
-#define HUD_LAYER 20			//Above lighting, but below obfuscation. For in-game HUD effects (whereas SCREEN_LAYER is for abstract/OOC things like inventory slots)
-#define OBFUSCATION_LAYER 21	//Where images covering the view for eyes are put
-#define SCREEN_LAYER 22			//Mob HUD/effects layer
 
 // Convoluted setup so defines can be supplied by Bay12 main server compile script.
 // Should still work fine for people jamming the icons into their repo.
@@ -139,6 +138,19 @@
 
 #define DEFAULT_TABLE_MATERIAL "plastic"
 #define DEFAULT_WALL_MATERIAL "steel"
+
+#define MAT_STEEL			"steel"
+#define MAT_GLASS			"glass"
+#define MAT_SILVER			"silver"
+#define MAT_GOLD			"gold"
+#define MAT_TITANIUM		"titanium"
+#define MAT_PHORON			"phoron"
+#define MAT_DIAMOND			"diamond"
+#define MAT_SNOW			"snow"
+#define MAT_WOOD			"wood"
+#define MAT_LOG				"log"
+#define MAT_SIFWOOD			"alien wood"
+#define MAT_SIFLOG			"alien log"
 
 #define SHARD_SHARD "shard"
 #define SHARD_SHRAPNEL "shrapnel"
@@ -183,3 +195,45 @@
 #define ROLE_SYNTHETIC			"synthetic"
 #define ROLE_UNKNOWN			"unknown"
 #define ROLE_EVERYONE			"everyone"
+
+// Canonical spellings of TSCs, so typos never have to happen again due to human error.
+#define TSC_NT		"NanoTrasen"
+#define TSC_HEPH	"Hephaestus" // Because everyone misspells it
+#define TSC_VM		"Vey Med"
+#define TSC_ZH		"Zeng-Hu"
+#define TSC_WT		"Ward-Takahashi"
+#define TSC_BC		"Bishop Cybernetics"
+#define TSC_MORPH	"Morpheus"
+#define TSC_XION	"Xion" // Not really needed but consistancy I guess.
+#define TSC_GIL 	"Gilthari"
+
+#define MIDNIGHT_ROLLOVER		864000	//number of deciseconds in a day
+
+#define WORLD_ICON_SIZE 32 //Needed for the R-UST port
+#define PIXEL_MULTIPLIER WORLD_ICON_SIZE/32 //Needed for the R-UST port
+
+// Maploader bounds indices
+#define MAP_MINX 1
+#define MAP_MINY 2
+#define MAP_MINZ 3
+#define MAP_MAXX 4
+#define MAP_MAXY 5
+#define MAP_MAXZ 6
+
+// /atom/proc/use_check flags
+#define USE_ALLOW_NONLIVING 1
+#define USE_ALLOW_NON_ADV_TOOL_USR 2
+#define USE_ALLOW_DEAD 4
+#define USE_ALLOW_INCAPACITATED 8
+#define USE_ALLOW_NON_ADJACENT 16
+#define USE_FORCE_SRC_IN_USER 32
+#define USE_DISALLOW_SILICONS 64
+
+#define USE_SUCCESS 0
+#define USE_FAIL_NON_ADJACENT 1
+#define USE_FAIL_NONLIVING 2
+#define USE_FAIL_NON_ADV_TOOL_USR 3
+#define USE_FAIL_DEAD 4
+#define USE_FAIL_INCAPACITATED 5
+#define USE_FAIL_NOT_IN_USER 6
+#define USE_FAIL_IS_SILICON 7

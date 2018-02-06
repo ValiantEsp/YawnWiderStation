@@ -3,6 +3,10 @@ var/global/defer_powernet_rebuild = 0      // True if net rebuild will be called
 #define CELLRATE 0.002 // Multiplier for watts per tick <> cell storage (e.g., 0.02 means if there is a load of 1000 watts, 20 units will be taken from a cell per second)
                        // It's a conversion constant. power_used*CELLRATE = charge_provided, or charge_used/CELLRATE = power_provided
 
+#define KILOWATTS *1000
+#define MEGAWATTS *1000000
+#define GIGAWATTS *1000000000
+
 // Doors!
 #define DOOR_CRUSH_DAMAGE 20
 #define ALIEN_SELECT_AFK_BUFFER  1    // How many minutes that a person can be AFK before not being allowed to be an alien.
@@ -49,12 +53,12 @@ var/global/defer_powernet_rebuild = 0      // True if net rebuild will be called
 #define NETWORK_PRISON "Prison"
 #define NETWORK_SECURITY "Security"
 #define NETWORK_INTERROGATION "Interrogation"
-#define NETWORK_TELECOM "Tcomsat"
+#define NETWORK_TELECOM "Tcomms"
 #define NETWORK_THUNDER "Thunderdome"
 #define NETWORK_COMMUNICATORS "Communicators"
 
 // Those networks can only be accessed by pre-existing terminals. AIs and new terminals can't use them.
-var/list/restricted_camera_networks = list(NETWORK_ERT,NETWORK_MERCENARY,"Secret")
+var/list/restricted_camera_networks = list(NETWORK_ERT,NETWORK_MERCENARY,"Secret", NETWORK_COMMUNICATORS)
 
 
 //singularity defines
@@ -101,3 +105,37 @@ var/list/restricted_camera_networks = list(NETWORK_ERT,NETWORK_MERCENARY,"Secret
 #define ATMOS_DEFAULT_VOLUME_FILTER 200 // L.
 #define ATMOS_DEFAULT_VOLUME_MIXER  200 // L.
 #define ATMOS_DEFAULT_VOLUME_PIPE   70  // L.
+
+// Fancy-pants START/STOP_PROCESSING() macros that lets us custom define what the list is.
+#define START_PROCESSING_IN_LIST(DATUM, LIST) \
+if (DATUM.is_processing) {\
+	if(DATUM.is_processing != #LIST)\
+	{\
+		crash_with("Failed to start processing. [log_info_line(DATUM)] is already being processed by [DATUM.is_processing] but queue attempt occured on [#LIST]."); \
+	}\
+} else {\
+	DATUM.is_processing = #LIST;\
+	LIST += DATUM;\
+}
+
+#define STOP_PROCESSING_IN_LIST(DATUM, LIST) \
+if(DATUM.is_processing) {\
+	if(LIST.Remove(DATUM)) {\
+		DATUM.is_processing = null;\
+	} else {\
+		crash_with("Failed to stop processing. [log_info_line(DATUM)] is being processed by [is_processing] and not found in SSmachines.[#LIST]"); \
+	}\
+}
+
+// Note - I would prefer these be defined machines.dm, but some are used prior in file order. ~Leshana
+#define START_MACHINE_PROCESSING(Datum) START_PROCESSING_IN_LIST(Datum, global.machines)
+#define STOP_MACHINE_PROCESSING(Datum) STOP_PROCESSING_IN_LIST(Datum, global.machines)
+
+#define START_PROCESSING_PIPENET(Datum) START_PROCESSING_IN_LIST(Datum, global.pipe_networks)
+#define STOP_PROCESSING_PIPENET(Datum) STOP_PROCESSING_IN_LIST(Datum, global.pipe_networks)
+
+#define START_PROCESSING_POWERNET(Datum) START_PROCESSING_IN_LIST(Datum, global.powernets)
+#define STOP_PROCESSING_POWERNET(Datum) STOP_PROCESSING_IN_LIST(Datum, global.powernets)
+
+#define START_PROCESSING_POWER_OBJECT(Datum) START_PROCESSING_IN_LIST(Datum, global.processing_power_items)
+#define STOP_PROCESSING_POWER_OBJECT(Datum) STOP_PROCESSING_IN_LIST(Datum, global.processing_power_items)

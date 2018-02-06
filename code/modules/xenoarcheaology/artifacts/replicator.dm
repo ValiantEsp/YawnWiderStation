@@ -26,7 +26,7 @@
 	/obj/item/roller,
 	/obj/structure/closet/crate,
 	/obj/structure/closet/acloset,
-	/mob/living/simple_animal/hostile/vore/mimic,
+	/mob/living/simple_animal/hostile/mimic/crate,
 	/mob/living/simple_animal/hostile/viscerator,
 	/mob/living/simple_animal/hostile/hivebot,
 	/obj/item/device/analyzer,
@@ -49,7 +49,7 @@
 	/obj/item/weapon/clipboard,
 	/obj/item/weapon/cell,
 	/obj/item/weapon/surgical/circular_saw,
-	/obj/item/weapon/material/hatchet,
+	/obj/item/weapon/material/knife/machete/hatchet,
 	/obj/item/weapon/handcuffs,
 	/obj/item/weapon/surgical/hemostat,
 	/obj/item/weapon/material/knife,
@@ -63,7 +63,7 @@
 	/obj/item/weapon/wrench,
 	/obj/item/weapon/screwdriver,
 	/obj/item/weapon/grenade/chem_grenade/cleaner,
-	/obj/item/weapon/grenade/chem_grenade/metalfoam) // Vorestation edit for vore mimic.
+	/obj/item/weapon/grenade/chem_grenade/metalfoam)
 
 	var/quantity = rand(5, 15)
 	for(var/i=0, i<quantity, i++)
@@ -74,13 +74,13 @@
 		viables.Remove(type)
 		construction[button_desc] = type
 
-	fail_message = "\blue \icon[src] a [pick("loud","soft","sinister","eery","triumphant","depressing","cheerful","angry")] \
+	fail_message = "<font color='blue'>\icon[src] a [pick("loud","soft","sinister","eery","triumphant","depressing","cheerful","angry")] \
 		[pick("horn","beep","bing","bleep","blat","honk","hrumph","ding")] sounds and a \
 		[pick("yellow","purple","green","blue","red","orange","white")] \
 		[pick("light","dial","meter","window","protrusion","knob","antenna","swirly thing")] \
 		[pick("swirls","flashes","whirrs","goes schwing","blinks","flickers","strobes","lights up")] on the \
 		[pick("front","side","top","bottom","rear","inside")] of [src]. A [pick("slot","funnel","chute","tube")] opens up in the \
-		[pick("front","side","top","bottom","rear","inside")]."
+		[pick("front","side","top","bottom","rear","inside")].</font>"
 
 /obj/machinery/replicator/process()
 	if(spawning_types.len && powered())

@@ -29,8 +29,8 @@
 				flash_strength *= H.species.flash_mod
 
 				if(flash_strength > 0)
-					H.confused = max(H.confused, flash_strength + 5)
-					H.eye_blind = max(H.eye_blind, flash_strength)
+					H.Confuse(flash_strength + 5)
+					H.Blind(flash_strength)
 					H.eye_blurry = max(H.eye_blurry, flash_strength + 5)
 					H.adjustHalLoss(22 * (flash_strength / 5)) // Five flashes to stun.  Bit weaker than melee flashes due to being ranged.
 
@@ -38,7 +38,7 @@
 	playsound(src, 'sound/effects/snap.ogg', 50, 1)
 	src.visible_message("<span class='warning'>\The [src] explodes in a bright flash!</span>")
 
-	var/datum/effect/effect/system/spark_spread/sparks = PoolOrNew(/datum/effect/effect/system/spark_spread)
+	var/datum/effect/effect/system/spark_spread/sparks = new /datum/effect/effect/system/spark_spread()
 	sparks.set_up(2, 1, T)
 	sparks.start()
 
@@ -111,13 +111,29 @@
 	name = "largebolt"
 	damage = 20
 
+/obj/item/projectile/energy/acid //Slightly up-gunned (Read: The thing does agony and checks bio resist) variant of the simple alien mob's projectile, for queens and sentinels.
+	name = "acidic spit"
+	icon_state = "neurotoxin"
+	damage = 30
+	damage_type = BURN
+	agony = 10
+	check_armour = "bio"
 
 /obj/item/projectile/energy/neurotoxin
-	name = "neuro"
+	name = "neurotoxic spit"
 	icon_state = "neurotoxin"
 	damage = 5
 	damage_type = TOX
-	weaken = 5
+	agony = 80
+	check_armour = "bio"
+
+/obj/item/projectile/energy/neurotoxin/toxic //New alien mob projectile to match the player-variant's projectiles.
+	name = "neurotoxic spit"
+	icon_state = "neurotoxin"
+	damage = 20
+	damage_type = TOX
+	agony = 20
+	check_armour = "bio"
 
 /obj/item/projectile/energy/phoron
 	name = "phoron bolt"
@@ -146,9 +162,9 @@
 	var/ear_safety = 0
 	ear_safety = M.get_ear_protection()
 	if(ear_safety == 1)
-		M.confused += 150
+		M.Confuse(150)
 	else if (ear_safety > 1)
-		M.confused += 30
+		M.Confuse(30)
 	else if (!ear_safety)
 		M.Stun(10)
 		M.Weaken(2)
@@ -162,8 +178,21 @@
 	else
 		if (M.ear_damage >= 5)
 			to_chat(M, "<span class='danger'>Your ears start to ring!</span>")
-	M.update_icons()
+	M.update_icons() //Just to apply matrix transform for laying asap
 
 /obj/item/projectile/energy/plasmastun/on_hit(var/atom/target)
 	bang(target)
 	. = ..()
+
+/obj/item/projectile/energy/blue_pellet
+	name = "suppressive pellet"
+	icon_state = "blue_pellet"
+	damage = 5
+	armor_penetration = 75
+	pass_flags = PASSTABLE | PASSGLASS | PASSGRILLE
+	damage_type = BURN
+	check_armour = "energy"
+	light_color = "#0000FF"
+
+	embed_chance = 0
+	muzzle_type = /obj/effect/projectile/pulse/muzzle

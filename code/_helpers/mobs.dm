@@ -5,7 +5,7 @@
 	return occupant
 
 /obj/vehicle/train/get_mob()
-	return buckled_mob
+	return buckled_mobs
 
 /mob/get_mob()
 	return src
@@ -18,6 +18,15 @@
 /proc/mobs_in_view(var/range, var/source)
 	var/list/mobs = list()
 	for(var/atom/movable/AM in view(range, source))
+		var/M = AM.get_mob()
+		if(M)
+			mobs += M
+
+	return mobs
+
+/proc/mobs_in_xray_view(var/range, var/source)
+	var/list/mobs = list()
+	for(var/atom/movable/AM in orange(range, source))
 		var/M = AM.get_mob()
 		if(M)
 			mobs += M
@@ -63,12 +72,12 @@ proc/random_facial_hair_style(gender, species = "Human")
 
 		return f_style
 
-proc/sanitize_name(name, species = "Human")
+proc/sanitize_name(name, species = "Human", robot = 0)
 	var/datum/species/current_species
 	if(species)
 		current_species = all_species[species]
 
-	return current_species ? current_species.sanitize_name(name) : sanitizeName(name)
+	return current_species ? current_species.sanitize_name(name, robot) : sanitizeName(name, MAX_NAME_LEN, robot)
 
 proc/random_name(gender, species = "Human")
 
@@ -120,7 +129,7 @@ proc/age2agedescription(age)
 		else				return "unknown"
 
 /proc/RoundHealth(health)
-	var/list/icon_states = icon_states('icons/mob/hud_med.dmi')
+	var/list/icon_states = icon_states(ingame_hud_med)
 	for(var/icon_state in icon_states)
 		if(health >= text2num(icon_state))
 			return icon_state
@@ -173,7 +182,7 @@ Proc for attack log creation, because really why not
 	var/starttime = world.time
 	. = 1
 	while (world.time < endtime)
-		sleep(1)
+		stoplag(1)
 		if (progress)
 			progbar.update(world.time - starttime)
 		if(!user || !target)
@@ -220,7 +229,7 @@ Proc for attack log creation, because really why not
 	var/starttime = world.time
 	. = 1
 	while (world.time < endtime)
-		sleep(1)
+		stoplag(1)
 		if (progress)
 			progbar.update(world.time - starttime)
 
@@ -228,7 +237,7 @@ Proc for attack log creation, because really why not
 			. = 0
 			break
 
-		if(target_loc && (!target || target_loc != target.loc))
+		if(target_loc && (QDELETED(target) || target_loc != target.loc))
 			. = 0
 			break
 
@@ -239,3 +248,19 @@ Proc for attack log creation, because really why not
 
 	if (progbar)
 		qdel(progbar)
+
+/atom/proc/living_mobs(var/range = world.view)
+	var/list/viewers = oviewers(src,range)
+	var/list/living = list()
+	for(var/mob/living/L in viewers)
+		living += L
+
+	return living
+
+/atom/proc/human_mobs(var/range = world.view)
+	var/list/viewers = oviewers(src,range)
+	var/list/humans = list()
+	for(var/mob/living/carbon/human/H in viewers)
+		humans += H
+
+	return humans

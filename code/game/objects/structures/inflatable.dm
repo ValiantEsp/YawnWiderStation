@@ -38,7 +38,7 @@
 
 /obj/structure/inflatable/Destroy()
 	update_nearby_tiles()
-	..()
+	return ..()
 
 /obj/structure/inflatable/CanPass(atom/movable/mover, turf/target, height=0, air_group=0)
 	return 0
@@ -65,6 +65,9 @@
 			if(prob(50))
 				deflate(1)
 				return
+
+/obj/structure/inflatable/blob_act()
+	deflate(1)
 
 /obj/structure/inflatable/attack_hand(mob/user as mob)
 		add_fingerprint(user)
@@ -256,7 +259,6 @@
 	name = "inflatable barrier box"
 	desc = "Contains inflatable walls and doors."
 	icon_state = "inf_box"
-	item_state = "syringe_kit"
 	w_class = ITEMSIZE_NORMAL
 	max_storage_space = ITEMSIZE_COST_NORMAL * 7
 	can_hold = list(/obj/item/inflatable)

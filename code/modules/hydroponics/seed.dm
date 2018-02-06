@@ -114,8 +114,11 @@
 
 	if(!target_limb) target_limb = pick(BP_ALL)
 	var/blocked = target.run_armor_check(target_limb, "melee")
+	var/soaked = target.get_armor_soak(target_limb, "melee")
+
 	if(blocked >= 100)
 		return
+
 	var/obj/item/organ/external/affecting = target.get_organ(target_limb)
 	var/damage = 0
 	var/has_edge = 0
@@ -125,7 +128,7 @@
 
 		if(affecting)
 			to_chat(target, "<span class='danger'>\The [fruit]'s thorns pierce your [affecting.name] greedily!</span>")
-			target.apply_damage(damage, BRUTE, target_limb, blocked, "Thorns", sharp=1, edge=has_edge)
+			target.apply_damage(damage, BRUTE, target_limb, blocked, soaked, "Thorns", sharp=1, edge=has_edge)
 		else
 			to_chat(target, "<span class='danger'>\The [fruit]'s thorns pierce your flesh greedily!</span>")
 			target.adjustBruteLoss(damage)
@@ -155,10 +158,13 @@
 
 		if(!body_coverage)
 			return
-		target << "<span class='danger'>You are stung by \the [fruit]!</span>"
-		for(var/rid in chems)
+		if (fruit)
 			var/injecting = min(5,max(1,get_trait(TRAIT_POTENCY)/5))
-			target.reagents.add_reagent(rid,injecting)
+			to_chat(target, "<span class='danger'>You are stung by \the [fruit]!</span>")
+			for(var/chem in chems)
+				target.reagents.add_reagent(chem,injecting)
+				if (fruit.reagents)
+					fruit.reagents.remove_reagent(chem, injecting)
 
 //Splatter a turf.
 /datum/seed/proc/splatter(var/turf/T,var/obj/item/thrown)
@@ -293,11 +299,7 @@
 
 	// Handle light requirements.
 	if(!light_supplied)
-		var/atom/movable/lighting_overlay/L = locate(/atom/movable/lighting_overlay) in current_turf
-		if(L)
-			light_supplied = max(0,min(10,L.lum_r + L.lum_g + L.lum_b)-5)
-		else
-			light_supplied =  5
+		light_supplied = current_turf.get_lumcount() * 5
 	if(light_supplied)
 		if(abs(light_supplied - get_trait(TRAIT_IDEAL_LIGHT)) > get_trait(TRAIT_LIGHT_TOLERANCE))
 			health_change += rand(1,3) * HYDRO_SPEED_MULTIPLIER

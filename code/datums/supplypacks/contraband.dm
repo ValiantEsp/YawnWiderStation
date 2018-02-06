@@ -14,7 +14,7 @@
 			)
 
 	name = "Contraband crate"
-	cost = 25
+	cost = 500
 	containertype = /obj/structure/closet/crate
 	containername = "Unlabeled crate"
 	contraband = 1
@@ -27,18 +27,72 @@
 			/obj/item/weapon/grenade/smokebomb = 4,
 			/obj/item/weapon/grenade/chem_grenade/incendiary
 			)
-	cost = 25
+	cost = 500
 	containertype = /obj/structure/closet/crate
 	containername = "Special Ops crate"
 	contraband = 1
 
-/datum/supply_packs/security/bolt_rifles_mosin
+/datum/supply_packs/supply/moghes
+	name = "Moghes imports"
+	contains = list(
+			/obj/item/weapon/reagent_containers/food/drinks/bottle/redeemersbrew = 2,
+			/obj/item/weapon/reagent_containers/food/snacks/unajerky = 4
+			)
+	cost = 25
+	containertype = /obj/structure/closet/crate
+	containername = "Moghes imports crate"
+	contraband = 1
+
+/datum/supply_packs/security/bolt_rifles_militia
  	name = "Surplus militia rifles"
  	contains = list(
- 			/obj/item/weapon/gun/projectile/shotgun/pump/rifle/mosin = 3,
- 			/obj/item/ammo_magazine/clip/a762 = 6
+ 			/obj/item/weapon/gun/projectile/shotgun/pump/rifle = 3,
+ 			/obj/item/ammo_magazine/clip/c762 = 6
  			)
- 	cost = 50
+ 	cost = 1000
  	contraband = 1
  	containertype = /obj/structure/closet/crate/secure/weapon
  	containername = "Weapons crate"
+
+/datum/supply_packs/randomised/misc/telecrate
+	name = "Confiscated equipment"
+	num_contained = 1
+	contains = list(
+			list( //the operator,
+					/obj/item/clothing/suit/storage/vest/heavy/merc,
+					/obj/item/clothing/glasses/night,
+					/obj/item/weapon/storage/box/anti_photons
+					),
+			list( //the indian,
+					/obj/item/weapon/gun/projectile/dartgun,
+					/obj/item/ammo_magazine/chemdart
+					),
+
+			list( //the doc,
+					/obj/item/weapon/storage/firstaid/combat,
+					/obj/item/weapon/reagent_containers/hypospray
+					),
+
+			list( //the sapper,
+					/obj/item/weapon/melee/energy/sword/ionic_rapier,
+					/obj/item/weapon/storage/box/syndie_kit/space, //doesn't matter what species you are,
+					/obj/item/device/multitool/ai_detector,
+					/obj/item/weapon/storage/toolbox/syndicate/powertools
+					),
+			list( //the infiltrator,
+					/obj/item/device/chameleon,
+					/obj/item/weapon/storage/box/syndie_kit/chameleon,
+					/obj/item/device/encryptionkey/syndicate,
+					/obj/item/weapon/card/id/syndicate,
+					/obj/item/clothing/mask/gas/voice
+					),
+			list( //the professional,
+					/obj/item/weapon/gun/energy/ionrifle/pistol,
+					/obj/item/weapon/material/knife/tacknife/combatknife,
+					/obj/item/clothing/mask/balaclava
+					)
+			)
+	cost = 400 //price,
+	contraband = 1
+	containertype = /obj/structure/largecrate
+	containername = "Suspicious crate"

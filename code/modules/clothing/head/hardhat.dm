@@ -8,9 +8,12 @@
 	flags_inv = 0
 	siemens_coefficient = 0.9
 	action_button_name = "Toggle Head-light"
+	w_class = ITEMSIZE_NORMAL
+	ear_protection = 1
 
 /obj/item/clothing/head/hardhat/orange
 	icon_state = "hardhat0_orange"
+	name = "orange hard hat"
 
 /obj/item/clothing/head/hardhat/red
 	icon_state = "hardhat0_red"
@@ -21,9 +24,11 @@
 
 /obj/item/clothing/head/hardhat/white
 	icon_state = "hardhat0_white"
+	name = "sleek hard hat"
 	item_flags = STOPPRESSUREDAMAGE
 	heat_protection = HEAD
 	max_heat_protection_temperature = FIRE_HELMET_MAX_HEAT_PROTECTION_TEMPERATURE
 
 /obj/item/clothing/head/hardhat/dblue
+	name = "blue hard hat"
 	icon_state = "hardhat0_dblue"

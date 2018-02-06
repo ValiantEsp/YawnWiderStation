@@ -18,14 +18,18 @@
 	path = /obj/item/clothing/glasses/regular/hipster
 
 /datum/gear/eyes/glasses/monocle
-	display_name = "Monocle"
+	display_name = "monocle"
 	path = /obj/item/clothing/glasses/monocle
 
-/datum/gear/eyes/scanning_goggles
+/datum/gear/eyes/goggles
+	display_name = "plain goggles"
+	path = /obj/item/clothing/glasses/goggles
+
+/datum/gear/eyes/goggles/scanning
 	display_name = "scanning goggles"
 	path = /obj/item/clothing/glasses/regular/scanners
 
-/datum/gear/eyes/sciencegoggles
+/datum/gear/eyes/goggles/science
 	display_name = "Science Goggles"
 	path = /obj/item/clothing/glasses/science
 
@@ -53,7 +57,7 @@
 /datum/gear/eyes/medical
 	display_name = "Medical HUD (Medical)"
 	path = /obj/item/clothing/glasses/hud/health
-	allowed_roles = list("Medical Doctor","Chief Medical Officer","Chemist","Paramedic","Geneticist")
+	allowed_roles = list("Medical Doctor","Chief Medical Officer","Chemist","Paramedic","Geneticist", "Psychiatrist")
 
 /datum/gear/eyes/medical/prescriptionmed
 	display_name = "Medical HUD, prescription (Medical)"
@@ -61,30 +65,37 @@
 
 /datum/gear/eyes/medical/aviator
 	display_name = "Medical HUD Aviators (Medical)"
-	path = /obj/item/clothing/glasses/sunglasses/medhud/aviator
+	path = /obj/item/clothing/glasses/hud/health/aviator
 
 /datum/gear/eyes/medical/aviator/prescription
 	display_name = "Medical HUD Aviators, prescription (Medical)"
-	path = /obj/item/clothing/glasses/sunglasses/medhud/aviator/prescription
+	path = /obj/item/clothing/glasses/hud/health/aviator/prescription
 
 /datum/gear/eyes/meson
-	display_name = "Optical Meson Scanners (Engineering)"
+	display_name = "Optical Meson Scanners (Engineering, Science)"
 	path = /obj/item/clothing/glasses/meson
-	allowed_roles = list("Station Engineer","Chief Engineer","Atmospheric Technician")
+	allowed_roles = list("Station Engineer","Chief Engineer","Atmospheric Technician", "Scientist", "Research Director")
 
 /datum/gear/eyes/meson/prescription
-	display_name = "Optical Meson Scanners, prescription (Engineering)"
+	display_name = "Optical Meson Scanners, prescription (Engineering, Science)"
 	path = /obj/item/clothing/glasses/meson/prescription
 
+/datum/gear/eyes/material
+	display_name = "Optical Material Scanners (Mining)"
+	path = /obj/item/clothing/glasses/material
+	allowed_roles = list("Shaft Miner")
+
+/datum/gear/eyes/material/prescription
+	display_name = "Prescription Optical Material Scanners (Mining)"
+	path = /obj/item/clothing/glasses/material/prescription
+
 /datum/gear/eyes/meson/aviator
-	display_name = "Optical Meson Aviators, (Engineering)"
+	display_name = "Optical Meson Aviators, (Engineering, Science)"
 	path = /obj/item/clothing/glasses/meson/aviator
 
 /datum/gear/eyes/meson/aviator/prescription
-	display_name = "Optical Meson Aviators, prescription (Engineering)"
+	display_name = "Optical Meson Aviators, prescription (Engineering, Science)"
 	path = /obj/item/clothing/glasses/meson/aviator/prescription
-
-/datum/gear/eyes/meson/aviator/prescription
 
 /datum/gear/eyes/glasses/fakesun
 	display_name = "Sunglasses, stylish"
@@ -103,7 +114,10 @@
 	display_name = "Sunglasses, fat (Security/Command)"
 	path = /obj/item/clothing/glasses/sunglasses/big
 
+/datum/gear/eyes/sun/aviators
+	display_name = "Sunglasses, aviators (Security/Command)"
+	path = /obj/item/clothing/glasses/sunglasses/aviator
+
 /datum/gear/eyes/sun/prescriptionsun
 	display_name = "sunglasses, presciption (Security/Command)"
 	path = /obj/item/clothing/glasses/sunglasses/prescription
-	cost = 2

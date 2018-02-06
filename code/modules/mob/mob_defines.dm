@@ -34,6 +34,10 @@
 	var/obj/screen/wizard/energy/wiz_energy_display = null
 	var/obj/screen/wizard/instability/wiz_instability_display = null
 
+	var/datum/plane_holder/plane_holder = null
+	var/list/vis_enabled = null		// List of vision planes that should be graphically visible (list of their VIS_ indexes).
+	var/list/planes_visible = null	// List of atom planes that are logically visible/interactable (list of actual plane numbers).
+
 	//spells hud icons - this interacts with add_spell and remove_spell
 	var/list/obj/screen/movable/spell_master/spell_masters = null
 	var/obj/screen/movable/ability_master/ability_master = null
@@ -67,11 +71,13 @@
 	var/stuttering = null	//Carbon
 	var/slurring = null		//Carbon
 	var/real_name = null
+	var/nickname = null
 	var/flavor_text = ""
 	var/med_record = ""
 	var/sec_record = ""
 	var/gen_record = ""
 	var/exploit_record = ""
+	var/exploit_addons = list()		//Assorted things that show up at the end of the exploit_record list
 	var/blinded = null
 	var/bhunger = 0			//Carbon
 	var/ajourn = 0
@@ -102,8 +108,6 @@
 	var/cpr_time = 1.0//Carbon
 
 	var/bodytemperature = 310.055	//98.7 F
-	var/old_x = 0
-	var/old_y = 0
 	var/drowsyness = 0.0//Carbon
 	var/charges = 0.0
 	var/nutrition = 400.0//Carbon
@@ -153,7 +157,8 @@
 	var/voice_name = "unidentifiable voice"
 
 	var/faction = "neutral" //Used for checking whether hostile simple animals will attack you, possibly more stuff later
-	var/captured = 0 //Functionally, should give the same effect as being buckled into a chair when true. Only used by energy nets, TODO replace with buckling
+
+	var/can_be_antagged = FALSE // To prevent pAIs/mice/etc from getting antag in autotraitor and future auto- modes. Uses inheritance instead of a bunch of typechecks.
 
 //Generic list for proc holders. Only way I can see to enable certain verbs/procs. Should be modified if needed.
 	var/proc_holder_list[] = list()//Right now unused.
@@ -209,3 +214,11 @@
 	var/list/active_genes=list()
 	var/mob_size = MOB_MEDIUM
 	var/disconnect_time = null		//Time of client loss, set by Logout(), for timekeeping
+	var/forbid_seeing_deadchat = FALSE // Used for lings to not see deadchat, and to have ghosting behave as if they were not really dead.
+
+	var/seedarkness = 1	//Determines mob's ability to see shadows. 1 = Normal vision, 0 = darkvision
+
+	// Falling things
+	var/hovering = FALSE	// Is the mob floating or flying in some way? If so, don't fall normally.	//Not implemented yet, idea is to let them ignore terrain slowdown and falling down floors
+	var/softfall = FALSE	// Is the mob able to lessen their impact upon falling?
+	var/parachuting = FALSE	// Is the mob able to jump out of planes and survive? Don't check this directly outside of CanParachute().

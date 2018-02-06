@@ -1,4 +1,10 @@
 // fun if you want to typecast humans/monkeys/etc without writing long path-filled lines.
+/proc/isxenomorph(A)
+	if(istype(A, /mob/living/carbon/human))
+		var/mob/living/carbon/human/H = A
+		return istype(H.species, /datum/species/xenos)
+	return 0
+
 /proc/issmall(A)
 	if(A && istype(A, /mob/living))
 		var/mob/living/L = A
@@ -349,19 +355,6 @@ proc/is_blind(A)
 			return 1
 	return 0
 
-/proc/broadcast_security_hud_message(var/message, var/broadcast_source)
-	broadcast_hud_message(message, broadcast_source, sec_hud_users, /obj/item/clothing/glasses/hud/security)
-
-/proc/broadcast_medical_hud_message(var/message, var/broadcast_source)
-	broadcast_hud_message(message, broadcast_source, med_hud_users, /obj/item/clothing/glasses/hud/health)
-
-/proc/broadcast_hud_message(var/message, var/broadcast_source, var/list/targets, var/icon)
-	var/turf/sourceturf = get_turf(broadcast_source)
-	for(var/mob/M in targets)
-		var/turf/targetturf = get_turf(M)
-		if((targetturf.z == sourceturf.z))
-			M.show_message("<span class='info'>\icon[icon] [message]</span>", 1)
-
 /proc/mobs_in_area(var/area/A)
 	var/list/mobs = new
 	for(var/mob/living/M in mob_list)
@@ -390,10 +383,16 @@ proc/is_blind(A)
 			else
 				name = realname
 
+	if(subject && subject.forbid_seeing_deadchat && !subject.client.holder)
+		return // Can't talk in deadchat if you can't see it.
+
 	for(var/mob/M in player_list)
-		if(M.client && ((!istype(M, /mob/new_player) && M.stat == DEAD) || (M.client.holder && !is_mentor(M.client))) && M.is_preference_enabled(/datum/client_preference/show_dsay))
+		if(M.client && ((!istype(M, /mob/new_player) && M.stat == DEAD) || (M.client.holder && M.client.holder.rights)) && M.is_preference_enabled(/datum/client_preference/show_dsay))
 			var/follow
 			var/lname
+			if(M.forbid_seeing_deadchat && !M.client.holder)
+				continue
+
 			if(subject)
 				if(M.is_key_ignored(subject.client.key)) // If we're ignored, do nothing.
 					continue
@@ -530,13 +529,40 @@ proc/is_blind(A)
 
 	return threatcount
 
-/mob/living/simple_animal/hostile/assess_perp(var/obj/access_obj, var/check_access, var/auth_weapons, var/check_records, var/check_arrest)
+/mob/living/simple_animal/assess_perp(var/obj/access_obj, var/check_access, var/auth_weapons, var/check_records, var/check_arrest)
 	var/threatcount = ..()
 	if(. == SAFE_PERP)
 		return SAFE_PERP
 
-	if(!istype(src, /mob/living/simple_animal/hostile/retaliate/goat))
+	if(!istype(src, /mob/living/simple_animal/retaliate/goat))
+		if(hostile)
+			if(faction != "neutral") // Otherwise Runtime gets killed.
+				threatcount += 4
+	return threatcount
+
+// Beepsky will (try to) only beat 'bad' slimes.
+/mob/living/simple_animal/slime/assess_perp(var/obj/access_obj, var/check_access, var/auth_weapons, var/check_records, var/check_arrest)
+	var/threatcount = 0
+
+	if(stat == DEAD)
+		return SAFE_PERP
+
+	if(is_justified_to_discipline())
 		threatcount += 4
+/*
+	if(discipline && !rabid)
+		if(!target_mob || istype(target_mob, /mob/living/carbon/human/monkey))
+			return SAFE_PERP
+
+	if(target_mob)
+		threatcount += 4
+
+	if(victim)
+		threatcount += 4
+*/
+	if(rabid)
+		threatcount = 10
+
 	return threatcount
 
 #undef SAFE_PERP
@@ -577,3 +603,22 @@ var/list/global/organ_rel_size = list(
 
 /mob/proc/flash_eyes(intensity = FLASH_PROTECTION_MODERATE, override_blindness_check = FALSE, affect_silicon = FALSE, visual = FALSE, type = /obj/screen/fullscreen/flash)
 	return
+
+//Recalculates what planes this mob can see using their plane_holder, for humans this is checking slots, for others, could be whatever.
+/mob/proc/recalculate_vis()
+	return
+
+//General HUD updates done regularly (health puppet things, etc)
+/mob/proc/handle_regular_hud_updates()
+	return
+
+//Icon is used to occlude things like huds from the faulty byond context menu.
+//   http://www.byond.com/forum/?post=2336679
+var/global/image/backplane
+/hook/startup/proc/generate_backplane()
+	backplane = image('icons/misc/win32.dmi')
+	backplane.alpha = 0
+	backplane.plane = -100
+	backplane.mouse_opacity = 0
+
+	return TRUE

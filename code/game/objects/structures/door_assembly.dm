@@ -71,16 +71,16 @@
 	glass_type = "/glass_medical"
 	airlock_type = "/medical"
 
+/obj/structure/door_assembly/door_assembly_ext
+	base_icon_state = "ext"
+	base_name = "External airlock"
+	glass_type = "/glass_external"
+	airlock_type = "/external"
+
 /obj/structure/door_assembly/door_assembly_mai
 	base_icon_state = "mai"
 	base_name = "Maintenance airlock"
 	airlock_type = "/maintenance"
-	glass = -1
-
-/obj/structure/door_assembly/door_assembly_ext
-	base_icon_state = "ext"
-	base_name = "External airlock"
-	airlock_type = "/external"
 	glass = -1
 
 /obj/structure/door_assembly/door_assembly_fre
@@ -105,6 +105,22 @@
 	base_icon_state = "highsec"
 	base_name = "high security airlock"
 	airlock_type = "/highsecurity"
+	glass = -1
+
+/obj/structure/door_assembly/door_assembly_voidcraft
+	base_icon_state = "voidcraft"
+	base_name = "voidcraft hatch"
+	airlock_type = "/voidcraft"
+	glass = -1
+
+/obj/structure/door_assembly/door_assembly_voidcraft/vertical
+	base_icon_state = "voidcraft_vertical"
+	airlock_type = "/voidcraft/vertical"
+
+/obj/structure/door_assembly/door_assembly_alien
+	base_icon_state = "alien"
+	base_name = "alien airlock"
+	airlock_type = "/alien"
 	glass = -1
 
 /obj/structure/door_assembly/multi_tile
@@ -157,10 +173,10 @@
 	if(istype(W, /obj/item/weapon/weldingtool) && ( (istext(glass)) || (glass == 1) || (!anchored) ))
 		var/obj/item/weapon/weldingtool/WT = W
 		if (WT.remove_fuel(0, user))
-			playsound(src.loc, 'sound/items/Welder2.ogg', 50, 1)
+			playsound(src, WT.usesound, 50, 1)
 			if(istext(glass))
 				user.visible_message("[user] welds the [glass] plating off the airlock assembly.", "You start to weld the [glass] plating off the airlock assembly.")
-				if(do_after(user, 40))
+				if(do_after(user, 40 * WT.toolspeed))
 					if(!src || !WT.isOn()) return
 					to_chat(user, "<span class='notice'>You welded the [glass] plating off!</span>")
 					var/M = text2path("/obj/item/stack/material/[glass]")
@@ -168,14 +184,14 @@
 					glass = 0
 			else if(glass == 1)
 				user.visible_message("[user] welds the glass panel out of the airlock assembly.", "You start to weld the glass panel out of the airlock assembly.")
-				if(do_after(user, 40))
+				if(do_after(user, 40 * WT.toolspeed))
 					if(!src || !WT.isOn()) return
 					to_chat(user, "<span class='notice'>You welded the glass panel out!</span>")
 					new /obj/item/stack/material/glass/reinforced(src.loc)
 					glass = 0
 			else if(!anchored)
 				user.visible_message("[user] dissassembles the airlock assembly.", "You start to dissassemble the airlock assembly.")
-				if(do_after(user, 40))
+				if(do_after(user, 40 * WT.toolspeed))
 					if(!src || !WT.isOn()) return
 					to_chat(user, "<span class='notice'>You dissasembled the airlock assembly!</span>")
 					new /obj/item/stack/material/steel(src.loc, 4)
@@ -185,13 +201,13 @@
 			return
 
 	else if(istype(W, /obj/item/weapon/wrench) && state == 0)
-		playsound(src.loc, 'sound/items/Ratchet.ogg', 100, 1)
+		playsound(src, W.usesound, 100, 1)
 		if(anchored)
 			user.visible_message("[user] begins unsecuring the airlock assembly from the floor.", "You starts unsecuring the airlock assembly from the floor.")
 		else
 			user.visible_message("[user] begins securing the airlock assembly to the floor.", "You starts securing the airlock assembly to the floor.")
 
-		if(do_after(user, 40))
+		if(do_after(user, 40 * W.toolspeed))
 			if(!src) return
 			to_chat(user, "<span class='notice'>You [anchored? "un" : ""]secured the airlock assembly!</span>")
 			anchored = !anchored
@@ -208,17 +224,17 @@
 				to_chat(user, "<span class='notice'>You wire the airlock.</span>")
 
 	else if(istype(W, /obj/item/weapon/wirecutters) && state == 1 )
-		playsound(src.loc, 'sound/items/Wirecutter.ogg', 100, 1)
+		playsound(src, W.usesound, 100, 1)
 		user.visible_message("[user] cuts the wires from the airlock assembly.", "You start to cut the wires from airlock assembly.")
 
-		if(do_after(user, 40))
+		if(do_after(user, 40 * W.toolspeed))
 			if(!src) return
 			to_chat(user, "<span class='notice'>You cut the airlock wires.!</span>")
 			new/obj/item/stack/cable_coil(src.loc, 1)
 			src.state = 0
 
 	else if(istype(W, /obj/item/weapon/airlock_electronics) && state == 1)
-		playsound(src.loc, 'sound/items/Screwdriver.ogg', 100, 1)
+		playsound(src, W.usesound, 100, 1)
 		user.visible_message("[user] installs the electronics into the airlock assembly.", "You start to install electronics into the airlock assembly.")
 
 		if(do_after(user, 40))
@@ -236,10 +252,10 @@
 			src.state = 1
 			return
 
-		playsound(src.loc, 'sound/items/Crowbar.ogg', 100, 1)
+		playsound(src, W.usesound, 100, 1)
 		user.visible_message("\The [user] starts removing the electronics from the airlock assembly.", "You start removing the electronics from the airlock assembly.")
 
-		if(do_after(user, 40))
+		if(do_after(user, 40 * W.toolspeed))
 			if(!src) return
 			to_chat(user, "<span class='notice'>You removed the airlock electronics!</span>")
 			src.state = 1
@@ -272,10 +288,10 @@
 								glass = material_name
 
 	else if(istype(W, /obj/item/weapon/screwdriver) && state == 2 )
-		playsound(src.loc, 'sound/items/Screwdriver.ogg', 100, 1)
+		playsound(src, W.usesound, 100, 1)
 		to_chat(user, "<span class='notice'>Now finishing the airlock.</span>")
 
-		if(do_after(user, 40))
+		if(do_after(user, 40 * W.toolspeed))
 			if(!src) return
 			to_chat(user, "<span class='notice'>You finish the airlock!</span>")
 			var/path

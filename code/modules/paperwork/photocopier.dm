@@ -67,14 +67,18 @@
 				break
 
 			if (istype(copyitem, /obj/item/weapon/paper))
+				playsound(loc, "sound/machines/copier.ogg", 100, 1)
+				sleep(11)
 				copy(copyitem)
-				sleep(15)
 			else if (istype(copyitem, /obj/item/weapon/photo))
+				playsound(loc, "sound/machines/copier.ogg", 100, 1)
+				sleep(11)
 				photocopy(copyitem)
-				sleep(15)
 			else if (istype(copyitem, /obj/item/weapon/paper_bundle))
+				sleep(11)
+				playsound(loc, "sound/machines/copier.ogg", 100, 1)
 				var/obj/item/weapon/paper_bundle/B = bundlecopy(copyitem)
-				sleep(15*B.pages.len)
+				sleep(11*B.pages.len)
 			else
 				usr << "<span class='warning'>\The [copyitem] can't be copied by \the [src].</span>"
 				break
@@ -123,6 +127,7 @@
 			copyitem = O
 			O.loc = src
 			user << "<span class='notice'>You insert \the [O] into \the [src].</span>"
+			playsound(loc, "sound/machines/click.ogg", 100, 1)
 			flick(insert_anim, src)
 		else
 			user << "<span class='notice'>There is already something in \the [src].</span>"
@@ -136,7 +141,7 @@
 		else
 			user << "<span class='notice'>This cartridge is not yet ready for replacement! Use up the rest of the toner.</span>"
 	else if(istype(O, /obj/item/weapon/wrench))
-		playsound(loc, 'sound/items/Ratchet.ogg', 50, 1)
+		playsound(loc, O.usesound, 50, 1)
 		anchored = !anchored
 		user << "<span class='notice'>You [anchored ? "wrench" : "unwrench"] \the [src].</span>"
 

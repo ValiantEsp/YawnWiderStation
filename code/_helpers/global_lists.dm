@@ -32,7 +32,7 @@ var/global/list/all_species[0]
 var/global/list/all_languages[0]
 var/global/list/language_keys[0]					// Table of say codes for all languages
 var/global/list/whitelisted_species = list("Human") // Species that require a whitelist check.
-var/global/list/playable_species = list("Human")    // A list of ALL playable species, whitelisted, latejoin or otherwise.
+var/global/list/playable_species = list("Custom Species","Human")    // A list of ALL playable species, whitelisted, latejoin or otherwise. //VOREStation Edit - Making sure custom species is obvious.
 
 var/list/mannequins_
 
@@ -51,12 +51,13 @@ var/global/list/facial_hair_styles_list = list()	//stores /datum/sprite_accessor
 var/global/list/facial_hair_styles_male_list = list()
 var/global/list/facial_hair_styles_female_list = list()
 var/global/list/skin_styles_female_list = list()		//unused
+var/global/list/body_marking_styles_list = list()		//stores /datum/sprite_accessory/marking indexed by name
 	//Underwear
 var/datum/category_collection/underwear/global_underwear = new()
 
 	//Backpacks
 var/global/list/backbaglist = list("Nothing", "Backpack", "Satchel", "Satchel Alt", "Messenger Bag")
-var/global/list/pdachoicelist = list("Default", "Slim", "Old")
+var/global/list/pdachoicelist = list("Default", "Slim", "Old", "Rugged")
 var/global/list/exclude_jobs = list(/datum/job/ai,/datum/job/cyborg)
 
 // Visual nets
@@ -140,6 +141,12 @@ var/global/list/string_slot_flags = list(
 			else
 				facial_hair_styles_male_list += H.name
 				facial_hair_styles_female_list += H.name
+
+	//Body markings - Initialise all /datum/sprite_accessory/marking into an list indexed by marking name
+	paths = typesof(/datum/sprite_accessory/marking) - /datum/sprite_accessory/marking
+	for(var/path in paths)
+		var/datum/sprite_accessory/marking/M = new path()
+		body_marking_styles_list[M.name] = M
 
 	//Surgery Steps - Initialize all /datum/surgery_step into a list
 	paths = typesof(/datum/surgery_step)-/datum/surgery_step

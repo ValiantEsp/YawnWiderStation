@@ -79,13 +79,8 @@ Frequency:
 
 				src.temp += "<B>Extranneous Signals:</B><BR>"
 				for (var/obj/item/weapon/implant/tracking/W in world)
-					if (!W.implanted || !(istype(W.loc,/obj/item/organ/external) || ismob(W.loc)))
+					if (!W.implanted || !(istype(W.loc,/obj/item/organ/external) || ismob(W.loc) || W.malfunction))
 						continue
-					else
-						var/mob/M = W.loc
-						if (M.stat == 2)
-							if (M.timeofdeath + 6000 < world.time)
-								continue
 
 					var/turf/tr = get_turf(W)
 					if (tr.z == sr.z && tr)
@@ -134,10 +129,11 @@ Frequency:
 	throw_range = 5
 	origin_tech = list(TECH_MAGNET = 1, TECH_BLUESPACE = 3)
 	matter = list(DEFAULT_WALL_MATERIAL = 10000)
+	preserve_item = 1
 
 /obj/item/weapon/hand_tele/attack_self(mob/user as mob)
 	var/turf/current_location = get_turf(user)//What turf is the user on?
-	if(!current_location||current_location.z==3||current_location.z>=8)//If turf was not found or they're on z level 2 or >7 which does not currently exist.
+	if(!current_location || current_location.z in using_map.admin_levels || current_location.block_tele)//If turf was not found or they're on z level 2 or >7 which does not currently exist.
 		user << "<span class='notice'>\The [src] is malfunctioning.</span>"
 		return
 	var/list/L = list(  )
@@ -152,6 +148,7 @@ Frequency:
 	for(var/turf/T in orange(10))
 		if(T.x>world.maxx-8 || T.x<8)	continue	//putting them at the edge is dumb
 		if(T.y>world.maxy-8 || T.y<8)	continue
+		if(T.block_tele) continue
 		turfs += T
 	if(turfs.len)
 		L["None (Dangerous)"] = pick(turfs)

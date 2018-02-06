@@ -80,7 +80,10 @@
 
 /obj/machinery/atmospherics/unary/vent_pump/Destroy()
 	unregister_radio(src, frequency)
-	..()
+	if(initial_loc)
+		initial_loc.air_vent_info -= id_tag
+		initial_loc.air_vent_names -= id_tag
+	return ..()
 
 /obj/machinery/atmospherics/unary/vent_pump/high_volume
 	name = "Large Air Vent"
@@ -103,8 +106,6 @@
 /obj/machinery/atmospherics/unary/vent_pump/update_icon(var/safety = 0)
 	if(!check_icon_cache())
 		return
-	if (!node)
-		use_power = 0
 
 	overlays.Cut()
 
@@ -119,10 +120,10 @@
 
 	if(welded)
 		vent_icon += "weld"
-	else if(!powered())
+	else if(!use_power || !node || (stat & (NOPOWER|BROKEN)))
 		vent_icon += "off"
 	else
-		vent_icon += "[use_power ? "[pump_direction ? "out" : "in"]" : "off"]"
+		vent_icon += "[pump_direction ? "out" : "in"]"
 
 	overlays += icon_manager.get_atmos_icon("device", , , vent_icon)
 
@@ -253,7 +254,7 @@
 	return 1
 
 
-/obj/machinery/atmospherics/unary/vent_pump/initialize()
+/obj/machinery/atmospherics/unary/vent_pump/atmos_init()
 	..()
 
 	//some vents work his own special way
@@ -354,10 +355,10 @@
 	if(istype(W, /obj/item/weapon/weldingtool))
 		var/obj/item/weapon/weldingtool/WT = W
 		if (WT.remove_fuel(0,user))
-			user << "<span class='notice'>Now welding the vent.</span>"
-			if(do_after(user, 20))
+			to_chat(user, "<span class='notice'>Now welding the vent.</span>")
+			if(do_after(user, 20 * WT.toolspeed))
 				if(!src || !WT.isOn()) return
-				playsound(src.loc, 'sound/items/Welder2.ogg', 50, 1)
+				playsound(src.loc, WT.usesound, 50, 1)
 				if(!welded)
 					user.visible_message("<span class='notice'>\The [user] welds the vent shut.</span>", "<span class='notice'>You weld the vent shut.</span>", "You hear welding.")
 					welded = 1
@@ -367,9 +368,9 @@
 					welded = 0
 					update_icon()
 			else
-				user << "<span class='notice'>The welding tool needs to be on to start this task.</span>"
+				to_chat(user, "<span class='notice'>The welding tool needs to be on to start this task.</span>")
 		else
-			user << "<span class='warning'>You need more welding fuel to complete this task.</span>"
+			to_chat(user, "<span class='warning'>You need more welding fuel to complete this task.</span>")
 			return 1
 	else
 		..()
@@ -392,34 +393,25 @@
 	if (!istype(W, /obj/item/weapon/wrench))
 		return ..()
 	if (!(stat & NOPOWER) && use_power)
-		user << "<span class='warning'>You cannot unwrench \the [src], turn it off first.</span>"
+		to_chat(user, "<span class='warning'>You cannot unwrench \the [src], turn it off first.</span>")
 		return 1
 	var/turf/T = src.loc
 	if (node && node.level==1 && isturf(T) && !T.is_plating())
-		user << "<span class='warning'>You must remove the plating first.</span>"
+		to_chat(user, "<span class='warning'>You must remove the plating first.</span>")
 		return 1
-	var/datum/gas_mixture/int_air = return_air()
-	var/datum/gas_mixture/env_air = loc.return_air()
-	if ((int_air.return_pressure()-env_air.return_pressure()) > 2*ONE_ATMOSPHERE)
-		user << "<span class='warning'>You cannot unwrench \the [src], it is too exerted due to internal pressure.</span>"
+	if(!can_unwrench())
+		to_chat(user, "<span class='warning'>You cannot unwrench \the [src], it is too exerted due to internal pressure.</span>")
 		add_fingerprint(user)
 		return 1
-	playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
-	user << "<span class='notice'>You begin to unfasten \the [src]...</span>"
-	if (do_after(user, 40))
+	playsound(src, W.usesound, 50, 1)
+	to_chat(user, "<span class='notice'>You begin to unfasten \the [src]...</span>")
+	if (do_after(user, 40 * W.toolspeed))
 		user.visible_message( \
 			"<span class='notice'>\The [user] unfastens \the [src].</span>", \
 			"<span class='notice'>You have unfastened \the [src].</span>", \
 			"You hear a ratchet.")
 		new /obj/item/pipe(loc, make_from=src)
 		qdel(src)
-
-/obj/machinery/atmospherics/unary/vent_pump/Destroy()
-	if(initial_loc)
-		initial_loc.air_vent_info -= id_tag
-		initial_loc.air_vent_names -= id_tag
-	..()
-	return
 
 #undef DEFAULT_PRESSURE_DELTA
 

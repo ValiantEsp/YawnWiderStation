@@ -9,19 +9,30 @@
 	possible_transfer_amounts = null
 
 	var/mode = 1
-	var/charge_cost = 50
+	var/charge_cost = 325
 	var/charge_tick = 0
 	var/recharge_time = 5 //Time it takes for shots to recharge (in seconds)
+	var/bypass_protection = FALSE // If true, can inject through things like spacesuits and armor.
 
-	var/list/reagent_ids = list("tricordrazine", "inaprovaline", "tramadol", "dexalin" ,"spaceacillin")
+	var/list/reagent_ids = list("tricordrazine", "inaprovaline", "bicaridine", "anti_toxin", "kelotane", "tramadol", "dexalin" ,"spaceacillin")
 	var/list/reagent_volumes = list()
 	var/list/reagent_names = list()
 
 /obj/item/weapon/reagent_containers/borghypo/surgeon
-	reagent_ids = list("tricordrazine", "inaprovaline", "tramadol", "dexalin" ,"spaceacillin")
+	reagent_ids = list("tricordrazine", "inaprovaline", "oxycodone", "dexalin" ,"spaceacillin")
 
 /obj/item/weapon/reagent_containers/borghypo/crisis
-	reagent_ids = list("tricordrazine", "inaprovaline", "tramadol", "dexalin" ,"spaceacillin")
+	reagent_ids = list("tricordrazine", "inaprovaline", "anti_toxin", "tramadol", "dexalin" ,"spaceacillin")
+
+/obj/item/weapon/reagent_containers/borghypo/lost
+	reagent_ids = list("tricordrazine", "bicaridine", "dexalin", "anti_toxin", "tramadol", "spaceacillin")
+
+/obj/item/weapon/reagent_containers/borghypo/merc
+	name = "advanced cyborg hypospray"
+	desc = "An advanced nanite and chemical synthesizer and injection system, designed for heavy-duty medical equipment.  This type is capable of safely bypassing \
+	thick materials that other hyposprays would struggle with."
+	bypass_protection = TRUE // Because mercs tend to be in spacesuits.
+	reagent_ids = list("healing_nanites", "hyperzine", "tramadol", "oxycodone", "spaceacillin", "peridaxon", "osteodaxon", "myelamine", "synthblood")
 
 /obj/item/weapon/reagent_containers/borghypo/New()
 	..()
@@ -35,7 +46,7 @@
 
 /obj/item/weapon/reagent_containers/borghypo/Destroy()
 	processing_objects.Remove(src)
-	..()
+	return ..()
 
 /obj/item/weapon/reagent_containers/borghypo/process() //Every [recharge_time] seconds, recharge some reagents for the cyborg+
 	if(++charge_tick < recharge_time)
@@ -47,8 +58,11 @@
 		if(R && R.cell)
 			for(var/T in reagent_ids)
 				if(reagent_volumes[T] < volume)
-					R.cell.use(charge_cost)
-					reagent_volumes[T] = min(reagent_volumes[T] + 5, volume)
+					if(R.cell.charge - charge_cost < 800) //This is so borgs don't kill themselves with it.
+						return 0
+					else
+						R.cell.use(charge_cost)
+						reagent_volumes[T] = min(reagent_volumes[T] + 5, volume)
 	return 1
 
 /obj/item/weapon/reagent_containers/borghypo/attack(var/mob/living/M, var/mob/user)
@@ -69,7 +83,7 @@
 			user << "<span class='danger'>You cannot inject a robotic limb.</span>"
 			return
 
-	if (M.can_inject(user, 1))
+	if(M.can_inject(user, 1, ignore_thickness = bypass_protection))
 		user << "<span class='notice'>You inject [M] with the injector.</span>"
 		M << "<span class='notice'>You feel a tiny prick!</span>"
 
@@ -121,7 +135,7 @@
 	recharge_time = 3
 	volume = 60
 	possible_transfer_amounts = list(5, 10, 20, 30)
-	reagent_ids = list("beer", "kahlua", "whiskey", "specialwhiskey", "wine", "vodka", "gin", "rum", "tequilla", "vermouth", "cognac", "ale", "mead", "water", "sugar", "ice", "tea", "icetea", "cola", "spacemountainwind", "dr_gibb", "space_up", "tonic", "sodawater", "lemon_lime", "orangejuice", "limejuice", "watermelonjuice")
+	reagent_ids = list("ale", "beer", "berryjuice", "bitters", "coffee", "cognac", "cola", "dr_gibb", "egg", "gin", "gingerale", "hot_coco", "ice", "icetea", "kahlua", "lemonjuice", "lemon_lime", "limejuice", "mead", "milk", "mint", "orangejuice", "rum", "sake", "sodawater", "soymilk", "space_up", "spacemountainwind", "specialwhiskey", "sugar", "tea", "tequilla", "tomatojuice", "tonic", "vermouth", "vodka", "water", "watermelonjuice", "whiskey", "wine")
 
 /obj/item/weapon/reagent_containers/borghypo/service/attack(var/mob/M, var/mob/user)
 	return

@@ -4,7 +4,7 @@
 /obj/machinery/light_switch
 	name = "light switch"
 	desc = "It turns lights on and off. What are you, simple?"
-	icon = 'icons/obj/power.dmi'
+	icon = 'icons/obj/power_vr.dmi' // VOREStation Edit
 	icon_state = "light1"
 	anchored = 1.0
 	use_power = 1
@@ -31,7 +31,8 @@
 
 /obj/machinery/light_switch/proc/updateicon()
 	if(!overlay)
-		overlay = image(icon, "light1-overlay", LIGHTING_LAYER+0.1)
+		overlay = image(icon, "light1-overlay")
+		overlay.plane = PLANE_LIGHTING_ABOVE
 
 	overlays.Cut()
 	if(stat & NOPOWER)
@@ -53,6 +54,7 @@
 
 	area.lightswitch = on
 	area.updateicon()
+	playsound(src, 'sound/machines/button.ogg', 100, 1, 0) // VOREStation Edit
 
 	for(var/obj/machinery/light_switch/L in area)
 		L.on = on

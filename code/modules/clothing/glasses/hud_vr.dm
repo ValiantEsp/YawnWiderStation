@@ -1,5 +1,5 @@
 /obj/item/clothing/glasses/omnihud
-	name = "AR glasses"
+	name = "\improper AR glasses"
 	desc = "The KHI-62 AR Glasses are a design from Kitsuhana Heavy Industries. These are a cheap export version \
 	for Nanotrasen. Probably not as complete as KHI could make them, but more readily available for NT."
 	origin_tech = list(TECH_MAGNET = 3, TECH_BIO = 3)
@@ -9,21 +9,17 @@
 	var/datum/nano_module/arscreen
 	var/arscreen_path
 	var/flash_prot = 0 //0 for none, 1 for flash weapon protection, 2 for welder protection
+	enables_planes = list(VIS_CH_ID,VIS_CH_HEALTH_VR,VIS_AUGMENTED)
+	plane_slots = list(slot_glasses)
 
 /obj/item/clothing/glasses/omnihud/New()
 	..()
-	src.hud = new/obj/item/clothing/glasses/hud/omni(src)
 	if(arscreen_path)
 		arscreen = new arscreen_path(src)
 
 /obj/item/clothing/glasses/omnihud/Destroy()
-	if(hud)
-		qdel(hud)
-		hud = null
-	if(arscreen)
-		qdel(arscreen)
-		arscreen = null
-	..()
+	qdel_null(arscreen)
+	. = ..()
 
 /obj/item/clothing/glasses/omnihud/dropped()
 	if(arscreen)
@@ -31,12 +27,9 @@
 	..()
 
 /obj/item/clothing/glasses/omnihud/emp_act(var/severity)
-	var/disconnect_hud = hud
 	var/disconnect_ar = arscreen
-	hud = null
 	arscreen = null
 	spawn(20 SECONDS)
-		hud = disconnect_hud
 		arscreen = disconnect_ar
 	..()
 
@@ -73,12 +66,13 @@
 	prescription = 1
 
 /obj/item/clothing/glasses/omnihud/med
-	name = "AR-M glasses"
+	name = "\improper AR-M glasses"
 	desc = "The KHI-62-M AR glasses are a design from Kitsuhana Heavy Industries. \
 	These have been upgraded with medical records access and virus database integration."
 	mode = "med"
 	action_button_name = "AR Console (Crew Monitor)"
 	arscreen_path = /datum/nano_module/crew_monitor
+	enables_planes = list(VIS_CH_ID,VIS_CH_HEALTH_VR,VIS_CH_STATUS_R,VIS_CH_BACKUP,VIS_AUGMENTED)
 
 	ar_interact(var/mob/living/carbon/human/user)
 		if(arscreen)
@@ -86,13 +80,14 @@
 		return 1
 
 /obj/item/clothing/glasses/omnihud/sec
-	name = "AR-S glasses"
+	name = "\improper AR-S glasses"
 	desc = "The KHI-62-S AR glasses are a design from Kitsuhana Heavy Industries. \
 	These have been upgraded with security records integration and flash protection."
 	mode = "sec"
-	flash_prot = 1 //Flash protection.
+	flash_protection = FLASH_PROTECTION_MAJOR
 	action_button_name = "AR Console (Security Alerts)"
 	arscreen_path = /datum/nano_module/alarm_monitor/security
+	enables_planes = list(VIS_CH_ID,VIS_CH_HEALTH_VR,VIS_CH_WANTED,VIS_AUGMENTED)
 
 	ar_interact(var/mob/living/carbon/human/user)
 		if(arscreen)
@@ -100,13 +95,13 @@
 		return 1
 
 /obj/item/clothing/glasses/omnihud/eng
-	name = "AR-E glasses"
+	name = "\improper AR-E glasses"
 	desc = "The KHI-62-E AR glasses are a design from Kitsuhana Heavy Industries. \
 	These have been upgraded with advanced electrochromic lenses to protect your eyes during welding."
-	mode = "civ"
-	flash_prot = 2 //Welding protection.
+	mode = "eng"
+	flash_protection = FLASH_PROTECTION_MAJOR
 	action_button_name = "AR Console (Station Alerts)"
-	arscreen_path = /datum/nano_module/alarm_monitor
+	arscreen_path = /datum/nano_module/alarm_monitor/engineering
 
 	ar_interact(var/mob/living/carbon/human/user)
 		if(arscreen)
@@ -114,35 +109,55 @@
 		return 1
 
 /obj/item/clothing/glasses/omnihud/rnd
-	name = "AR-R glasses"
+	name = "\improper AR-R glasses"
 	desc = "The KHI-62-R AR glasses are a design from Kitsuhana Heavy Industries. \
 	These have been ... modified ... to fit into a different frame."
-	mode = "civ"
+	mode = "sci"
 	icon = 'icons/obj/clothing/glasses.dmi'
 	icon_override = null
 	icon_state = "purple"
 
+/obj/item/clothing/glasses/omnihud/eng/meson
+	name = "meson scanner HUD"
+	desc = "A headset equipped with a scanning lens and mounted retinal projector. They don't provide any eye protection, but they're less obtrusive than goggles."
+	icon = 'icons/vore/custom_items_vr.dmi'
+	icon_override = 'icons/vore/custom_clothes_vr.dmi'
+	icon_state = "projector"
+	off_state = "projector-off"
+	body_parts_covered = 0
+	toggleable = 1
+	vision_flags = SEE_TURFS //but they can spot breaches. Due to the way HUDs work, they don't provide darkvision up-close the way mesons do.
+
+/obj/item/clothing/glasses/omnihud/eng/meson/attack_self(mob/user)
+	if(!active)
+		toggleprojector()
+	..()
+
+/obj/item/clothing/glasses/omnihud/eng/meson/verb/toggleprojector()
+	set name = "Toggle projector"
+	set category = "Object"
+	set src in usr
+	if(!istype(usr, /mob/living)) return
+	if(usr.stat) return
+	if(toggleable)
+		if(active)
+			active = 0
+			icon_state = off_state
+			item_state = "[initial(item_state)]-off"
+			usr.update_inv_glasses()
+			usr << "You deactivate the retinal projector on the [src]."
+		else
+			active = 1
+			icon_state = initial(icon_state)
+			item_state = initial(item_state)
+			usr.update_inv_glasses()
+			usr << "You activate the retinal projector on the [src]."
+		usr.update_action_buttons()
+
 /obj/item/clothing/glasses/omnihud/all
-	name = "AR-B glasses"
+	name = "\improper AR-B glasses"
 	desc = "The KHI-62-B AR glasses are a design from Kitsuhana Heavy Industries. \
 	These have been upgraded with every feature the lesser models have. Now we're talkin'."
 	mode = "best"
-	flash_prot = 2 //Welding protection.
-
-/obj/item/clothing/glasses/hud/omni
-	name = "internal omni hud"
-	desc = "You shouldn't see this. This is an internal item for glasses."
-	var/obj/item/clothing/glasses/omnihud/shades = null
-
-	vision_flags = SEE_MOBS
-	see_invisible = SEE_INVISIBLE_NOLIGHTING
-
-	New()
-		..()
-		if(istype(loc,/obj/item/clothing/glasses/omnihud))
-			shades = loc
-		else
-			qdel(src)
-
-/obj/item/clothing/glasses/hud/omni/process_hud(var/mob/M)
-	process_omni_hud(M,shades.mode)
+	flash_protection = FLASH_PROTECTION_MAJOR
+	enables_planes = list(VIS_CH_ID,VIS_CH_HEALTH_VR,VIS_CH_STATUS_R,VIS_CH_BACKUP,VIS_CH_WANTED)

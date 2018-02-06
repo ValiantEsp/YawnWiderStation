@@ -4,6 +4,8 @@
 	than the alternative."
 	icon_state = "gridchecker_on"
 	circuit = /obj/item/weapon/circuitboard/grid_checker
+	density = 1
+	anchored = 1
 	var/power_failing = FALSE // Turns to TRUE when the grid check event is fired by the Game Master, or perhaps a cheeky antag.
 	// Wire stuff below.
 	var/datum/wires/grid_checker/wires
@@ -28,7 +30,7 @@
 /obj/machinery/power/grid_checker/Destroy()
 	qdel(wires)
 	wires = null
-	..()
+	return ..()
 
 /obj/machinery/power/grid_checker/update_icon()
 	if(power_failing)

@@ -46,11 +46,7 @@
 /obj/machinery/atmospherics/tvalve/hide(var/i)
 	update_underlays()
 
-/obj/machinery/atmospherics/tvalve/New()
-	initialize_directions()
-	..()
-
-/obj/machinery/atmospherics/tvalve/proc/initialize_directions()
+/obj/machinery/atmospherics/tvalve/init_dir()
 	switch(dir)
 		if(NORTH)
 			initialize_directions = SOUTH|NORTH|EAST
@@ -100,7 +96,7 @@
 	return null
 
 /obj/machinery/atmospherics/tvalve/Destroy()
-	loc = null
+	. = ..()
 
 	if(node1)
 		node1.disconnect(src)
@@ -115,8 +111,6 @@
 	node1 = null
 	node2 = null
 	node3 = null
-
-	..()
 
 /obj/machinery/atmospherics/tvalve/proc/go_to_side()
 
@@ -182,11 +176,10 @@
 /obj/machinery/atmospherics/tvalve/process()
 	..()
 	. = PROCESS_KILL
-	//machines.Remove(src)
 
 	return
 
-/obj/machinery/atmospherics/tvalve/initialize()
+/obj/machinery/atmospherics/tvalve/atmos_init()
 	var/node1_dir
 	var/node2_dir
 	var/node3_dir
@@ -284,6 +277,10 @@
 	var/id = null
 	var/datum/radio_frequency/radio_connection
 
+/obj/machinery/atmospherics/tvalve/digital/Destroy()
+	unregister_radio(src, frequency)
+	. = ..()
+
 /obj/machinery/atmospherics/tvalve/digital/bypass
 	icon_state = "map_tvalve1"
 	state = 1
@@ -306,7 +303,7 @@
 	if(!powered())
 		return
 	if(!src.allowed(user))
-		user << "<span class='warning'>Access denied.</span>"
+		to_chat(user, "<span class='warning'>Access denied.</span>")
 		return
 	..()
 
@@ -348,17 +345,15 @@
 	if (!istype(W, /obj/item/weapon/wrench))
 		return ..()
 	if (istype(src, /obj/machinery/atmospherics/tvalve/digital))
-		user << "<span class='warning'>You cannot unwrench \the [src], it's too complicated.</span>"
+		to_chat(user, "<span class='warning'>You cannot unwrench \the [src], it's too complicated.</span>")
 		return 1
-	var/datum/gas_mixture/int_air = return_air()
-	var/datum/gas_mixture/env_air = loc.return_air()
-	if ((int_air.return_pressure()-env_air.return_pressure()) > 2*ONE_ATMOSPHERE)
-		user << "<span class='warnng'>You cannot unwrench \the [src], it too exerted due to internal pressure.</span>"
+	if(!can_unwrench())
+		to_chat(user, "<span class='warnng'>You cannot unwrench \the [src], it too exerted due to internal pressure.</span>")
 		add_fingerprint(user)
 		return 1
-	playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
-	user << "<span class='notice'>You begin to unfasten \the [src]...</span>"
-	if (do_after(user, 40))
+	playsound(src, W.usesound, 50, 1)
+	to_chat(user, "<span class='notice'>You begin to unfasten \the [src]...</span>")
+	if (do_after(user, 40 * W.toolspeed))
 		user.visible_message( \
 			"<span class='notice'>\The [user] unfastens \the [src].</span>", \
 			"<span class='notice'>You have unfastened \the [src].</span>", \
@@ -373,7 +368,7 @@
 	icon_state = "map_tvalvem1"
 	state = 1
 
-/obj/machinery/atmospherics/tvalve/mirrored/initialize_directions()
+/obj/machinery/atmospherics/tvalve/mirrored/init_dir()
 	switch(dir)
 		if(NORTH)
 			initialize_directions = SOUTH|NORTH|WEST
@@ -384,7 +379,7 @@
 		if(WEST)
 			initialize_directions = EAST|WEST|SOUTH
 
-/obj/machinery/atmospherics/tvalve/mirrored/initialize()
+/obj/machinery/atmospherics/tvalve/mirrored/atmos_init()
 	var/node1_dir
 	var/node2_dir
 	var/node3_dir
@@ -424,6 +419,10 @@
 	var/id = null
 	var/datum/radio_frequency/radio_connection
 
+/obj/machinery/atmospherics/tvalve/mirrored/digital/Destroy()
+	unregister_radio(src, frequency)
+	. = ..()
+
 /obj/machinery/atmospherics/tvalve/mirrored/digital/bypass
 	icon_state = "map_tvalvem1"
 	state = 1
@@ -446,7 +445,7 @@
 	if(!powered())
 		return
 	if(!src.allowed(user))
-		user << "<span class='warning'>Access denied.</span>"
+		to_chat(user, "<span class='warning'>Access denied.</span>")
 		return
 	..()
 

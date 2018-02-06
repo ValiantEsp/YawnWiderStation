@@ -34,12 +34,16 @@
 		H.restore_blood()
 		H.mutations.Remove(HUSK)
 		H.status_flags -= DISFIGURED
-		H.update_body(1)
+		H.update_icons_body()
 		for(var/limb in H.organs_by_name)
 			var/obj/item/organ/external/current_limb = H.organs_by_name[limb]
 			if(current_limb)
 				current_limb.undislocate()
 				current_limb.open = 0
+
+		BITSET(H.hud_updateflag, HEALTH_HUD)
+		BITSET(H.hud_updateflag, STATUS_HUD)
+		BITSET(H.hud_updateflag, LIFE_HUD)
 
 	C.halloss = 0
 	C.shock_stage = 0 //Pain
@@ -48,8 +52,12 @@
 	C.mind.changeling.purchased_powers -= C
 	feedback_add_details("changeling_powers","CR")
 	C.stat = CONSCIOUS
+	C.forbid_seeing_deadchat = FALSE
 	C.timeofdeath = null
 	src.verbs -= /mob/proc/changeling_revive
 	// re-add our changeling powers
 	C.make_changeling()
+
+
+
 	return 1

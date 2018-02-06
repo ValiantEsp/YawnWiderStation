@@ -27,7 +27,7 @@
 /obj/item/clothing/gloves/swat
 	desc = "These tactical gloves are somewhat fire and impact-resistant."
 	name = "\improper SWAT Gloves"
-	icon_state = "black"
+	icon_state = "swat"
 	item_state = "swat"
 	siemens_coefficient = 0.50
 	permeability_coefficient = 0.05
@@ -39,7 +39,7 @@
 /obj/item/clothing/gloves/combat //Combined effect of SWAT gloves and insulated gloves
 	desc = "These tactical gloves are somewhat fire and impact resistant."
 	name = "combat gloves"
-	icon_state = "black"
+	icon_state = "swat"
 	item_state = "swat"
 	siemens_coefficient = 0
 	permeability_coefficient = 0.05
@@ -48,14 +48,32 @@
 	heat_protection = HANDS
 	max_heat_protection_temperature = GLOVES_MAX_HEAT_PROTECTION_TEMPERATURE
 
-/obj/item/clothing/gloves/latex
-	name = "latex gloves"
-	desc = "Sterile latex gloves."
+/obj/item/clothing/gloves/sterile
+	name = "sterile gloves"
+	desc = "Sterile gloves."
 	icon_state = "latex"
 	item_state_slots = list(slot_r_hand_str = "white", slot_l_hand_str = "white")
 	siemens_coefficient = 1.0 //thin latex gloves, much more conductive than fabric gloves (basically a capacitor for AC)
 	permeability_coefficient = 0.01
 	germ_level = 0
+	fingerprint_chance = 25
+//	var/balloonPath = /obj/item/latexballon
+
+//TODO: Make inflating gloves a thing
+/*/obj/item/clothing/gloves/sterile/proc/Inflate(/mob/living/carbon/human/user)
+	user.visible_message("<span class='notice'>\The [src] expands!</span>")
+	qdel(src)*/
+
+/obj/item/clothing/gloves/sterile/latex
+	name = "latex gloves"
+	desc = "Sterile latex gloves."
+
+/obj/item/clothing/gloves/sterile/nitrile
+	name = "nitrile gloves"
+	desc = "Sterile nitrile gloves"
+	icon_state = "nitrile"
+	item_state = "ngloves"
+//	balloonPath = /obj/item/nitrileballoon
 
 /obj/item/clothing/gloves/botanic_leather
 	desc = "These leather work gloves protect against thorns, barbs, prickles, spikes and other harmful objects of floral origin."

@@ -46,7 +46,7 @@
 		var/status = current_project.organ_data[part]
 		if(status == null) continue //Species doesn't have organ? Child of missing part?
 
-		var/obj/item/organ/I = H.internal_organs_by_name[name]
+		var/obj/item/organ/I = H.internal_organs_by_name[part]
 		if(!I) continue//Not an organ. Perhaps external conversion changed it already?
 
 		if(status == 0) //Normal organ
@@ -70,7 +70,7 @@
 	H.original_player = current_project.ckey
 
 	//Apply damage
-	H.adjustCloneLoss(150)
+	H.adjustCloneLoss((H.getMaxHealth() - config.health_threshold_dead)*0.75)
 	H.Paralyse(4)
 	H.updatehealth()
 
@@ -88,7 +88,9 @@
 	//Basically all the VORE stuff
 	H.ooc_notes = current_project.body_oocnotes
 	H.flavor_texts = current_project.mydna.flavor.Copy()
-	H.size_multiplier = current_project.sizemult
+	H.resize(current_project.sizemult, FALSE)
+	H.appearance_flags = current_project.aflags
+	H.weight = current_project.weight
 	if(current_project.speciesname)
 		H.custom_species = current_project.speciesname
 
@@ -104,6 +106,16 @@
 	return 1
 
 /obj/machinery/clonepod/transhuman/process()
+
+	var/visible_message = 0
+	for(var/obj/item/weapon/reagent_containers/food/snacks/meat/meat in range(1, src))
+		qdel(meat)
+		biomass += 50
+		visible_message = 1 // Prevent chatspam if multiple meat are near
+
+	if(visible_message)
+		visible_message("[src] sucks in and processes the nearby biomass.")
+
 	if(stat & NOPOWER)
 		if(occupant)
 			locked = 0
@@ -135,7 +147,7 @@
 			use_power(7500) //This might need tweaking.
 			return
 
-		else if((occupant.health >= heal_level) && (!eject_wait))
+		else if(((occupant.health >= heal_level) || (occupant.health == occupant.maxHealth)) && (!eject_wait))
 			playsound(src.loc, 'sound/machines/ding.ogg', 50, 1)
 			audible_message("\The [src] signals that the growing process is complete.")
 			connected_message("Growing Process Complete.")
@@ -165,8 +177,11 @@
 	var/connected      //What console it's done up with
 	var/busy = 0       //Busy cloning
 	var/body_cost = 15000  //Cost of a cloned body (metal and glass ea.)
+	var/max_res_amount = 30000 //Max the thing can hold
 	var/datum/transhuman/body_record/current_project
 	var/broken = 0
+	var/burn_value = 45
+	var/brute_value = 60
 
 /obj/machinery/transhuman/synthprinter/New()
 	..()
@@ -178,6 +193,26 @@
 	component_parts += new /obj/item/stack/cable_coil(src, 2)
 	RefreshParts()
 	update_icon()
+
+/obj/machinery/transhuman/synthprinter/RefreshParts()
+
+	//Scanning modules reduce burn rating by 15 each
+	var/burn_rating = initial(burn_value)
+	for(var/obj/item/weapon/stock_parts/scanning_module/SM in component_parts)
+		burn_rating = burn_rating - (SM.rating*15)
+	burn_value = burn_rating
+
+	//Manipulators reduce brute by 10 each
+	var/brute_rating = initial(burn_value)
+	for(var/obj/item/weapon/stock_parts/manipulator/M in component_parts)
+		brute_rating = brute_rating - (M.rating*10)
+	brute_value = brute_rating
+
+	//Matter bins multiply the storage amount by their rating.
+	var/store_rating = initial(max_res_amount)
+	for(var/obj/item/weapon/stock_parts/matter_bin/MB in component_parts)
+		store_rating = store_rating * MB.rating
+	max_res_amount = store_rating
 
 /obj/machinery/transhuman/synthprinter/process()
 	if(stat & NOPOWER)
@@ -265,8 +300,8 @@
 	H.original_player = current_project.ckey
 
 	//Apply damage
-	H.adjustBruteLoss(20)
-	H.adjustFireLoss(20)
+	H.adjustBruteLoss(brute_value)
+	H.adjustFireLoss(burn_value)
 	H.updatehealth()
 
 	//Update appearance, remake icons
@@ -277,7 +312,9 @@
 	//Basically all the VORE stuff
 	H.ooc_notes = current_project.body_oocnotes
 	H.flavor_texts = current_project.mydna.flavor.Copy()
-	H.size_multiplier = current_project.sizemult
+	H.resize(current_project.sizemult)
+	H.appearance_flags = current_project.aflags
+	H.weight = current_project.weight
 	if(current_project.speciesname)
 		H.custom_species = current_project.speciesname
 
@@ -329,7 +366,6 @@
 		return
 
 	var/amnt = S.perunit
-	var/max_res_amount = 30000
 	if(stored_material[S.material.name] + amnt <= max_res_amount)
 		if(S && S.amount >= 1)
 			var/count = 0
@@ -367,6 +403,8 @@
 
 	var/mob/living/carbon/human/occupant = null
 	var/connected = null
+
+	var/sleevecards = 2
 
 /obj/machinery/transhuman/resleever/New()
 	..()
@@ -436,16 +474,36 @@
 			qdel(G)
 			src.updateUsrDialog()
 			return //Don't call up else we'll get attack messsages
+	if(istype(W, /obj/item/device/sleevecard))
+		var/obj/item/device/sleevecard/C = W
+		user.unEquip(C)
+		C.removePersonality()
+		qdel(C)
+		sleevecards++
+		to_chat(user,"<span class='notice'>You store \the [C] in \the [src].</span>")
+		return
 
 	return ..()
 
-/obj/machinery/transhuman/resleever/proc/putmind(var/datum/transhuman/mind_record/MR)
-	if(!occupant || !istype(occupant) || occupant.stat >= DEAD)
+/obj/machinery/transhuman/resleever/proc/putmind(var/datum/transhuman/mind_record/MR, mode = 1, var/mob/living/carbon/human/override = null)
+	if((!occupant || !istype(occupant) || occupant.stat >= DEAD) && mode == 1)
 		return 0
 
+	if(mode == 2 && sleevecards) //Card sleeving
+		var/obj/item/device/sleevecard/card = new /obj/item/device/sleevecard(get_turf(src))
+		card.sleeveInto(MR)
+		sleevecards--
+		return 1
+
+	//If we're sleeving a subtarget, briefly swap them to not need to duplicate tons of code.
+	var/mob/living/carbon/human/original_occupant
+	if(override)
+		original_occupant = occupant
+		occupant = override
+
 	//In case they already had a mind!
-	occupant << "<span class='warning'>You feel your mind being overwritten...</span>"
-	if(occupant.mind)
+	if(occupant && occupant.mind)
+		occupant << "<span class='warning'>You feel your mind being overwritten...</span>"
 		log_and_message_admins("was resleeve-wiped from their body.",occupant.mind)
 		occupant.ghostize()
 
@@ -457,6 +515,22 @@
 	occupant.identifying_gender = MR.id_gender
 	occupant.ooc_notes = MR.mind_oocnotes
 	occupant.apply_vore_prefs() //Cheap hack for now to give them SOME bellies.
+	if(MR.one_time)
+		var/how_long = round((world.time - MR.last_update)/10/60)
+		to_chat(occupant,"<span class='danger'>Your mind backup was a 'one-time' backup. \
+		You will not be able to remember anything since the backup, [how_long] minutes ago.</span>")
+
+	//Re-supply a NIF if one was backed up with them.
+	if(MR.nif_path)
+		var/obj/item/device/nif/nif = new MR.nif_path(occupant,MR.nif_durability)
+		for(var/path in MR.nif_software)
+			new path(nif)
+
+	// If it was a custom sleeve (not owned by anyone), update namification sequences
+	if(!occupant.original_player)
+		occupant.real_name = occupant.mind.name
+		occupant.name = occupant.real_name
+		occupant.dna.real_name = occupant.real_name
 
 	//Give them a backup implant
 	var/obj/item/weapon/implant/backup/new_imp = new()
@@ -478,8 +552,11 @@
 	occupant.confused = max(occupant.confused, confuse_amount)
 	occupant.eye_blurry = max(occupant.eye_blurry, blur_amount)
 
-	if(occupant.original_player != occupant.ckey)
-		log_and_message_admins("is now a cross-sleeved character. Body originally belonged to [occupant.original_player]. Mind is now [occupant.mind.name].",occupant)
+	if(occupant.mind && occupant.original_player && ckey(occupant.mind.key) != occupant.original_player)
+		log_and_message_admins("is now a cross-sleeved character. Body originally belonged to [occupant.real_name]. Mind is now [occupant.mind.name].",occupant)
+
+	if(original_occupant)
+		occupant = original_occupant
 
 	return 1
 

@@ -1,20 +1,10 @@
-/obj/item/device/gps
-	name = "relay positioning device"
-	desc = "Triangulates the approximate co-ordinates using a nearby satellite network."
-	icon = 'icons/obj/device.dmi'
-	icon_state = "locator"
-	item_state = "locator"
-	w_class = ITEMSIZE_SMALL
-
-/obj/item/device/gps/attack_self(var/mob/user as mob)
-	var/turf/T = get_turf(src)
-	user << "<span class='notice'>\icon[src] \The [src] flashes <i>[T.x]:[T.y]:[T.z]</i>.</span>"
-
 /obj/item/device/measuring_tape
 	name = "measuring tape"
 	desc = "A coiled metallic tape used to check dimensions and lengths."
 	icon = 'icons/obj/xenoarchaeology.dmi'
 	icon_state = "measuring"
+	origin_tech = list(TECH_MATERIAL = 1)
+	matter = list(DEFAULT_WALL_MATERIAL = 100)
 	w_class = ITEMSIZE_SMALL
 
 /obj/item/weapon/storage/bag/fossils
@@ -46,6 +36,8 @@
 	icon = 'icons/obj/xenoarchaeology.dmi'
 	icon_state = "flashgun"
 	item_state = "lampgreen"
+	origin_tech = list(TECH_BLUESPACE = 3, TECH_MAGNET = 3)
+	matter = list(DEFAULT_WALL_MATERIAL = 10000,"glass" = 5000)
 	w_class = ITEMSIZE_SMALL
 	slot_flags = SLOT_BELT
 
@@ -99,9 +91,11 @@
 /obj/item/device/depth_scanner
 	name = "depth analysis scanner"
 	desc = "Used to check spatial depth and density of rock outcroppings."
-	icon = 'icons/obj/pda.dmi'
-	icon_state = "crap"
+	icon = 'icons/obj/xenoarchaeology.dmi'
+	icon_state = "depth_scanner"
 	item_state = "analyzer"
+	origin_tech = list(TECH_MAGNET = 2, TECH_ENGINEERING = 2, TECH_BLUESPACE = 2)
+	matter = list(DEFAULT_WALL_MATERIAL = 1000,"glass" = 1000)
 	w_class = ITEMSIZE_SMALL
 	slot_flags = SLOT_BELT
 	var/list/positive_locations = list()
@@ -227,6 +221,8 @@
 	icon = 'icons/obj/device.dmi'
 	icon_state = "pinoff"	//pinonfar, pinonmedium, pinonclose, pinondirect, pinonnull
 	item_state = "electronic"
+	origin_tech = list(TECH_MAGNET = 3, TECH_ENGINEERING = 2, TECH_BLUESPACE = 3)
+	matter = list(DEFAULT_WALL_MATERIAL = 1000,"glass" = 500)
 	var/frequency = PUB_FREQ
 	var/scan_ticks = 0
 	var/obj/item/device/radio/target_radio

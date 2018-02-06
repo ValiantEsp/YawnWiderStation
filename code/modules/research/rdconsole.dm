@@ -97,7 +97,7 @@ won't update every console in existence) but it's more of a hassle to do. Also, 
 				D.linked_console = src
 	return
 
-/obj/machinery/computer/rdconsole/proc/griefProtection() //Have it automatically push research to the centcomm server so wild griffins can't fuck up R&D's work
+/obj/machinery/computer/rdconsole/proc/griefProtection() //Have it automatically push research to the CentCom server so wild griffins can't fuck up R&D's work
 	for(var/obj/machinery/r_n_d/server/centcom/C in machines)
 		for(var/datum/tech/T in files.known_tech)
 			C.files.AddTech2Known(T)
@@ -167,7 +167,7 @@ won't update every console in existence) but it's more of a hassle to do. Also, 
 			screen = 1.2
 			files.AddTech2Known(t_disk.stored)
 			updateUsrDialog()
-			griefProtection() //Update centcomm too
+			griefProtection() //Update CentCom too
 
 	else if(href_list["clear_tech"]) //Erase data on the technology disk.
 		t_disk.stored = null
@@ -190,7 +190,7 @@ won't update every console in existence) but it's more of a hassle to do. Also, 
 			screen = 1.4
 			files.AddDesign2Known(d_disk.blueprint)
 			updateUsrDialog()
-			griefProtection() //Update centcomm too
+			griefProtection() //Update CentCom too
 
 	else if(href_list["clear_design"]) //Erases data on the design disk.
 		d_disk.blueprint = null
@@ -405,7 +405,7 @@ won't update every console in existence) but it's more of a hassle to do. Also, 
 	return
 
 /obj/machinery/computer/rdconsole/proc/GetResearchLevelsInfo()
-	var/dat
+	var/list/dat = list()
 	dat += "<UL>"
 	for(var/datum/tech/T in files.known_tech)
 		if(T.level < 1)
@@ -416,23 +416,23 @@ won't update every console in existence) but it's more of a hassle to do. Also, 
 		dat +=  "<LI>Level: [T.level]"
 		dat +=  "<LI>Summary: [T.desc]"
 		dat += "</UL>"
-	return dat
+	return dat.Join()
 
 /obj/machinery/computer/rdconsole/proc/GetResearchListInfo()
-	var/dat
+	var/list/dat = list()
 	dat += "<UL>"
 	for(var/datum/design/D in files.known_designs)
 		if(D.build_path)
 			dat += "<LI><B>[D.name]</B>: [D.desc]"
 	dat += "</UL>"
-	return dat
+	return dat.Join()
 
 /obj/machinery/computer/rdconsole/attack_hand(mob/user as mob)
 	if(stat & (BROKEN|NOPOWER))
 		return
 
 	user.set_machine(src)
-	var/dat = ""
+	var/list/dat = list()
 	files.RefreshResearch()
 	switch(screen) //A quick check to make sure you get the right screen when a device is disconnected.
 		if(2 to 2.9)
@@ -774,7 +774,7 @@ won't update every console in existence) but it's more of a hassle to do. Also, 
 			dat += "List of Researched Technologies and Designs:"
 			dat += GetResearchListInfo()
 
-	user << browse("<TITLE>Research and Development Console</TITLE><HR>[dat]", "window=rdconsole;size=850x600")
+	user << browse("<TITLE>Research and Development Console</TITLE><HR>[dat.Join()]", "window=rdconsole;size=850x600")
 	onclose(user, "rdconsole")
 
 /obj/machinery/computer/rdconsole/robotics

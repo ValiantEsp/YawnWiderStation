@@ -12,6 +12,9 @@
 	handle_regular_status_updates()
 	handle_actions()
 	handle_instability()
+	// For some reason borg Life() doesn't call ..()
+	handle_modifiers()
+	handle_light()
 
 	if(client)
 		handle_regular_hud_updates()
@@ -21,6 +24,7 @@
 		process_killswitch()
 		process_locks()
 		process_queued_alarms()
+	handle_internal_contents() //VOREStation Edit
 	update_canmove()
 
 /mob/living/silicon/robot/proc/clamp_values()
@@ -56,7 +60,7 @@
 		src.has_power = 1
 	else
 		if (src.has_power)
-			src << "\red You are now running on emergency backup power."
+			src << "<font color='red'>You are now running on emergency backup power.</font>"
 		src.has_power = 0
 		if(lights_on) // Light is on but there is no power!
 			lights_on = 0
@@ -76,8 +80,8 @@
 		Paralyse(3)
 		src.sleeping--
 
-	if(src.resting)
-		Weaken(5)
+	//if(src.resting) // VOREStation edit. Our borgos would rather not.
+	//	Weaken(5)
 
 	if(health < config.health_threshold_dead && src.stat != 2) //die only once
 		death()
@@ -98,7 +102,7 @@
 		else	//Not stunned.
 			src.stat = 0
 
-		confused = max(0, confused - 1)
+		AdjustConfused(-1)
 
 	else //Dead.
 		src.blinded = 1
@@ -107,7 +111,7 @@
 	if (src.stuttering) src.stuttering--
 
 	if (src.eye_blind)
-		src.eye_blind--
+		src.AdjustBlinded(-1)
 		src.blinded = 1
 
 	if (src.ear_deaf > 0) src.ear_deaf--
@@ -172,6 +176,12 @@
 		src.sight |= SEE_MOBS
 		src.see_in_dark = 8
 		src.see_invisible = SEE_INVISIBLE_LEVEL_TWO
+	else if (!seedarkness)
+		src.sight &= ~SEE_MOBS
+		src.sight &= ~SEE_TURFS
+		src.sight &= ~SEE_OBJS
+		src.see_in_dark = 8
+		src.see_invisible = SEE_INVISIBLE_NOLIGHTING
 	else if (src.stat != 2)
 		src.sight &= ~SEE_MOBS
 		src.sight &= ~SEE_TURFS
@@ -181,16 +191,6 @@
 							 // has a "invisible" value of 15
 
 	..()
-
-	var/obj/item/borg/sight/hud/hud = (locate(/obj/item/borg/sight/hud) in src)
-	if(hud && hud.hud)
-		hud.hud.process_hud(src)
-	else
-		switch(src.sensor_mode)
-			if (SEC_HUD)
-				process_sec_hud(src,0)
-			if (MED_HUD)
-				process_med_hud(src,0)
 
 	if (src.healths)
 		if (src.stat != 2)
@@ -329,15 +329,23 @@
 			weaponlock_time = 120
 
 /mob/living/silicon/robot/update_canmove()
-	if(paralysis || stunned || weakened || buckled || lockdown || !is_component_functioning("actuator")) canmove = 0
-	else canmove = 1
+	..() // Let's not reinvent the wheel.
+	if(lockdown || !is_component_functioning("actuator"))
+		canmove = FALSE
 	return canmove
 
 /mob/living/silicon/robot/update_fire()
-	overlays -= image("icon"='icons/mob/OnFire.dmi', "icon_state"="Standing")
+	overlays -= image("icon"='icons/mob/OnFire.dmi', "icon_state" = get_fire_icon_state())
 	if(on_fire)
-		overlays += image("icon"='icons/mob/OnFire.dmi', "icon_state"="Standing")
+		overlays += image("icon"='icons/mob/OnFire.dmi', "icon_state" = get_fire_icon_state())
 
 /mob/living/silicon/robot/fire_act()
 	if(!on_fire) //Silicons don't gain stacks from hotspots, but hotspots can ignite them
 		IgniteMob()
+
+/mob/living/silicon/robot/handle_light()
+	. = ..()
+	if(. == FALSE) // If no other light sources are on.
+		if(lights_on)
+			set_light(integrated_light_power, 1, "#FFFFFF")
+			return TRUE

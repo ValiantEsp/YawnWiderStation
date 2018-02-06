@@ -56,6 +56,7 @@
 		return
 	if(src.allowed(user))
 		src.locked = !src.locked
+		playsound(src.loc, 'sound/machines/click.ogg', 15, 1, -3)
 		for(var/mob/O in viewers(user, 3))
 			if((O.client && !( O.blinded )))
 				O << "<span class='notice'>The locker has been [locked ? null : "un"]locked by [user].</span>"
@@ -93,7 +94,7 @@
 				user.visible_message("\The [user] begins unsecuring \the [src] from the floor.", "You start unsecuring \the [src] from the floor.")
 			else
 				user.visible_message("\The [user] begins securing \the [src] to the floor.", "You start securing \the [src] to the floor.")
-			if(do_after(user, 20))
+			if(do_after(user, 20 * W.toolspeed))
 				if(!src) return
 				user << "<span class='notice'>You [anchored? "un" : ""]secured \the [src]!</span>"
 				anchored = !anchored
@@ -126,12 +127,16 @@
 	else
 		src.toggle(user)
 
+/obj/structure/closet/secure_closet/AltClick()
+	..()
+	verb_togglelock()
+
 /obj/structure/closet/secure_closet/verb/verb_togglelock()
 	set src in oview(1) // One square distance
 	set category = "Object"
 	set name = "Toggle Lock"
 
-	if(!usr.canmove || usr.stat || usr.restrained()) // Don't use it if you're not able to! Checks for stuns, ghost and restrain
+	if(!usr.canmove || usr.stat || usr.restrained() || !Adjacent(usr)) // Don't use it if you're not able to! Checks for stuns, ghost and restrain
 		return
 
 	if(ishuman(usr) || isrobot(usr))

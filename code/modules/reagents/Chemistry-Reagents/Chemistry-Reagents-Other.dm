@@ -133,7 +133,7 @@
 	M.disabilities = 0
 	M.sdisabilities = 0
 	M.eye_blurry = 0
-	M.eye_blind = 0
+	M.SetBlinded(0)
 	M.SetWeakened(0)
 	M.SetStunned(0)
 	M.SetParalysis(0)
@@ -141,7 +141,7 @@
 	M.dizziness = 0
 	M.drowsyness = 0
 	M.stuttering = 0
-	M.confused = 0
+	M.SetConfused(0)
 	M.sleeping = 0
 	M.jitteriness = 0
 
@@ -168,6 +168,14 @@
 	taste_description = "metal"
 	reagent_state = SOLID
 	color = "#B8B8C0"
+
+/datum/reagent/platinum
+	name = "Platinum"
+	id = "platinum"
+	description = "Platinum is a dense, malleable, ductile, highly unreactive, precious, gray-white transition metal.  It is very resistant to corrosion."
+	taste_description = "metal"
+	reagent_state = SOLID
+	color = "#777777"
 
 /datum/reagent/uranium/affect_touch(var/mob/living/carbon/M, var/alien, var/removed)
 	affect_ingest(M, alien, removed)
@@ -298,7 +306,7 @@
 			S.dirt = 0
 		T.clean_blood()
 
-		for(var/mob/living/carbon/slime/M in T)
+		for(var/mob/living/simple_animal/slime/M in T)
 			M.adjustToxLoss(rand(5, 10))
 
 /datum/reagent/space_cleaner/affect_touch(var/mob/living/carbon/M, var/alien, var/removed)

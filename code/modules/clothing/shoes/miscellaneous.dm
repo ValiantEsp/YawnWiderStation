@@ -8,16 +8,19 @@
 	var/list/clothing_choices = list()
 	siemens_coefficient = 0.8
 	species_restricted = null
+	step_volume_mod = 0.5
 
 /obj/item/clothing/shoes/mime
 	name = "mime shoes"
 	icon_state = "white"
+	step_volume_mod = 0	//It's a mime
 
 /obj/item/clothing/shoes/galoshes
 	desc = "Rubber boots"
 	name = "galoshes"
 	icon_state = "galoshes"
 	permeability_coefficient = 0.05
+	siemens_coefficient = 0 //They're thick rubber boots! Of course they won't conduct electricity!
 	item_flags = NOSLIP
 	slowdown = SHOES_SLOWDOWN+1
 	species_restricted = null
@@ -122,15 +125,33 @@
 	name = "flip flops"
 	desc = "A pair of foam flip flops. For those not afraid to show a little ankle."
 	icon_state = "thongsandal"
+	addblends = "thongsandal_a"
 
 /obj/item/clothing/shoes/athletic
 	name = "athletic shoes"
 	desc = "A pair of sleek atheletic shoes. Made by and for the sporty types."
 	icon_state = "sportshoe"
+	addblends = "sportshoe_a"
 	item_state_slots = list(slot_r_hand_str = "sportheld", slot_l_hand_str = "sportheld")
 
 /obj/item/clothing/shoes/skater
 	name = "skater shoes"
 	desc = "A pair of wide shoes with thick soles.  Designed for skating."
 	icon_state = "skatershoe"
+	addblends = "skatershoe_a"
 	item_state_slots = list(slot_r_hand_str = "skaterheld", slot_l_hand_str = "skaterheld")
+
+/obj/item/clothing/shoes/heels
+	name = "high heels"
+	desc = "A pair of high-heeled shoes. Fancy!"
+	icon_state = "heels"
+	addblends = "heels_a"
+
+/obj/item/clothing/shoes/footwraps
+	name = "cloth footwraps"
+	desc = "A roll of treated canvas used for wrapping claws or paws"
+	icon_state = "clothwrap"
+	item_state = "clothwrap"
+	force = 0
+	w_class = ITEMSIZE_SMALL
+	species_restricted = null

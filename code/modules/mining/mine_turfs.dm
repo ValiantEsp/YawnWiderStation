@@ -6,6 +6,14 @@ var/list/mining_overlay_cache = list()
 	icon = 'icons/turf/walls.dmi'
 	icon_state = "rock-dark"
 
+/turf/unsimulated/mineral/ice
+	name = "Ice wall"
+	desc = "Frigid Ice that seems to be stronger then most manmade structures"
+	icon = 'icons/turf/snow_new.dmi'
+	icon_state = "Icerock"
+
+
+
 /turf/simulated/mineral //wall piece
 	name = "rock"
 	icon = 'icons/turf/walls.dmi'
@@ -81,6 +89,7 @@ var/list/mining_overlay_cache = list()
 
 /turf/simulated/mineral/proc/update_general()
 	update_icon(1)
+	recalc_atom_opacity()
 	if(ticker && ticker.current_state == GAME_STATE_PLAYING)
 		reconsider_lights()
 		if(air_master)
@@ -481,7 +490,7 @@ var/list/mining_overlay_cache = list()
 				M.flash_eyes()
 				if(prob(50))
 					M.Stun(5)
-			M.apply_effect(25, IRRADIATE)
+			radiation_repository.flat_radiate(src, 25, 200)
 			if(prob(25))
 				excavate_find(prob(5), finds[1])
 	else if(rand(1,500) == 1)

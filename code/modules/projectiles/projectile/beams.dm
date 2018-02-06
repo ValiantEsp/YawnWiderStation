@@ -70,6 +70,16 @@
 	tracer_type = /obj/effect/projectile/xray/tracer
 	impact_type = /obj/effect/projectile/xray/impact
 
+/obj/item/projectile/beam/cyan
+	name = "cyan beam"
+	icon_state = "cyan"
+	damage = 40
+	light_color = "#00C6FF"
+
+	muzzle_type = /obj/effect/projectile/laser_omni/muzzle
+	tracer_type = /obj/effect/projectile/laser_omni/tracer
+	impact_type = /obj/effect/projectile/laser_omni/impact
+
 /obj/item/projectile/beam/pulse
 	name = "pulse"
 	icon_state = "u_laser"
@@ -182,3 +192,8 @@
 	name = "weak stun beam"
 	icon_state = "stun"
 	agony = 25
+
+/obj/item/projectile/beam/stun/med
+	name = "stun beam"
+	icon_state = "stun"
+	agony = 35

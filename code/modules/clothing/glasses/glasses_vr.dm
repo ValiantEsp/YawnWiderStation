@@ -56,3 +56,7 @@
 
 	else
 		..()
+
+/obj/item/clothing/glasses/sunglasses/sechud/tactical
+	item_flags = AIRTIGHT
+	body_parts_covered = EYES

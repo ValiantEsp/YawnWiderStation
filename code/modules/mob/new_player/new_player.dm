@@ -118,8 +118,8 @@
 			var/mob/observer/dead/observer = new()
 
 			spawning = 1
-			src << sound(null, repeat = 0, wait = 0, volume = 85, channel = 1) // MAD JAMS cant last forever yo
-
+			if(client.media)
+				client.media.stop_music() // MAD JAMS cant last forever yo
 
 			observer.started_as_observer = 1
 			close_spawn_windows()
@@ -154,7 +154,7 @@
 	if(href_list["late_join"])
 
 		if(!ticker || ticker.current_state != GAME_STATE_PLAYING)
-			usr << "\red The round is either not ready, or has already finished..."
+			usr << "<font color='red'>The round is either not ready, or has already finished...</font>"
 			return
 /*
 		if(client.prefs.species != "Human" && !check_rights(R_ADMIN, 0)) //VORESTATION EDITS: THE COMMENTED OUT AREAS FROM LINE 154 TO 178
@@ -318,6 +318,7 @@
 	if(jobban_isbanned(src,rank))	return 0
 	if(!job.player_old_enough(src.client))	return 0
 	if(!is_job_whitelisted(src,rank))	return 0 //VOREStation Code
+	if(!job.player_has_enough_pto(src.client)) return 0 //VOREStation Code
 	return 1
 
 
@@ -325,7 +326,7 @@
 	if (src != usr)
 		return 0
 	if(!ticker || ticker.current_state != GAME_STATE_PLAYING)
-		usr << "\red The round is either not ready, or has already finished..."
+		usr << "<font color='red'>The round is either not ready, or has already finished...</font>"
 		return 0
 	if(!config.enter_allowed)
 		usr << "<span class='notice'>There is an administrative lock on entering the game!</span>"
@@ -355,7 +356,7 @@
 
 		character.loc = C.loc
 
-		AnnounceCyborg(character, rank, "has been downloaded to the empty core in \the [character.loc.loc]")
+		AnnounceCyborg(character, rank, "has been transferred to the empty core in \the [character.loc.loc]")
 		ticker.mode.latespawn(character)
 
 		qdel(C)
@@ -366,6 +367,8 @@
 	var/join_message = job_master.LateSpawn(character, rank)
 	// Equip our custom items only AFTER deploying to spawn points eh?
 	equip_custom_items(character)
+
+	//character.apply_traits() //VOREStation Removal
 
 	character.lastarea = get_area(loc)
 	// Moving wheelchair if they have one
@@ -402,7 +405,7 @@
 	dat += "Round Duration: [roundduration2text()]<br>"
 
 	if(emergency_shuttle) //In case NanoTrasen decides reposess CentCom's shuttles.
-		if(emergency_shuttle.going_to_centcom()) //Shuttle is going to centcomm, not recalled
+		if(emergency_shuttle.going_to_centcom()) //Shuttle is going to CentCom, not recalled
 			dat += "<font color='red'><b>The station has been evacuated.</b></font><br>"
 		if(emergency_shuttle.online())
 			if (emergency_shuttle.evac)	// Emergency shuttle is past the point of no recall
@@ -455,7 +458,8 @@
 	else
 		client.prefs.copy_to(new_character)
 
-	src << sound(null, repeat = 0, wait = 0, volume = 85, channel = 1) // MAD JAMS cant last forever yo
+	if(client && client.media)
+		client.media.stop_music() // MAD JAMS cant last forever yo
 
 	if(mind)
 		mind.active = 0					//we wish to transfer the key manually
@@ -463,6 +467,11 @@
 			new_character.real_name = pick(clown_names)	//I hate this being here of all places but unfortunately dna is based on real_name!
 			new_character.rename_self("clown")
 		mind.original = new_character
+		// VOREStation
+		mind.loaded_from_ckey = client.ckey
+		mind.loaded_from_slot = client.prefs.default_slot
+		// VOREStation
+		//mind.traits = client.prefs.traits.Copy() // VOREStation conflict
 		mind.transfer_to(new_character)					//won't transfer key since the mind is not active
 
 	new_character.name = real_name
@@ -483,7 +492,7 @@
 	//new_character.dna.UpdateSE()
 
 	// Do the initial caching of the player's body icons.
-	new_character.force_update_limbs()
+	//new_character.force_update_limbs() //VOREStation Removal - This is done in copy_to, don't waste time.
 	new_character.update_eyes()
 	new_character.regenerate_icons()
 

@@ -3,7 +3,6 @@
 	name = "loot spawner"
 	icon_state = "grabbed1"
 	var/live_cargo = 1 // So you can turn off aliens.
-	var/blobchance = 0 // So you can turn on blobs.
 	var/low_probability = 0
 	var/spawned_faction = "hostile" // Spawned mobs can have their faction changed.
 
@@ -19,7 +18,6 @@
 	low_probability * 1000;"nothing", \
 	200 - low_probability * 175;"treasure", \
 	25 + low_probability * 75;"remains", \
-	5; "blob", \
 	50 + low_probability * 50;"clothes", \
 	"glasses", \
 	100 - low_probability * 50;"weapons", \
@@ -78,8 +76,6 @@
 				new /obj/effect/decal/remains/mouse(src.loc)
 			else
 				new /obj/effect/decal/remains/xeno(src.loc)
-		if("blob")
-			if(blobchance) new /obj/effect/blob/core(src.loc)
 		if("clothes")
 			var/obj/structure/closet/C = new(src.loc)
 			C.icon_state = "blue"
@@ -118,7 +114,7 @@
 					prob(10);/obj/item/weapon/gun/launcher/crossbow,\
 					prob(10);/obj/item/weapon/gun/projectile/shotgun/doublebarrel/pellet,\
 					prob(10);/obj/item/weapon/material/knife,\
-					prob(10);/obj/item/weapon/material/hatchet/tacknife/combatknife,\
+					prob(10);/obj/item/weapon/material/knife/tacknife/combatknife,\
 					prob(10);/obj/item/weapon/material/butterfly/switchblade,\
 					prob(10);/obj/item/weapon/gun/projectile/luger,\
 					prob(10);/obj/item/weapon/gun/projectile/luger/brown,\
@@ -130,7 +126,7 @@
 					prob(10);/obj/item/weapon/gun/projectile/colt,\
 					prob(10);/obj/item/weapon/gun/projectile/shotgun/pump,\
 					prob(10);/obj/item/weapon/gun/projectile/shotgun/pump/rifle,\
-					prob(10);/obj/item/weapon/gun/projectile/shotgun/pump/rifle/mosin,\
+				/*	prob(10);/obj/item/weapon/gun/projectile/shotgun/pump/rifle/mosin,\ */
 					prob(10);/obj/item/weapon/melee/baton,\
 					prob(10);/obj/item/weapon/melee/telebaton,\
 					prob(10);/obj/item/weapon/melee/classic_baton,\
@@ -160,13 +156,13 @@
 					prob(7);/obj/item/weapon/gun/projectile/automatic/sts35,\
 					prob(7);/obj/item/weapon/gun/projectile/automatic/z8,\
 					prob(7);/obj/item/weapon/gun/energy/gun/burst,\
-					prob(7);/obj/item/weapon/gun/projectile/shotgun/pump/unsc,\
+					prob(7);/obj/item/weapon/gun/projectile/shotgun/pump/USDF,\
 					prob(7);/obj/item/weapon/gun/projectile/deagle,\
 					prob(7);/obj/item/weapon/gun/launcher/grenade,\
-					prob(6);/obj/item/weapon/gun/projectile/SVD,\
+				/*	prob(6);/obj/item/weapon/gun/projectile/SVD,\*/
 					prob(6);/obj/item/weapon/gun/projectile/automatic/l6_saw,\
 					prob(6);/obj/item/weapon/gun/energy/lasercannon,\
-					prob(5);/obj/item/weapon/gun/projectile/automatic/carbine,\
+					prob(5);/obj/item/weapon/gun/projectile/automatic/bullpup,\
 					prob(5);/obj/item/weapon/gun/energy/pulse_rifle,\
 				/*	prob(4);/obj/item/weapon/gun/projectile/automatic/battlerifle,\ */
 					prob(3);/obj/item/weapon/gun/projectile/deagle/camo,\
@@ -185,37 +181,37 @@
 				var/new_ammo = pick( // Copied from Random.dm
 					prob(5);/obj/item/weapon/storage/box/shotgunammo,\
 					prob(5);/obj/item/weapon/storage/box/shotgunshells,\
-					prob(5);/obj/item/ammo_magazine/a357,\
-					prob(5);/obj/item/ammo_magazine/clip/a762,\
-					prob(5);/obj/item/ammo_magazine/c45m,\
-					prob(5);/obj/item/ammo_magazine/c45m/rubber,\
-					prob(5);/obj/item/ammo_magazine/c38,\
-					prob(5);/obj/item/ammo_magazine/c38/rubber,\
+					prob(5);/obj/item/ammo_magazine/s357,\
+					prob(5);/obj/item/ammo_magazine/clip/c762,\
+					prob(5);/obj/item/ammo_magazine/m45,\
+					prob(5);/obj/item/ammo_magazine/m45/rubber,\
+					prob(5);/obj/item/ammo_magazine/s38,\
+					prob(5);/obj/item/ammo_magazine/s38/rubber,\
 					prob(5);/obj/item/weapon/storage/box/flashbangs,\
-					prob(5);/obj/item/ammo_magazine/s762,\
-					prob(4);/obj/item/ammo_magazine/clip/a556,\
+					prob(5);/obj/item/ammo_magazine/m545,\
+					prob(4);/obj/item/ammo_magazine/clip/c545,\
 					prob(4);/obj/item/ammo_magazine/clip/c45,\
 					prob(4);/obj/item/ammo_magazine/clip/c9mm,\
-					prob(4);/obj/item/ammo_magazine/c45uzi,\
-					prob(4);/obj/item/ammo_magazine/c762,\
-					prob(4);/obj/item/ammo_magazine/mc9mm,\
-					prob(4);/obj/item/ammo_magazine/mc9mml,\
-					prob(4);/obj/item/ammo_magazine/mc9mmt,\
-					prob(4);/obj/item/ammo_magazine/mc9mmt/rubber,\
-					prob(4);/obj/item/ammo_magazine/a10mm,\
-					prob(4);/obj/item/ammo_magazine/p90,\
+					prob(4);/obj/item/ammo_magazine/m45uzi,\
+					prob(4);/obj/item/ammo_magazine/m545/ext,\
+					prob(4);/obj/item/ammo_magazine/m9mm,\
+					prob(4);/obj/item/ammo_magazine/m9mml,\
+					prob(4);/obj/item/ammo_magazine/m9mmt,\
+					prob(4);/obj/item/ammo_magazine/m9mmt/rubber,\
+					prob(4);/obj/item/ammo_magazine/m10mm,\
+					prob(4);/obj/item/ammo_magazine/m9mmp90,\
 				/*	prob(4);/obj/item/ammo_magazine/m14,\
-					prob(4);/obj/item/ammo_magazine/m14/large,\ */
-					prob(4);/obj/item/ammo_magazine/c762,\
-					prob(4);/obj/item/ammo_magazine/a556,\
-					prob(4);/obj/item/ammo_magazine/a556m,\
-					prob(3);/obj/item/ammo_magazine/clip/a10mm,\
-					prob(3);/obj/item/ammo_magazine/clip/a50,\
-					prob(3);/obj/item/ammo_magazine/s762,\
-					prob(2);/obj/item/ammo_magazine/a50,\
-					prob(2);/obj/item/ammo_magazine/a762,\
+					prob(4);/obj/item/ammo_magazine/m14/large,\*/
+					prob(4);/obj/item/ammo_magazine/m545/ext,
+					prob(4);/obj/item/ammo_magazine/m762,\
+					prob(4);/obj/item/ammo_magazine/m545/ext,\
+					prob(3);/obj/item/ammo_magazine/clip/c10mm,\
+					prob(3);/obj/item/ammo_magazine/clip/c44,\
+					prob(3);/obj/item/ammo_magazine/m545,\
+					prob(2);/obj/item/ammo_magazine/m44,\
+					prob(2);/obj/item/ammo_magazine/m545,\
 					prob(1);/obj/item/weapon/storage/box/frags,\
-				/*	prob(1);/obj/item/ammo_magazine/battlerifle,\ */
+				/*	prob(1);/obj/item/ammo_magazine/m95,\ */
 					prob(1);/obj/item/ammo_casing/rocket,\
 					prob(1);/obj/item/weapon/storage/box/sniperammo,\
 					prob(1);/obj/item/weapon/storage/box/flashshells,\
@@ -223,9 +219,9 @@
 					prob(1);/obj/item/weapon/storage/box/practiceshells,\
 					prob(1);/obj/item/weapon/storage/box/stunshells,\
 					prob(1);/obj/item/weapon/storage/box/blanks,\
-					prob(1);/obj/item/ammo_magazine/stg,\
-					prob(1);/obj/item/ammo_magazine/tommydrum,\
-					prob(1);/obj/item/ammo_magazine/tommymag)
+					prob(1);/obj/item/ammo_magazine/mtg,\
+					prob(1);/obj/item/ammo_magazine/m45tommydrum,\
+					prob(1);/obj/item/ammo_magazine/m45tommy)
 				new new_ammo(C)
 		if("spacesuit")
 			var/obj/structure/closet/syndicate/C = new(src.loc)
@@ -287,12 +283,12 @@
 				if(live_cargo) // Carp! Since Facehuggers got removed.
 					var/num = rand(1,3)
 					for(var/i=0,i<num,i++)
-						new /mob/living/simple_animal/hostile/vore/carp(C)
+						new /mob/living/simple_animal/hostile/carp(C)
 				else // Just a costume.
 					new /obj/item/clothing/suit/storage/hooded/carp_costume(C)
 			else if(prob(50))
 				if(live_cargo) // Something else very much alive and angry.
-					var/spawn_type = pick(/mob/living/simple_animal/hostile/vore/alien, /mob/living/simple_animal/hostile/vore/alien/drone, /mob/living/simple_animal/hostile/vore/alien/sentinel)
+					var/spawn_type = pick(/mob/living/simple_animal/hostile/alien, /mob/living/simple_animal/hostile/alien/drone, /mob/living/simple_animal/hostile/alien/sentinel)
 					new spawn_type(C)
 				else // Just a costume.
 					new /obj/item/clothing/head/xenos(C)
@@ -340,7 +336,7 @@
 				new /obj/effect/decal/remains/xeno(src)
 		if("mimic")
 			//a guardian of the tomb!
-			var/mob/living/simple_animal/hostile/vore/mimic/crate/mimic = new(src.loc)
+			var/mob/living/simple_animal/hostile/mimic/crate/mimic = new(src.loc)
 			mimic.faction = spawned_faction
 		if("viscerator")
 			//more tomb guardians!
@@ -355,6 +351,7 @@
 /**********************************/
 
 /obj/structure/symbol
+	anchored = 1
 	layer = 3.5
 	name = "strange symbol"
 	icon = 'icons/obj/decals_vr.dmi'

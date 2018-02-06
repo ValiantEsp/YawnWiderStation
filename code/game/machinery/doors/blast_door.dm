@@ -12,7 +12,8 @@
 	desc = "That looks like it doesn't open easily."
 	icon = 'icons/obj/doors/rapid_pdoor.dmi'
 	icon_state = null
-
+	min_force = 20 //minimum amount of force needed to damage the door with a melee weapon
+	var/material/implicit_material
 	// Icon states for different shutter types. Simply change this instead of rewriting the update_icon proc.
 	var/icon_state_open = null
 	var/icon_state_opening = null
@@ -27,6 +28,13 @@
 	//Most blast doors are infrequently toggled and sometimes used with regular doors anyways,
 	//turning this off prevents awkward zone geometry in places like medbay lobby, for example.
 	block_air_zones = 0
+
+/obj/machinery/door/blast/initialize()
+	..()
+	implicit_material = get_material_by_name("plasteel")
+
+/obj/machinery/door/blast/get_material()
+	return implicit_material
 
 // Proc: Bumped()
 // Parameters: 1 (AM - Atom that tried to walk through this object)
@@ -45,6 +53,7 @@
 		icon_state = icon_state_closed
 	else
 		icon_state = icon_state_open
+	radiation_repository.resistance_cache.Remove(get_turf(src))
 	return
 
 // Proc: force_open()
@@ -78,11 +87,25 @@
 // Proc: force_toggle()
 // Parameters: None
 // Description: Opens or closes the door, depending on current state. No checks are done inside this proc.
-/obj/machinery/door/blast/proc/force_toggle()
+/obj/machinery/door/blast/proc/force_toggle(var/forced = 0, mob/user as mob)
+	if (forced)
+		playsound(src.loc, 'sound/machines/airlock_creaking.ogg', 100, 1)
+
 	if(src.density)
 		src.force_open()
 	else
 		src.force_close()
+
+//Proc: attack_hand
+//Description: Attacked with empty hand. Only to allow special attack_bys.
+/obj/machinery/door/blast/attack_hand(mob/user as mob)
+	if(istype(user, /mob/living/carbon/human))
+		var/mob/living/carbon/human/X = user
+		if(istype(X.species, /datum/species/xenos))
+			src.attack_alien(user)
+			return
+	..()
+
 
 // Proc: attackby()
 // Parameters: 2 (C - Item this object was clicked with, user - Mob which clicked this object)
@@ -91,7 +114,7 @@
 /obj/machinery/door/blast/attackby(obj/item/weapon/C as obj, mob/user as mob)
 	src.add_fingerprint(user)
 	if(istype(C, /obj/item/weapon)) // For reasons unknown, sometimes C is actually not what it is advertised as, like a mob.
-		if(C.pry == 1) // Can we pry it open with something, like a crowbar/fireaxe/lingblade?
+		if(C.pry == 1 && (user.a_intent != I_HURT || (stat & BROKEN))) // Can we pry it open with something, like a crowbar/fireaxe/lingblade?
 			if(istype(C,/obj/item/weapon/material/twohanded/fireaxe)) // Fireaxes need to be in both hands to pry.
 				var/obj/item/weapon/material/twohanded/fireaxe/F = C
 				if(!F.wielded)
@@ -100,38 +123,93 @@
 
 			// If we're at this point, it's a fireaxe in both hands or something else that doesn't care for twohanding.
 			if(((stat & NOPOWER) || (stat & BROKEN)) && !( src.operating ))
-				force_toggle()
+				force_toggle(1, user)
+
 			else
 				usr << "<span class='notice'>[src]'s motors resist your effort.</span>"
 			return
 
-		if(istype(C, /obj/item/stack/material) && C.get_material_name() == "plasteel") // Repairing.
-			var/amt = Ceiling((maxhealth - health)/150)
-			if(!amt)
-				usr << "<span class='notice'>\The [src] is already fully repaired.</span>"
-				return
-			var/obj/item/stack/P = C
-			if(P.amount < amt)
-				usr << "<span class='warning'>You don't have enough sheets to repair this! You need at least [amt] sheets.</span>"
-				return
-			usr << "<span class='notice'>You begin repairing [src]...</span>"
-			if(do_after(usr, 30))
-				if(P.use(amt))
-					usr << "<span class='notice'>You have repaired \The [src]</span>"
-					src.repair()
+
+		else if(src.density && (user.a_intent == I_HURT)) //If we can't pry it open and it's a weapon, let's hit it.
+			var/obj/item/weapon/W = C
+			user.setClickCooldown(user.get_attack_speed(W))
+			if(W.damtype == BRUTE || W.damtype == BURN)
+				user.do_attack_animation(src)
+				if(W.force < min_force)
+					user.visible_message("<span class='danger'>\The [user] hits \the [src] with \the [W] with no visible effect.</span>")
 				else
-					usr << "<span class='warning'>You don't have enough sheets to repair this! You need at least [amt] sheets.</span>"
+					user.visible_message("<span class='danger'>\The [user] forcefully strikes \the [src] with \the [W]!</span>")
+					playsound(src.loc, hitsound, 100, 1)
+					take_damage(W.force*0.35) //it's a blast door, it should take a while. -Luke
+				return
 
+	else if(istype(C, /obj/item/stack/material) && C.get_material_name() == "plasteel") // Repairing.
+		var/amt = Ceiling((maxhealth - health)/150)
+		if(!amt)
+			usr << "<span class='notice'>\The [src] is already fully repaired.</span>"
+			return
+		var/obj/item/stack/P = C
+		if(P.amount < amt)
+			usr << "<span class='warning'>You don't have enough sheets to repair this! You need at least [amt] sheets.</span>"
+			return
+		usr << "<span class='notice'>You begin repairing [src]...</span>"
+		if(do_after(usr, 30))
+			if(P.use(amt))
+				usr << "<span class='notice'>You have repaired \The [src]</span>"
+				src.repair()
+			else
+				usr << "<span class='warning'>You don't have enough sheets to repair this! You need at least [amt] sheets.</span>"
 
+	else if(src.density && (user.a_intent == I_HURT)) //If we can't pry it open and it's not a weapon.... Eh, let's attack it anyway.
+		var/obj/item/weapon/W = C
+		user.setClickCooldown(user.get_attack_speed(W))
+		if(W.damtype == BRUTE || W.damtype == BURN)
+			user.do_attack_animation(src)
+			if(W.force < min_force) //No actual non-weapon item shouls have a force greater than the min_force, but let's include this just in case.
+				user.visible_message("<span class='danger'>\The [user] hits \the [src] with \the [W] with no visible effect.</span>")
+			else
+				user.visible_message("<span class='danger'>\The [user] forcefully strikes \the [src] with \the [W]!</span>")
+				playsound(src.loc, hitsound, 100, 1)
+				take_damage(W.force*0.15) //If the item isn't a weapon, let's make this take longer than usual to break it down.
+			return
+
+// Proc: attack_alien()
+// Parameters: Attacking Xeno mob.
+// Description: Forces open the door after a delay.
+/obj/machinery/door/blast/attack_alien(var/mob/user) //Familiar, right? Doors.
+	if(istype(user, /mob/living/carbon/human))
+		var/mob/living/carbon/human/X = user
+		if(istype(X.species, /datum/species/xenos))
+			if(src.density)
+				visible_message("<span class='alium'>\The [user] begins forcing \the [src] open!</span>")
+				if(do_after(user, 15 SECONDS,src))
+					playsound(src.loc, 'sound/machines/airlock_creaking.ogg', 100, 1)
+					visible_message("<span class='danger'>\The [user] forces \the [src] open!</span>")
+					force_open(1)
+			else
+				visible_message("<span class='alium'>\The [user] begins forcing \the [src] closed!</span>")
+				if(do_after(user, 5 SECONDS,src))
+					playsound(src.loc, 'sound/machines/airlock_creaking.ogg', 100, 1)
+					visible_message("<span class='danger'>\The [user] forces \the [src] closed!</span>")
+					force_close(1)
+		else
+			visible_message("<span class='notice'>\The [user] strains fruitlessly to force \the [src] [density ? "open" : "closed"].</span>")
+			return
+	..()
 
 // Proc: open()
 // Parameters: None
 // Description: Opens the door. Does necessary checks. Automatically closes if autoclose is true
-/obj/machinery/door/blast/open()
-	if (src.operating || (stat & BROKEN || stat & NOPOWER))
-		return
-	force_open()
-	if(autoclose)
+/obj/machinery/door/blast/open(var/forced = 0)
+	if(forced)
+		force_open()
+		return 1
+	else
+		if (src.operating || (stat & BROKEN || stat & NOPOWER))
+			return 1
+		force_open()
+
+	if(autoclose && src.operating && !(stat & BROKEN || stat & NOPOWER))
 		spawn(150)
 			close()
 	return 1

@@ -25,6 +25,7 @@ datum/preferences
 	//character preferences
 	var/real_name						//our character's name
 	var/be_random_name = 0				//whether we are a random name every round
+	var/nickname						//our character's nickname
 	var/age = 30						//age of character
 	var/spawnpoint = "Arrivals Shuttle" //where this character will spawn (0-2).
 	var/b_type = "A+"					//blood type (not-chooseable)
@@ -49,7 +50,14 @@ datum/preferences
 	var/species_preview                 //Used for the species selection window.
 	var/list/alternate_languages = list() //Secondary language(s)
 	var/list/language_prefixes = list() //Kanguage prefix keys
-	var/list/gear						//Custom/fluff item loadout.
+	var/list/gear						//Left in for Legacy reasons, will no longer save.
+	var/list/gear_list = list()			//Custom/fluff item loadouts.
+	var/gear_slot = 1					//The current gear save slot
+	var/list/traits						//Traits which modifier characters for better or worse (mostly worse).
+	var/synth_color	= 0					//Lets normally uncolorable synth parts be colorable.
+	var/r_synth							//Used with synth_color to color synth parts that normaly can't be colored.
+	var/g_synth							//Same as above
+	var/b_synth							//Same as above
 
 		//Some faction information.
 	var/home_system = "Unset"           //System of birth.
@@ -76,7 +84,7 @@ datum/preferences
 	var/job_engsec_low = 0
 
 	//Keeps track of preferrence for not getting any wanted jobs
-	var/alternate_option = 0
+	var/alternate_option = 1
 
 	var/used_skillpoints = 0
 	var/skill_specialization = null
@@ -88,6 +96,8 @@ datum/preferences
 	var/list/rlimb_data = list()
 	var/list/player_alt_titles = new()		// the default name of a job like "Medical Doctor"
 
+	var/list/body_markings = list() // "name" = "#rgbcolor"
+
 	var/list/flavor_texts = list()
 	var/list/flavour_texts_robot = list()
 
@@ -97,7 +107,7 @@ datum/preferences
 	var/exploit_record = ""
 	var/disabilities = 0
 
-	var/nanotrasen_relation = "Neutral"
+	var/economic_status = "Average"
 
 	var/uplinklocation = "PDA"
 
@@ -123,6 +133,8 @@ datum/preferences
 	b_type = RANDOM_BLOOD_TYPE
 
 	gear = list()
+	gear_list = list()
+	gear_slot = 1
 
 	if(istype(C))
 		client = C
@@ -241,6 +253,7 @@ datum/preferences
 		load_preferences()
 		load_character()
 		attempt_vr(client.prefs_vr,"load_vore","") //VOREStation Edit
+		sanitize_preferences()
 	else if(href_list["load"])
 		if(!IsGuestKey(usr.key))
 			open_load_dialog(usr)
@@ -248,6 +261,7 @@ datum/preferences
 	else if(href_list["changeslot"])
 		load_character(text2num(href_list["changeslot"]))
 		attempt_vr(client.prefs_vr,"load_vore","") //VOREStation Edit
+		sanitize_preferences()
 		close_load_dialog(usr)
 	else if(href_list["resetslot"])
 		if("No" == alert("This will reset the current slot. Continue?", "Reset current slot?", "No", "Yes"))
@@ -272,14 +286,16 @@ datum/preferences
 
 	// Ask the preferences datums to apply their own settings to the new mob
 	player_setup.copy_to_mob(character)
-
+	
+	// VOREStation Edit - Sync up all their organs and species one final time
+	character.force_update_organs()
+	
 	if(icon_updates)
 		character.force_update_limbs()
 		character.update_mutations(0)
-		character.update_body(0)
 		character.update_underwear(0)
 		character.update_hair(0)
-		character.update_icons()
+		character.update_icons_all()
 
 /datum/preferences/proc/open_load_dialog(mob/user)
 	var/dat = "<body>"

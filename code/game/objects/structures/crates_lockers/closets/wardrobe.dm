@@ -29,6 +29,8 @@
 	new /obj/item/clothing/under/rank/security2(src)
 	new /obj/item/clothing/under/rank/security2(src)
 	new /obj/item/clothing/under/rank/security2(src)
+	new /obj/item/clothing/under/rank/security/skirt(src)
+	new /obj/item/clothing/under/rank/security/skirt(src)
 	new /obj/item/clothing/shoes/boots/jackboots(src)
 	new /obj/item/clothing/shoes/boots/jackboots(src)
 	new /obj/item/clothing/shoes/boots/jackboots(src)
@@ -82,6 +84,7 @@
 	new /obj/item/clothing/under/det/grey/waistcoat(src)
 	new /obj/item/clothing/under/det/black(src)
 	new /obj/item/clothing/under/det/black(src)
+	new /obj/item/clothing/under/det/skirt(src)
 	new /obj/item/clothing/under/det/corporate(src)
 	new /obj/item/clothing/under/det/corporate(src)
 	new /obj/item/clothing/suit/storage/det_trench(src)
@@ -148,6 +151,7 @@
 	new /obj/item/clothing/suit/nun(src)
 	new /obj/item/clothing/head/nun_hood(src)
 	new /obj/item/clothing/suit/storage/hooded/chaplain_hoodie(src)
+	new /obj/item/clothing/suit/storage/hooded/chaplain_hoodie/whiteout(src)
 	new /obj/item/clothing/suit/holidaypriest(src)
 	new /obj/item/clothing/under/wedding/bride_white(src)
 	new /obj/item/weapon/storage/backpack/cultpack (src)
@@ -189,7 +193,8 @@
 	new /obj/item/clothing/suit/unathi/robe(src)
 	new /obj/item/clothing/shoes/sandal(src)
 	new /obj/item/clothing/shoes/sandal(src)
-	new /obj/item/clothing/shoes/sandal(src)
+	new /obj/item/clothing/shoes/footwraps(src)
+	new /obj/item/clothing/shoes/footwraps(src)
 	new /obj/item/clothing/shoes/boots/winter(src)
 	new /obj/item/clothing/shoes/boots/winter(src)
 	new /obj/item/clothing/suit/storage/hooded/wintercoat(src)
@@ -264,6 +269,9 @@
 	new /obj/item/clothing/suit/storage/hooded/wintercoat/engineering/atmos(src)
 	new /obj/item/clothing/suit/storage/hooded/wintercoat/engineering/atmos(src)
 	new /obj/item/clothing/suit/storage/hooded/wintercoat/engineering/atmos(src)
+	new /obj/item/clothing/shoes/boots/winter/atmos(src)
+	new /obj/item/clothing/shoes/boots/winter/atmos(src)
+	new /obj/item/clothing/shoes/boots/winter/atmos(src)
 	return
 
 /obj/structure/closet/wardrobe/engineering_yellow
@@ -294,6 +302,9 @@
 	new /obj/item/clothing/suit/storage/hooded/wintercoat/engineering(src)
 	new /obj/item/clothing/suit/storage/hooded/wintercoat/engineering(src)
 	new /obj/item/clothing/suit/storage/hooded/wintercoat/engineering(src)
+	new /obj/item/clothing/shoes/boots/winter/engineering(src)
+	new /obj/item/clothing/shoes/boots/winter/engineering(src)
+	new /obj/item/clothing/shoes/boots/winter/engineering(src)
 	new /obj/item/clothing/shoes/boots/workboots(src)
 	new /obj/item/clothing/shoes/boots/workboots(src)
 	new /obj/item/clothing/shoes/boots/workboots(src)
@@ -359,12 +370,17 @@
 	new /obj/item/clothing/shoes/slippers(src)
 	new /obj/item/clothing/shoes/slippers(src)
 	new /obj/item/clothing/suit/storage/hooded/wintercoat/science(src)
-	new /obj/item/weapon/storage/backpack/toxins(src)
+	new /obj/item/clothing/shoes/boots/winter/science(src)
 	new /obj/item/weapon/storage/backpack/toxins(src)
 	new /obj/item/weapon/storage/backpack/satchel/tox(src)
-	new /obj/item/weapon/storage/backpack/satchel/tox(src)
-	return
-
+	if(prob(50))
+		new /obj/item/weapon/storage/backpack/dufflebag/sci(src)
+	else
+		new /obj/item/weapon/storage/backpack/satchel/tox(src)
+	if(prob(50))
+		new /obj/item/weapon/storage/backpack/dufflebag/sci(src)
+	else
+		new /obj/item/weapon/storage/backpack/satchel/tox(src)
 /obj/structure/closet/wardrobe/robotics_black
 	name = "robotics wardrobe"
 	icon_state = "black"
@@ -381,9 +397,15 @@
 	new /obj/item/clothing/gloves/black(src)
 	new /obj/item/clothing/gloves/black(src)
 	new /obj/item/weapon/storage/backpack/toxins(src)
-	new /obj/item/weapon/storage/backpack/toxins(src)
+	if(prob(50))
+		new /obj/item/weapon/storage/backpack/dufflebag/sci(src)
+	else
+		new /obj/item/weapon/storage/backpack/satchel/tox(src)
 	new /obj/item/weapon/storage/backpack/satchel/tox(src)
-	new /obj/item/weapon/storage/backpack/satchel/tox(src)
+	if(prob(50))
+		new /obj/item/weapon/storage/backpack/dufflebag/sci(src)
+	else
+		new /obj/item/weapon/storage/backpack/satchel/tox(src)
 	return
 
 
@@ -406,6 +428,8 @@
 	new /obj/item/weapon/storage/backpack/chemistry(src)
 	new /obj/item/weapon/storage/backpack/satchel/chem(src)
 	new /obj/item/weapon/storage/backpack/satchel/chem(src)
+	new /obj/item/weapon/storage/bag/chemistry(src)
+	new /obj/item/weapon/storage/bag/chemistry(src)
 	return
 
 
@@ -466,11 +490,11 @@
 	new /obj/item/clothing/under/rank/medical(src)
 	new /obj/item/clothing/under/rank/medical/skirt(src)
 	new /obj/item/clothing/under/rank/medical/skirt(src)
-	new /obj/item/clothing/under/rank/medical/blue(src)
-	new /obj/item/clothing/under/rank/medical/green(src)
-	new /obj/item/clothing/under/rank/medical/purple(src)
-	new /obj/item/clothing/under/rank/medical/black(src)
-	new /obj/item/clothing/under/rank/medical/navyblue(src)
+	new /obj/item/clothing/under/rank/medical/scrubs(src)
+	new /obj/item/clothing/under/rank/medical/scrubs/green(src)
+	new /obj/item/clothing/under/rank/medical/scrubs/purple(src)
+	new /obj/item/clothing/under/rank/medical/scrubs/black(src)
+	new /obj/item/clothing/under/rank/medical/scrubs/navyblue(src)
 	new /obj/item/clothing/head/surgery/navyblue(src)
 	new /obj/item/clothing/head/surgery/purple(src)
 	new /obj/item/clothing/head/surgery/blue(src)
@@ -484,6 +508,22 @@
 	new /obj/item/clothing/mask/surgical(src)
 	new /obj/item/clothing/suit/storage/hooded/wintercoat/medical(src)
 	new /obj/item/clothing/suit/storage/hooded/wintercoat/medical(src)
+	new /obj/item/clothing/shoes/boots/winter/medical(src)
+	new /obj/item/clothing/shoes/boots/winter/medical(src)
+	return
+
+
+/obj/structure/closet/wardrobe/medic_gown
+	name = "cloning wardrobe"
+	icon_state = "white"
+	icon_closed = "white"
+
+/obj/structure/closet/wardrobe/medic_gown/New()
+	..()
+	new /obj/item/clothing/under/medigown(src)
+	new /obj/item/clothing/under/medigown(src)
+	new /obj/item/clothing/under/medigown(src)
+	new /obj/item/clothing/under/medigown(src)
 	return
 
 
@@ -599,17 +639,25 @@
 	..()
 	new /obj/item/clothing/under/assistantformal(src)
 	new /obj/item/clothing/under/suit_jacket/charcoal(src)
+	new /obj/item/clothing/under/suit_jacket/charcoal/skirt(src)
 	new /obj/item/clothing/under/suit_jacket/navy(src)
+	new /obj/item/clothing/under/suit_jacket/navy/skirt(src)
 	new /obj/item/clothing/under/suit_jacket/burgundy(src)
+	new /obj/item/clothing/under/suit_jacket/burgundy/skirt(src)
 	new /obj/item/clothing/under/suit_jacket/checkered(src)
+	new /obj/item/clothing/under/suit_jacket/checkered/skirt(src)
 	new /obj/item/clothing/under/suit_jacket/tan(src)
+	new /obj/item/clothing/under/suit_jacket/tan/skirt(src)
 	new /obj/item/clothing/under/sl_suit(src)
 	new /obj/item/clothing/under/suit_jacket(src)
 	new /obj/item/clothing/under/suit_jacket/female(src)
 	new /obj/item/clothing/under/suit_jacket/female/skirt(src)
 	new /obj/item/clothing/under/suit_jacket/really_black(src)
+	new /obj/item/clothing/under/suit_jacket/really_black/skirt(src)
 	new /obj/item/clothing/under/suit_jacket/red(src)
+	new /obj/item/clothing/under/suit_jacket/red/skirt(src)
 	new /obj/item/clothing/under/scratch(src)
+	new /obj/item/clothing/under/scratch/skirt(src)
 	new /obj/item/weapon/storage/backpack/satchel(src)
 	new /obj/item/weapon/storage/backpack/satchel(src)
 	return
@@ -634,7 +682,10 @@
 	new /obj/item/clothing/head/caphat/formal(src)
 	new /obj/item/clothing/under/captainformal(src)
 	new /obj/item/clothing/suit/storage/hooded/wintercoat/captain(src)
+	new /obj/item/clothing/shoes/boots/winter/command(src)
 	new /obj/item/clothing/head/beret/centcom/captain(src)
 	new /obj/item/clothing/under/gimmick/rank/captain/suit(src)
+	new /obj/item/clothing/under/gimmick/rank/captain/suit/skirt(src)
 	new /obj/item/clothing/glasses/sunglasses(src)
+	new /obj/item/clothing/head/caphat(src)
 	return

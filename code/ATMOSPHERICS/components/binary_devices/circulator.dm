@@ -89,11 +89,11 @@
 
 /obj/machinery/atmospherics/binary/circulator/attackby(obj/item/weapon/W as obj, mob/user as mob)
 	if(istype(W, /obj/item/weapon/wrench))
-		playsound(src.loc, 'sound/items/Ratchet.ogg', 75, 1)
+		playsound(src, W.usesound, 75, 1)
 		anchored = !anchored
 		user.visible_message("[user.name] [anchored ? "secures" : "unsecures"] the bolts holding [src.name] to the floor.", \
 					"You [anchored ? "secure" : "unsecure"] the bolts holding [src] to the floor.", \
-					"You hear a ratchet")
+					"You hear a ratchet.")
 
 		if(anchored)
 			if(dir & (NORTH|SOUTH))
@@ -101,13 +101,13 @@
 			else if(dir & (EAST|WEST))
 				initialize_directions = EAST|WEST
 
-			initialize()
+			atmos_init()
 			build_network()
 			if (node1)
-				node1.initialize()
+				node1.atmos_init()
 				node1.build_network()
 			if (node2)
-				node2.initialize()
+				node2.atmos_init()
 				node2.build_network()
 		else
 			if(node1)

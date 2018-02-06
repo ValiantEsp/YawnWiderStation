@@ -26,15 +26,22 @@
 	var/absorbchance = 0					// % Chance of stomach beginning to absorb if prey struggles
 	var/escapechance = 0 					// % Chance of prey beginning to escape if prey struggles.
 	var/transferchance = 0 					// % Chance of prey being
+	var/can_taste = 0						// If this belly prints the flavor of prey when it eats someone.
+	var/bulge_size = 0.25					// The minimum size the prey has to be in order to show up on examine.
+	var/shrink_grow_size = 1				// This horribly named variable determines the minimum/maximum size it will shrink/grow prey to.
 	var/datum/belly/transferlocation = null	// Location that the prey is released if they struggle and get dropped off.
 
 	var/tmp/digest_mode = DM_HOLD				// Whether or not to digest. Default to not digest.
-	var/tmp/list/digest_modes = list(DM_HOLD,DM_DIGEST,DM_HEAL,DM_ABSORB,DM_DRAIN,DM_UNABSORB)	// Possible digest modes
-	var/tmp/list/transform_modes = list(DM_TRANSFORM_MALE,DM_TRANSFORM_FEMALE,DM_TRANSFORM_KEEP_GENDER,DM_TRANSFORM_CHANGE_SPECIES,DM_TRANSFORM_CHANGE_SPECIES_EGG,DM_TRANSFORM_KEEP_GENDER_EGG,DM_TRANSFORM_MALE_EGG,DM_TRANSFORM_FEMALE_EGG, DM_EGG)
+	var/tmp/list/digest_modes = list(DM_HOLD,DM_DIGEST,DM_ITEMWEAK,DM_STRIPDIGEST,DM_HEAL,DM_ABSORB,DM_DRAIN,DM_UNABSORB,DM_SHRINK,DM_GROW,DM_SIZE_STEAL,DM_DIGEST_NUMB)	// Possible digest modes
+	var/tmp/list/transform_modes = list(DM_TRANSFORM_MALE,DM_TRANSFORM_FEMALE,DM_TRANSFORM_KEEP_GENDER,DM_TRANSFORM_CHANGE_SPECIES_AND_TAUR,DM_TRANSFORM_CHANGE_SPECIES_AND_TAUR_EGG,DM_TRANSFORM_REPLICA,DM_TRANSFORM_REPLICA_EGG,DM_TRANSFORM_KEEP_GENDER_EGG,DM_TRANSFORM_MALE_EGG,DM_TRANSFORM_FEMALE_EGG, DM_EGG)
 	var/tmp/mob/living/owner					// The mob whose belly this is.
 	var/tmp/list/internal_contents = list()		// People/Things you've eaten into this belly!
 	var/tmp/is_full								// Flag for if digested remeans are present. (for disposal messages)
-	var/tmp/emotePend = 0						// If there's already a spawned thing counting for the next emote
+	var/tmp/emotePend = FALSE						// If there's already a spawned thing counting for the next emote
+	var/tmp/list/items_preserved = list()		// Stuff that wont digest.
+	var/tmp/list/checked_slots = list()			// Checked gear slots for strip digest.
+	var/list/slots = list(slot_back,slot_handcuffed,slot_l_store,slot_r_store,slot_wear_mask,slot_l_hand,slot_r_hand,slot_wear_id,slot_glasses,slot_gloves,slot_head,slot_shoes,slot_belt,slot_wear_suit,slot_w_uniform,slot_s_store,slot_l_ear,slot_r_ear)
+
 
 	// Don't forget to watch your commas at the end of each line if you change these.
 	var/list/struggle_messages_outside = list(
@@ -88,7 +95,7 @@
 	//Mostly for being overridden on precreated bellies on mobs. Could be VV'd into
 	//a carbon's belly if someone really wanted. No UI for carbons to adjust this.
 	//List has indexes that are the digestion mode strings, and keys that are lists of strings.
-	var/list/emote_lists = list()
+	var/tmp/list/emote_lists = list()
 
 // Constructor that sets the owning mob
 /datum/belly/New(var/mob/living/owning_mob)
@@ -107,22 +114,24 @@
 // Release all contents of this belly into the owning mob's location.
 // If that location is another mob, contents are transferred into whichever of its bellies the owning mob is in.
 // Returns the number of mobs so released.
-/datum/belly/proc/release_all_contents()
+/datum/belly/proc/release_all_contents(var/include_absorbed = FALSE)
 	if (internal_contents.len == 0)
 		return 0
-	for (var/atom/movable/M in internal_contents)
+	for (var/M in internal_contents)
 		if(istype(M,/mob/living))
 			var/mob/living/ML = M
-			if(ML.absorbed)
+			if(ML.absorbed && !include_absorbed)
 				continue
+			ML.absorbed = FALSE
 
-		M.forceMove(owner.loc)  // Move the belly contents into the same location as belly's owner.
-		internal_contents -= M  // Remove from the belly contents
-
+		var/atom/movable/AM = M
+		AM.forceMove(owner.loc)  // Move the belly contents into the same location as belly's owner.
+		internal_contents -= AM  // Remove from the belly contents
 		var/datum/belly/B = check_belly(owner) // This makes sure that the mob behaves properly if released into another mob
 		if(B)
-			B.internal_contents += M
-
+			B.internal_contents += AM
+	items_preserved.Cut()
+	checked_slots.Cut()
 	owner.visible_message("<font color='green'><b>[owner] expels everything from their [lowertext(name)]!</b></font>")
 	return 1
 
@@ -135,21 +144,23 @@
 
 	M.forceMove(owner.loc)  // Move the belly contents into the same location as belly's owner.
 	src.internal_contents -= M  // Remove from the belly contents
+	if(M in items_preserved)
+		src.items_preserved -= M
 
 	if(istype(M,/mob/living))
 		var/mob/living/ML = M
 		var/mob/living/OW = owner
 		if(ML.absorbed)
 			ML.absorbed = 0
-			ML.reagents = new/datum/reagents(1000,M) //Human reagent datums hold 1000
-			if(OW.reagents && istype(OW.reagents,/datum/reagents)) //Does the pred have a reagents list?
-				var/datum/reagents/OR = owner.reagents
+			if(ishuman(M) && ishuman(OW))
+				var/mob/living/carbon/human/Prey = M
+				var/mob/living/carbon/human/Pred = OW
+				// TODO - If we ever find a way to share reagent containers, un-share them here
 				var/absorbed_count = 2 //Prey that we were, plus the pred gets a portion
 				for(var/mob/living/P in internal_contents)
 					if(P.absorbed)
 						absorbed_count++
-
-				OR.trans_to(ML,OR.total_volume / absorbed_count)
+				Pred.bloodstr.trans_to(Prey, Pred.reagents.total_volume / absorbed_count)
 
 	var/datum/belly/B = check_belly(owner)
 	if(B)
@@ -168,6 +179,9 @@
 
 	prey.forceMove(owner)
 	internal_contents |= prey
+	owner.updateVRPanel()
+	for(var/mob/living/M in internal_contents)
+		M.updateVRPanel()
 
 	if(inside_flavor)
 		prey << "<span class='notice'><B>[inside_flavor]</B></span>"
@@ -180,10 +194,18 @@
 	if(internal_contents.len && examine_messages.len)
 		var/formatted_message
 		var/raw_message = pick(examine_messages)
+		var/total_bulge = 0
 
 		formatted_message = replacetext(raw_message,"%belly",lowertext(name))
-
-		return("<span class='warning'>[formatted_message]</span><BR>")
+		formatted_message = replacetext(formatted_message,"%pred",owner)
+		formatted_message = replacetext(formatted_message,"%prey",english_list(internal_contents))
+		for(var/mob/living/P in internal_contents)
+			if(!P.absorbed) //This is required first, in case there's a person absorbed and not absorbed in a stomach.
+				total_bulge += P.size_multiplier
+		if(total_bulge >= bulge_size && bulge_size != 0)
+			return("<span class='warning'>[formatted_message]</span><BR>")
+		else
+			return ""
 
 // The next function gets the messages set on the belly, in human-readable format.
 // This is useful in customization boxes and such. The delimiter right now is \n\n so
@@ -249,12 +271,14 @@
 // Indigestable items are removed, and M is deleted.
 /datum/belly/proc/digestion_death(var/mob/living/M)
 	is_full = 1
-	M.death(1)
+	//M.death(1) // "Stop it he's already dead..." Basically redundant and the reason behind screaming mouse carcasses.
+	if(M.ckey)
+		message_admins("[key_name(owner)] has digested [key_name(M)] in their [name] ([owner ? "<a href='?_src_=holder;adminplayerobservecoodjump=1;X=[owner.x];Y=[owner.y];Z=[owner.z]'>JMP</a>" : "null"])")
 	internal_contents -= M
 
 	// If digested prey is also a pred... anyone inside their bellies gets moved up.
-	if (is_vore_predator(M))
-		for (var/bellytype in M.vore_organs)
+	if(is_vore_predator(M))
+		for(var/bellytype in M.vore_organs)
 			var/datum/belly/belly = M.vore_organs[bellytype]
 			for (var/obj/thing in belly.internal_contents)
 				thing.loc = owner
@@ -265,73 +289,56 @@
 				subprey << "As [M] melts away around you, you find yourself in [owner]'s [name]"
 
 	//Drop all items into the belly.
-	if (config.items_survive_digestion)
-		for (var/obj/item/W in M)
-			_handle_digested_item(W,M)
+	if(config.items_survive_digestion)
+		var/mob/living/carbon/human/H = M
+		if(!H)
+			H = owner
+		for(var/obj/item/W in H)
+			if(istype(W,/obj/item/organ/internal/mmi_holder/posibrain))
+				var/obj/item/organ/internal/mmi_holder/MMI = W
+				var/atom/movable/brain = MMI.removed()
+				if(brain)
+					H.remove_from_mob(brain,owner)
+					brain.forceMove(owner)
+					items_preserved += brain
+					internal_contents += brain
+			for(var/slot in slots)
+				var/obj/item/thingy = M.get_equipped_item(slot = slot)
+				if(thingy)
+					M.unEquip(thingy,force = TRUE)
+					thingy.forceMove(owner)
+					internal_contents |= thingy
 
 	//Reagent transfer
-	if(M.reagents && istype(M.reagents,/datum/reagents))
-		var/mob/living/OW = owner
-		if(OW.reagents && istype(OW.reagents,/datum/reagents)) //Does the pred have a reagents list to give to?
-			var/datum/reagents/RL = M.reagents
-			RL.trans_to(owner,RL.total_volume*0.5)
+	if(ishuman(owner))
+		var/mob/living/carbon/human/Pred = owner
+		if(ishuman(M))
+			var/mob/living/carbon/human/Prey = M
+			Prey.bloodstr.trans_to_holder(Pred.bloodstr, Prey.bloodstr.total_volume, 0.5, TRUE) // Copy=TRUE because we're deleted anyway
+			Prey.ingested.trans_to_holder(Pred.bloodstr, Prey.ingested.total_volume, 0.5, TRUE) // Therefore don't bother spending cpu
+			Prey.touching.trans_to_holder(Pred.bloodstr, Prey.touching.total_volume, 0.5, TRUE) // On updating the prey's reagents
+		else if(M.reagents)
+			M.reagents.trans_to_holder(Pred.bloodstr, M.reagents.total_volume, 0.5, TRUE)
 
 	// Delete the digested mob
 	qdel(M)
-
-// Recursive method - To recursively scan thru someone's inventory for digestable/indigestable.
-/datum/belly/proc/_handle_digested_item(var/obj/item/W,var/mob/M)
-	// SOME mob has to use some procs. If somehow they're gone, then the pred can handle it.
-	if(!M)
-		M = owner
-
-	// IDs are handled specially to 'digest' them
-	if(istype(W,/obj/item/weapon/card/id))
-		var/obj/item/weapon/card/id/ID = W
-		ID.desc = "A partially digested card that has seen better days.  Much of it's data has been destroyed."
-		ID.icon = 'icons/obj/card_vr.dmi'
-		ID.icon_state = "digested"
-		ID.access = list() // No access
-		M.remove_from_mob(ID,owner)
-		internal_contents += ID
-
-	// Posibrains have to be pulled 'out' of their organ version.
-	else if(istype(W,/obj/item/organ/internal/mmi_holder/posibrain))
-		var/obj/item/organ/internal/mmi_holder/MMI = W
-		var/atom/movable/brain = MMI.removed()
-		if(brain)
-			M.remove_from_mob(brain,owner)
-			brain.forceMove(owner)
-			internal_contents += brain
-
-	else
-		if(!_is_digestable(W))
-			M.remove_from_mob(W,owner)
-			internal_contents += W
-		else
-			for (var/obj/item/SubItem in W)
-				_handle_digested_item(SubItem,M)
-
-/datum/belly/proc/_is_digestable(var/obj/item/I)
-	if(is_type_in_list(I,important_items))
-		return 0
-	return 1
 
 // Handle a mob being absorbed
 /datum/belly/proc/absorb_living(var/mob/living/M)
 	M.absorbed = 1
 	M << "<span class='notice'>[owner]'s [name] absorbs your body, making you part of them.</span>"
 	owner << "<span class='notice'>Your [name] absorbs [M]'s body, making them part of you.</span>"
-	var/mob/living/OW = owner
 
-	//Reagent sharing for absorbed with pred
-	if(OW.reagents && istype(OW.reagents,/datum/reagents)) //Does the pred have a reagent list?
-		if(M.reagents && istype(M.reagents,/datum/reagents)) //Does the prey have a reagent list?
-			var/datum/reagents/OR = owner.reagents
-			var/datum/reagents/PR = M.reagents
-			PR.trans_to(owner,PR.total_volume)
-			M.reagents = OR
-			del(PR)
+	if(ishuman(M) && ishuman(owner))
+		var/mob/living/carbon/human/Prey = M
+		var/mob/living/carbon/human/Pred = owner
+		//Reagent sharing for absorbed with pred - Copy so both pred and prey have these reagents.
+		Prey.bloodstr.trans_to_holder(Pred.bloodstr, Prey.bloodstr.total_volume, copy = TRUE)
+		Prey.ingested.trans_to_holder(Pred.bloodstr, Prey.ingested.total_volume, copy = TRUE)
+		Prey.touching.trans_to_holder(Pred.bloodstr, Prey.touching.total_volume, copy = TRUE)
+		// TODO - Find a way to make the absorbed prey share the effects with the pred.
+		// Currently this is infeasible because reagent containers are designed to have a single my_atom, and we get
+		// problems when A absorbs B, and then C absorbs A,  resulting in B holding onto an invalid reagent container.
 
 	//This is probably already the case, but for sub-prey, it won't be.
 	M.forceMove(owner)
@@ -347,6 +354,20 @@
 				internal_contents += Mm
 				B.internal_contents -= Mm
 				absorb_living(Mm)
+
+//Digest a single item
+//Receives a return value from digest_act that's how much nutrition
+//the item should be worth
+/datum/belly/proc/digest_item(var/obj/item/item)
+	var/digested = item.digest_act(internal_contents, owner)
+	if(!digested)
+		items_preserved |= item
+	else
+		internal_contents -= item
+		owner.nutrition += (digested)
+		if(isrobot(owner))
+			var/mob/living/silicon/robot/R = owner
+			R.cell.charge += (50 * digested)
 
 //Handle a mob struggling
 // Called from /mob/living/carbon/relaymove()
@@ -394,11 +415,11 @@
 	playsound(R.loc, strsound, 50, 1)
 
 	if(escapable) //If the stomach has escapable enabled.
-		R << "<span class='warning'>You attempt to climb out of \the [name].</span>"
-		owner << "<span class='warning'>Someone is attempting to climb out of your [name]!</span>"
 		if(prob(escapechance)) //Let's have it check to see if the prey escapes first.
+			R << "<span class='warning'>You start to climb out of \the [name].</span>"
+			owner << "<span class='warning'>Someone is attempting to climb out of your [name]!</span>"
 			if(do_after(R, escapetime))
-				if((escapable) && (R in internal_contents)) //Does the owner still have escapable enabled?
+				if((escapable) && (R in internal_contents) && !R.absorbed) //Does the owner still have escapable enabled?
 					release_specific_contents(R)
 					R << "<span class='warning'>You climb out of \the [name].</span>"
 					owner << "<span class='warning'>[R] climbs out of your [name]!</span>"
@@ -407,33 +428,75 @@
 					return
 				else if(!(R in internal_contents)) //Aren't even in the belly. Quietly fail.
 					return
-			else //Belly became inescapable.
-				R << "<span class='warning'>Your attempt to escape [name] has failed!</span>"
-				owner << "<span class='notice'>The attempt to escape from your [name] has failed!</span>"
-				return
+				else //Belly became inescapable.
+					R << "<span class='warning'>Your attempt to escape [name] has failed!</span>"
+					owner << "<span class='notice'>The attempt to escape from your [name] has failed!</span>"
+					return
 
 		else if(prob(transferchance) && istype(transferlocation)) //Next, let's have it see if they end up getting into an even bigger mess then when they started.
-			internal_contents -= R
-			transferlocation.internal_contents |= R
+			var/location_found = 0
+			var/name_found = 0
+			for(var/I in owner.vore_organs)
+				var/datum/belly/B = owner.vore_organs[I]
+				if(B == transferlocation)
+					location_found = 1
+					break
+
+			if(!location_found)
+				for(var/I in owner.vore_organs)
+					var/datum/belly/B = owner.vore_organs[I]
+					if(B.name == transferlocation.name)
+						name_found = 1
+						transferlocation = B
+						break
+
+			if(!location_found && !name_found)
+				to_chat(owner, "<span class='warning'>Something went wrong with your belly transfer settings.</span>")
+				transferlocation = null
+				return
+
 			R << "<span class='warning'>Your attempt to escape [name] has failed and your struggles only results in you sliding into [owner]'s [transferlocation]!</span>"
 			owner << "<span class='warning'>Someone slid into your [transferlocation] due to their struggling inside your [name]!</span>"
+			transfer_contents(R, transferlocation)
 			return
 
-		else if(prob(absorbchance)) //After that, let's have it run the absorb chance.
-			R << "<span class='warning'>In response to your struggling, \the [name] begins to get more active...</span>"
-			owner << "<span class='warning'>You feel your [name] beginning to become active!</span>"
+		else if(prob(absorbchance) && digest_mode != DM_ABSORB) //After that, let's have it run the absorb chance.
+			R << "<span class='warning'>In response to your struggling, \the [name] begins to cling more tightly...</span>"
+			owner << "<span class='warning'>You feel your [name] start to cling onto its contents...</span>"
 			digest_mode = DM_ABSORB
 			return
 
-		else if(prob(digestchance)) //Finally, let's see if it should run the digest chance.
+		else if(prob(digestchance) && digest_mode != DM_DIGEST) //Finally, let's see if it should run the digest chance.
 			R << "<span class='warning'>In response to your struggling, \the [name] begins to get more active...</span>"
 			owner << "<span class='warning'>You feel your [name] beginning to become active!</span>"
 			digest_mode = DM_DIGEST
 			return
 		else //Nothing interesting happened.
-			R << "<span class='warning'>But make no progress in escaping [owner]'s [name].</span>"
-			owner << "<span class='warning'>But appears to be unable to make any progress in escaping your [name].</span>"
+			R << "<span class='warning'>You make no progress in escaping [owner]'s [name].</span>"
+			owner << "<span class='warning'>Your prey appears to be unable to make any progress in escaping your [name].</span>"
 			return
+
+//Transfers contents from one belly to another
+/datum/belly/proc/transfer_contents(var/atom/movable/content, var/datum/belly/target, silent = 0)
+	if(!(content in internal_contents))
+		return
+	internal_contents -= content
+	target.internal_contents += content
+	if(content in items_preserved)
+		items_preserved -= content
+		target.items_preserved += content
+	if(isliving(content))
+		var/mob/living/M = content
+		if(target.inside_flavor)
+			to_chat(M, "<span class='notice'><B>[target.inside_flavor]</B></span>")
+		if(target.can_taste && M.get_taste_message(0))
+			to_chat(owner, "<span class='notice'>[M] tastes of [M.get_taste_message(0)].</span>")
+	if(!silent)
+		for(var/mob/hearer in range(1,owner))
+			hearer << sound(target.vore_sound,volume=80)
+	owner.updateVRPanel()
+	for(var/mob/living/M in internal_contents)
+		M.updateVRPanel()
 
 // Belly copies and then returns the copy
 // Needs to be updated for any var changes
@@ -452,6 +515,7 @@
 	dupe.digest_burn = digest_burn
 	dupe.digest_tickrate = digest_tickrate
 	dupe.immutable = immutable
+	dupe.can_taste = can_taste
 	dupe.escapable = escapable
 	dupe.escapetime = escapetime
 	dupe.digestchance = digestchance
@@ -459,6 +523,8 @@
 	dupe.escapechance = escapechance
 	dupe.transferchance = transferchance
 	dupe.transferlocation = transferlocation
+	dupe.bulge_size = bulge_size
+	dupe.shrink_grow_size = shrink_grow_size
 
 	//// Object-holding variables
 	//struggle_messages_outside - strings

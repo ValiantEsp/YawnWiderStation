@@ -13,6 +13,7 @@
 	throw_range = 5
 	origin_tech = list(TECH_BIO = 3)
 	attack_verb = list("attacked", "slapped", "whacked")
+	var/clone_source = FALSE
 	var/mob/living/carbon/brain/brainmob = null
 
 /obj/item/organ/internal/brain/robotize()
@@ -35,7 +36,7 @@
 	if (. >= 2)
 		if(prob(1))
 			owner.custom_pain("Your feel very dizzy for a moment!",0)
-			owner.confused = max(owner.confused, 2)
+			owner.Confuse(2)
 
 /obj/item/organ/internal/brain/proc/replace_self_with(replace_path)
 	var/mob/living/carbon/human/tmp_owner = owner
@@ -43,21 +44,6 @@
 	if(tmp_owner)
 		tmp_owner.internal_organs_by_name[organ_tag] = new replace_path(tmp_owner, 1)
 		tmp_owner = null
-
-/obj/item/organ/internal/pariah_brain
-	name = "brain remnants"
-	desc = "Did someone tread on this? It looks useless for cloning or cyborgification."
-	organ_tag = "brain"
-	parent_organ = BP_HEAD
-	icon = 'icons/mob/alien.dmi'
-	icon_state = "chitin"
-	vital = 1
-
-/obj/item/organ/internal/brain/xeno
-	name = "thinkpan"
-	desc = "It looks kind of like an enormous wad of purple bubblegum."
-	icon = 'icons/mob/alien.dmi'
-	icon_state = "chitin"
 
 /obj/item/organ/internal/brain/New()
 	..()
@@ -67,10 +53,8 @@
 			brainmob.client.screen.len = null //clear the hud
 
 /obj/item/organ/internal/brain/Destroy()
-	if(brainmob)
-		qdel(brainmob)
-		brainmob = null
-	..()
+	qdel_null(brainmob)
+	. = ..()
 
 /obj/item/organ/internal/brain/proc/transfer_identity(var/mob/living/carbon/H)
 
@@ -81,8 +65,15 @@
 		brainmob.dna = H.dna.Clone()
 		brainmob.timeofhostdeath = H.timeofdeath
 
+		// Copy modifiers.
+		for(var/datum/modifier/M in H.modifiers)
+			if(M.flags & MODIFIER_GENETIC)
+				brainmob.add_modifier(M.type)
+
 	if(H.mind)
 		H.mind.transfer_to(brainmob)
+
+	brainmob.languages = H.languages
 
 	brainmob << "<span class='notice'>You feel slightly disoriented. That's normal when you're just \a [initial(src.name)].</span>"
 	callHook("debrain", list(brainmob))
@@ -122,11 +113,31 @@
 			target.key = brainmob.key
 	..()
 
+/obj/item/organ/internal/pariah_brain
+	name = "brain remnants"
+	desc = "Did someone tread on this? It looks useless for cloning or cyborgification."
+	organ_tag = "brain"
+	parent_organ = BP_HEAD
+	icon = 'icons/mob/alien.dmi'
+	icon_state = "chitin"
+	vital = 1
+
+/obj/item/organ/internal/brain/xeno
+	name = "thinkpan"
+	desc = "It looks kind of like an enormous wad of purple bubblegum."
+	icon = 'icons/mob/alien.dmi'
+	icon_state = "chitin"
+
 /obj/item/organ/internal/brain/slime
 	name = "slime core"
 	desc = "A complex, organic knot of jelly and crystalline particles."
 	icon = 'icons/mob/slimes.dmi'
 	icon_state = "green slime extract"
+	parent_organ = BP_TORSO
+	clone_source = TRUE
+
+/obj/item/orgam/internal/brain/slime/is_open_container()
+	return 1
 
 /obj/item/organ/internal/brain/golem
 	name = "chem"

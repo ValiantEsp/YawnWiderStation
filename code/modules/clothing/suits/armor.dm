@@ -80,6 +80,9 @@
 	if(istype(damage_source, /obj/item/projectile/energy) || istype(damage_source, /obj/item/projectile/beam))
 		var/obj/item/projectile/P = damage_source
 
+		if(P.reflected) // Can't reflect twice
+			return ..()
+
 		var/reflectchance = 40 - round(damage/3)
 		if(!(def_zone in list(BP_TORSO, BP_GROIN)))
 			reflectchance /= 2
@@ -194,10 +197,10 @@
 /obj/item/clothing/suit/armor/reactive/attack_self(mob/user as mob)
 	active = !( active )
 	if (active)
-		user << "\blue The reactive armor is now active."
+		user << "<font color='blue'>The reactive armor is now active.</font>"
 		icon_state = "reactive"
 	else
-		user << "\blue The reactive armor is now inactive."
+		user << "<font color='blue'>The reactive armor is now inactive.</font>"
 		icon_state = "reactiveoff"
 		add_fingerprint(user)
 	return
@@ -206,6 +209,36 @@
 	active = 0
 	icon_state = "reactiveoff"
 	..()
+
+// Alien armor has a chance to completely block attacks.
+/obj/item/clothing/suit/armor/alien
+	name = "alien enhancement vest"
+	desc = "It's a strange piece of what appears to be armor. It looks very light and agile. Strangely enough it seems to have been designed for a humanoid shape."
+	description_info = "It has a 20% chance to completely nullify an incoming attack, and the wearer moves slightly faster."
+	icon_state = "alien_speed"
+	blood_overlay_type = "armor"
+	item_state_slots = list(slot_r_hand_str = "armor", slot_l_hand_str = "armor")
+	slowdown = -1
+	body_parts_covered = UPPER_TORSO|LOWER_TORSO
+	armor = list(melee = 50, bullet = 50, laser = 50, energy = 50, bomb = 50, bio = 0, rad = 40)
+	siemens_coefficient = 0.4
+	var/block_chance = 20
+
+/obj/item/clothing/suit/armor/alien/tank
+	name = "alien protection suit"
+	desc = "It's really resilient yet lightweight, so it's probably meant to be armor. Strangely enough it seems to have been designed for a humanoid shape."
+	description_info = "It has a 40% chance to completely nullify an incoming attack."
+	icon_state = "alien_tank"
+	slowdown = 0
+	body_parts_covered = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
+	armor = list(melee = 70, bullet = 70, laser = 70, energy = 70, bomb = 70, bio = 0, rad = 40)
+	block_chance = 40
+
+/obj/item/clothing/suit/armor/alien/handle_shield(mob/user, var/damage, atom/damage_source = null, mob/attacker = null, var/def_zone = null, var/attack_text = "the attack")
+	if(prob(block_chance))
+		user.visible_message("<span class='danger'>\The [src] completely absorbs [attack_text]!</span>")
+		return TRUE
+	return FALSE
 
 //Non-hardsuit ERT armor.
 /obj/item/clothing/suit/armor/vest/ert
@@ -411,7 +444,7 @@
 //All of the armor below is mostly unused
 
 /obj/item/clothing/suit/armor/centcomm
-	name = "Cent. Com. armor"
+	name = "CentCom armor"
 	desc = "A suit that protects against some damage."
 	icon_state = "centcom"
 	item_state_slots = list(slot_r_hand_str = "armor", slot_l_hand_str = "armor")
@@ -452,3 +485,71 @@
 	desc = "Pukish armor."
 	icon_state = "tdgreen"
 	siemens_coefficient = 1
+
+//Modular plate carriers
+/obj/item/clothing/suit/armor/pcarrier
+	name = "plate carrier"
+	desc = "A lightweight black plate carrier vest. It can be equipped with armor plates, but provides no protection of its own."
+	icon = 'icons/obj/clothing/modular_armor.dmi'
+	item_icons = list(slot_wear_suit_str = 'icons/mob/modular_armor.dmi')
+	icon_state = "pcarrier"
+	valid_accessory_slots = list(ACCESSORY_SLOT_INSIGNIA, ACCESSORY_SLOT_ARMOR_C, ACCESSORY_SLOT_ARMOR_A, ACCESSORY_SLOT_ARMOR_L, ACCESSORY_SLOT_ARMOR_S, ACCESSORY_SLOT_ARMOR_M)
+	restricted_accessory_slots = list(ACCESSORY_SLOT_INSIGNIA, ACCESSORY_SLOT_ARMOR_C, ACCESSORY_SLOT_ARMOR_A, ACCESSORY_SLOT_ARMOR_L, ACCESSORY_SLOT_ARMOR_S)
+	blood_overlay_type = "armor"
+
+/obj/item/clothing/suit/armor/pcarrier/light
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate)
+
+/obj/item/clothing/suit/armor/pcarrier/light/sol
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate, /obj/item/clothing/accessory/armor/tag)
+
+/obj/item/clothing/suit/armor/pcarrier/light/nt
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate, /obj/item/clothing/accessory/armor/tag/nt)
+
+/obj/item/clothing/suit/armor/pcarrier/medium
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate/medium, /obj/item/clothing/accessory/storage/pouches)
+
+/obj/item/clothing/suit/armor/pcarrier/medium/sol
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate/medium, /obj/item/clothing/accessory/storage/pouches, /obj/item/clothing/accessory/armor/tag)
+
+/obj/item/clothing/suit/armor/pcarrier/medium/security
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate/medium, /obj/item/clothing/accessory/storage/pouches, /obj/item/clothing/accessory/armor/tag/sec)
+
+/obj/item/clothing/suit/armor/pcarrier/medium/command
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate/medium, /obj/item/clothing/accessory/storage/pouches, /obj/item/clothing/accessory/armor/tag/com)
+
+/obj/item/clothing/suit/armor/pcarrier/medium/nt
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate/medium, /obj/item/clothing/accessory/storage/pouches, /obj/item/clothing/accessory/armor/tag/nt)
+
+/obj/item/clothing/suit/armor/pcarrier/blue
+	name = "blue plate carrier"
+	desc = "A lightweight blue plate carrier vest. It can be equipped with armor plates, but provides no protection of its own."
+	icon_state = "pcarrier_blue"
+
+/obj/item/clothing/suit/armor/pcarrier/blue/sol
+	name = "peacekeeper plate carrier"
+	desc = "A lightweight plate carrier vest in SCG Peacekeeper colors. It can be equipped with armor plates, but provides no protection of its own."
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate/medium, /obj/item/clothing/accessory/storage/pouches/blue, /obj/item/clothing/accessory/armguards/blue, /obj/item/clothing/accessory/armor/tag)
+
+/obj/item/clothing/suit/armor/pcarrier/green
+	name = "green plate carrier"
+	desc = "A lightweight green plate carrier vest. It can be equipped with armor plates, but provides no protection of its own."
+	icon_state = "pcarrier_green"
+
+/obj/item/clothing/suit/armor/pcarrier/navy
+	name = "navy plate carrier"
+	desc = "A lightweight navy blue plate carrier vest. It can be equipped with armor plates, but provides no protection of its own."
+	icon_state = "pcarrier_navy"
+
+/obj/item/clothing/suit/armor/pcarrier/tan
+	name = "tan plate carrier"
+	desc = "A lightweight tan plate carrier vest. It can be equipped with armor plates, but provides no protection of its own."
+	icon_state = "pcarrier_tan"
+
+/obj/item/clothing/suit/armor/pcarrier/tan/tactical
+	name = "tactical plate carrier"
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate/tactical, /obj/item/clothing/accessory/storage/pouches/large/tan)
+
+/obj/item/clothing/suit/armor/pcarrier/merc
+	starting_accessories = list(/obj/item/clothing/accessory/armorplate/merc, /obj/item/clothing/accessory/armguards/merc, /obj/item/clothing/accessory/legguards/merc, /obj/item/clothing/accessory/storage/pouches/large)
+

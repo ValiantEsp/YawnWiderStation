@@ -37,7 +37,7 @@
 /obj/item/device/flashlight/Destroy()
 	if(power_use)
 		processing_objects -= src
-	..()
+	return ..()
 
 /obj/item/device/flashlight/verb/toggle()
 	set name = "Toggle Flashlight Brightness"
@@ -73,7 +73,7 @@
 		if(brightness_level == "low")
 			set_light(brightness_on/2)
 		else if(brightness_level == "high")
-			set_light(brightness_on*4)
+			set_light(brightness_on*1.5)
 		else
 			set_light(brightness_on)
 
@@ -109,6 +109,7 @@
 			user << "You flick the switch on [src], but nothing happens."
 			return 0
 	on = !on
+	playsound(src.loc, 'sound/weapons/empty.ogg', 15, 1, -3)
 	update_icon()
 	user.update_action_buttons()
 	return 1
@@ -140,7 +141,7 @@
 
 			user.visible_message("<span class='notice'>\The [user] directs [src] to [M]'s eyes.</span>", \
 							 	 "<span class='notice'>You direct [src] to [M]'s eyes.</span>")
-			if(H == user)	//can't look into your own eyes buster
+			if(H != user)	//can't look into your own eyes buster
 				if(M.stat == DEAD || M.blinded)	//mob is dead or fully blind
 					user << "<span class='warning'>\The [M]'s pupils do not react to the light!</span>"
 					return
@@ -162,7 +163,7 @@
 				else
 					user << "<span class='notice'>\The [M]'s pupils narrow.</span>"
 
-			user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN) //can be used offensively
+			user.setClickCooldown(user.get_attack_speed(src)) //can be used offensively
 			M.flash_eyes()
 	else
 		return ..()
@@ -180,6 +181,38 @@
 		..()
 	else
 		return ..()
+
+/obj/item/device/flashlight/MouseDrop(obj/over_object as obj)
+	if(!canremove)
+		return
+
+	if (ishuman(usr) || issmall(usr)) //so monkeys can take off their backpacks -- Urist
+
+		if (istype(usr.loc,/obj/mecha)) // stops inventory actions in a mech. why?
+			return
+
+		if (!( istype(over_object, /obj/screen) ))
+			return ..()
+
+		//makes sure that the thing is equipped, so that we can't drag it into our hand from miles away.
+		//there's got to be a better way of doing this.
+		if (!(src.loc == usr) || (src.loc && src.loc.loc == usr))
+			return
+
+		if (( usr.restrained() ) || ( usr.stat ))
+			return
+
+		if ((src.loc == usr) && !(istype(over_object, /obj/screen)) && !usr.unEquip(src))
+			return
+
+		switch(over_object.name)
+			if("r_hand")
+				usr.u_equip(src)
+				usr.put_in_r_hand(src)
+			if("l_hand")
+				usr.u_equip(src)
+				usr.put_in_l_hand(src)
+		src.add_fingerprint(usr)
 
 /obj/item/device/flashlight/attackby(obj/item/weapon/W, mob/user as mob)
 	if(power_use)
@@ -210,6 +243,26 @@
 	w_class = ITEMSIZE_TINY
 	power_use = 0
 
+/obj/item/device/flashlight/color	//Default color is blue, just roll with it.
+	name = "blue flashlight"
+	desc = "A hand-held emergency light. This one is blue."
+	icon_state = "flashlight_blue"
+
+/obj/item/device/flashlight/color/red
+	name = "red flashlight"
+	desc = "A hand-held emergency light. This one is red."
+	icon_state = "flashlight_red"
+
+/obj/item/device/flashlight/color/orange
+	name = "orange flashlight"
+	desc = "A hand-held emergency light. This one is orange."
+	icon_state = "flashlight_orange"
+
+/obj/item/device/flashlight/color/yellow
+	name = "yellow flashlight"
+	desc = "A hand-held emergency light. This one is yellow."
+	icon_state = "flashlight_yellow"
+
 /obj/item/device/flashlight/maglight
 	name = "maglight"
 	desc = "A very, very heavy duty flashlight."
@@ -237,6 +290,7 @@
 	name = "desk lamp"
 	desc = "A desk lamp with an adjustable mount."
 	icon_state = "lamp"
+	force = 10
 	brightness_on = 5
 	w_class = ITEMSIZE_LARGE
 	flags = CONDUCT
@@ -267,7 +321,7 @@
 	w_class = ITEMSIZE_SMALL
 	brightness_on = 8 // Pretty bright.
 	light_power = 3
-	light_color = "#e58775"
+	light_color = LIGHT_COLOR_FLARE
 	icon_state = "flare"
 	item_state = "flare"
 	action_button_name = null //just pull it manually, neckbeard.
@@ -396,10 +450,11 @@
 /obj/item/device/flashlight/slime
 	gender = PLURAL
 	name = "glowing slime extract"
-	desc = "A glowing ball of what appears to be amber."
+	desc = "A slimy ball that appears to be glowing from bioluminesence."
 	icon = 'icons/obj/lighting.dmi'
 	icon_state = "floor1" //not a slime extract sprite but... something close enough!
 	item_state = "slime"
+	light_color = "#FFF423"
 	w_class = ITEMSIZE_TINY
 	brightness_on = 6
 	on = 1 //Bio-luminesence has one setting, on.

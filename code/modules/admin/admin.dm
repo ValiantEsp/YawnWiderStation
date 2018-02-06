@@ -114,8 +114,7 @@ proc/admin_notice(var/message, var/rights)
 			else if(ishuman(M))
 				body += {"<A href='?src=\ref[src];makeai=\ref[M]'>Make AI</A> |
 					<A href='?src=\ref[src];makerobot=\ref[M]'>Make Robot</A> |
-					<A href='?src=\ref[src];makealien=\ref[M]'>Make Alien</A> |
-					<A href='?src=\ref[src];makeslime=\ref[M]'>Make slime</A>
+					<A href='?src=\ref[src];makealien=\ref[M]'>Make Alien</A>
 				"}
 
 			//Simple Animals
@@ -146,6 +145,11 @@ proc/admin_notice(var/message, var/rights)
 			body += {"<br><br>
 				<b>Rudimentary transformation:</b><font size=2><br>These transformations only create a new mob type and copy stuff over. They do not take into account MMIs and similar mob-specific things. The buttons in 'Transformations' are preferred, when possible.</font><br>
 				<A href='?src=\ref[src];simplemake=observer;mob=\ref[M]'>Observer</A> |
+				\[ Xenos: <A href='?src=\ref[src];simplemake=larva;mob=\ref[M]'>Larva</A>
+				<A href='?src=\ref[src];simplemake=human;species=Xenomorph Drone;mob=\ref[M]'>Drone</A>
+				<A href='?src=\ref[src];simplemake=human;species=Xenomorph Hunter;mob=\ref[M]'>Hunter</A>
+				<A href='?src=\ref[src];simplemake=human;species=Xenomorph Sentinel;mob=\ref[M]'>Sentinel</A>
+				<A href='?src=\ref[src];simplemake=human;species=Xenomorph Queen;mob=\ref[M]'>Queen</A> \] |
 				\[ Crew: <A href='?src=\ref[src];simplemake=human;mob=\ref[M]'>Human</A>
 				<A href='?src=\ref[src];simplemake=human;species=Unathi;mob=\ref[M]'>Unathi</A>
 				<A href='?src=\ref[src];simplemake=human;species=Tajaran;mob=\ref[M]'>Tajaran</A>
@@ -664,6 +668,9 @@ proc/admin_notice(var/message, var/rights)
 		log_admin("Announce: [key_name(usr)] : [message]")
 	feedback_add_details("admin_verb","A") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
+//VOREStation Edit to this verb for the purpose of making it compliant with the annunciator system
+var/datum/announcement/priority/admin_pri_announcer = new
+var/datum/announcement/minor/admin_min_announcer = new
 /datum/admins/proc/intercom()
 	set category = "Fun"
 	set name = "Intercom Msg"
@@ -671,11 +678,9 @@ proc/admin_notice(var/message, var/rights)
 	if(!check_rights(0))	return
 
 	//This is basically how death alarms do it
-	var/obj/item/device/radio/headset/a = new /obj/item/device/radio/headset/ert(null)
-	a.icon = 'icons/obj/radio.dmi' //VOREStation Tweak
-	a.icon_state = "intercom" //VOREStation Tweak
+	var/obj/item/device/radio/headset/a = new /obj/item/device/radio/headset/omni(null)
 
-	var/channel = input("Channel for message:","Channel", null) as null|anything in (list("Common") + a.keyslot1.channels + a.keyslot2.channels)
+	var/channel = input("Channel for message:","Channel", null) as null|anything in (list("Common") + a.keyslot2.channels) // + a.keyslot1.channels
 
 	if(channel) //They picked a channel
 		var/sender = input("Name of sender (max 75):", "Announcement", "Announcement Computer") as null|text
@@ -785,6 +790,7 @@ proc/admin_notice(var/message, var/rights)
 		return
 	if(ticker.current_state == GAME_STATE_PREGAME)
 		ticker.current_state = GAME_STATE_SETTING_UP
+		Master.SetRunLevel(RUNLEVEL_SETUP)
 		log_admin("[usr.key] has started the game.")
 		message_admins("<font color='blue'>[usr.key] has started the game.</font>")
 		feedback_add_details("admin_verb","SN") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
@@ -803,7 +809,7 @@ proc/admin_notice(var/message, var/rights)
 	else
 		world << "<B>New players may now enter the game.</B>"
 	log_admin("[key_name(usr)] toggled new player game entering.")
-	message_admins("\blue [key_name_admin(usr)] toggled new player game entering.", 1)
+	message_admins("<font color='blue'>[key_name_admin(usr)] toggled new player game entering.</font>", 1)
 	world.update_status()
 	feedback_add_details("admin_verb","TE") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
@@ -829,7 +835,7 @@ proc/admin_notice(var/message, var/rights)
 		world << "<B>You may now respawn.</B>"
 	else
 		world << "<B>You may no longer respawn :(</B>"
-	message_admins("\blue [key_name_admin(usr)] toggled respawn to [config.abandon_allowed ? "On" : "Off"].", 1)
+	message_admins("<font color='blue'>[key_name_admin(usr)] toggled respawn to [config.abandon_allowed ? "On" : "Off"].</font>", 1)
 	log_admin("[key_name(usr)] toggled respawn to [config.abandon_allowed ? "On" : "Off"].")
 	world.update_status()
 	feedback_add_details("admin_verb","TR") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
@@ -857,11 +863,11 @@ proc/admin_notice(var/message, var/rights)
 	set desc="Delay the game start/end"
 	set name="Delay"
 
-	if(!check_rights(R_SERVER))	return
+	if(!check_rights(R_SERVER|R_EVENT))	return
 	if (!ticker || ticker.current_state != GAME_STATE_PREGAME)
 		ticker.delay_end = !ticker.delay_end
 		log_admin("[key_name(usr)] [ticker.delay_end ? "delayed the round end" : "has made the round end normally"].")
-		message_admins("\blue [key_name(usr)] [ticker.delay_end ? "delayed the round end" : "has made the round end normally"].", 1)
+		message_admins("<font color='blue'>[key_name(usr)] [ticker.delay_end ? "delayed the round end" : "has made the round end normally"].</font>", 1)
 		return //alert("Round end delayed", null, null, null, null, null)
 	round_progressing = !round_progressing
 	if (!round_progressing)
@@ -877,7 +883,7 @@ proc/admin_notice(var/message, var/rights)
 	set desc="Toggle admin jumping"
 	set name="Toggle Jump"
 	config.allow_admin_jump = !(config.allow_admin_jump)
-	message_admins("\blue Toggled admin jumping to [config.allow_admin_jump].")
+	message_admins("<font color='blue'>Toggled admin jumping to [config.allow_admin_jump].</font>")
 	feedback_add_details("admin_verb","TJ") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/adspawn()
@@ -885,7 +891,7 @@ proc/admin_notice(var/message, var/rights)
 	set desc="Toggle admin spawning"
 	set name="Toggle Spawn"
 	config.allow_admin_spawning = !(config.allow_admin_spawning)
-	message_admins("\blue Toggled admin item spawning to [config.allow_admin_spawning].")
+	message_admins("<font color='blue'>Toggled admin item spawning to [config.allow_admin_spawning].</font>")
 	feedback_add_details("admin_verb","TAS") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/adrev()
@@ -893,7 +899,7 @@ proc/admin_notice(var/message, var/rights)
 	set desc="Toggle admin revives"
 	set name="Toggle Revive"
 	config.allow_admin_rev = !(config.allow_admin_rev)
-	message_admins("\blue Toggled reviving to [config.allow_admin_rev].")
+	message_admins("<font color='blue'>Toggled reviving to [config.allow_admin_rev].</font>")
 	feedback_add_details("admin_verb","TAR") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/immreboot()
@@ -903,7 +909,7 @@ proc/admin_notice(var/message, var/rights)
 	if(!usr.client.holder)	return
 	if( alert("Reboot server?",,"Yes","No") == "No")
 		return
-	world << "\red <b>Rebooting world!</b> \blue Initiated by [usr.client.holder.fakekey ? "Admin" : usr.key]!"
+	world << "<font color='red'><b>Rebooting world!</b></font> <font color='blue'>Initiated by [usr.client.holder.fakekey ? "Admin" : usr.key]!</font>"
 	log_admin("[key_name(usr)] initiated an immediate reboot.")
 
 	feedback_set_details("end_error","immediate admin reboot - by [usr.key] [usr.client.holder.fakekey ? "(stealth)" : ""]")
@@ -1167,7 +1173,7 @@ proc/admin_notice(var/message, var/rights)
 	else
 		world << "<B>Guests may now enter the game.</B>"
 	log_admin("[key_name(usr)] toggled guests game entering [config.guests_allowed?"":"dis"]allowed.")
-	message_admins("\blue [key_name_admin(usr)] toggled guests game entering [config.guests_allowed?"":"dis"]allowed.", 1)
+	message_admins("<font color='blue'>[key_name_admin(usr)] toggled guests game entering [config.guests_allowed?"":"dis"]allowed.</font>", 1)
 	feedback_add_details("admin_verb","TGU") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /datum/admins/proc/output_ai_laws()
@@ -1220,21 +1226,6 @@ proc/admin_notice(var/message, var/rights)
 	if(istype(H))
 		H.regenerate_icons()
 
-
-/*
-	helper proc to test if someone is a mentor or not.  Got tired of writing this same check all over the place.
-*/
-/proc/is_mentor(client/C)
-
-	if(!istype(C))
-		return 0
-	if(!C.holder)
-		return 0
-
-	if(C.holder.rights == R_MENTOR)
-		return 1
-	return 0
-
 /proc/get_options_bar(whom, detail = 2, name = 0, link = 1, highlight_special = 1)
 	if(!whom)
 		return "<b>(*null*)</b>"
@@ -1263,7 +1254,7 @@ proc/admin_notice(var/message, var/rights)
 			var/ref_mob = "\ref[M]"
 			return "<b>[key_name(C, link, name, highlight_special)](<A HREF='?_src_=vars;Vars=[ref_mob]'>VV</A>)([admin_jump_link(M, src)]) (<A HREF='?_src_=holder;take_question=\ref[M]'>TAKE</A>)</b>"
 
-		if(4)	//Mentors
+		if(4)	//Event Managers
 			var/ref_mob = "\ref[M]"
 			return "<b>[key_name(C, link, name, highlight_special)] (<A HREF='?_src_=holder;adminmoreinfo=\ref[M]'>?</A>) (<A HREF='?_src_=holder;adminplayeropts=[ref_mob]'>PP</A>) (<A HREF='?_src_=vars;Vars=[ref_mob]'>VV</A>) (<A HREF='?_src_=holder;subtlemessage=[ref_mob]'>SM</A>) ([admin_jump_link(M, src)]) (<A HREF='?_src_=holder;take_question=\ref[M]'>TAKE</A>)</b>"
 
@@ -1479,7 +1470,7 @@ datum/admins/var/obj/item/weapon/paper/admin/faxreply // var to hold fax replies
 
 
 
-	if(destination.recievefax(P))
+	if(destination.receivefax(P))
 		src.owner << "<span class='notice'>Message reply to transmitted successfully.</span>"
 		if(P.sender) // sent as a reply
 			log_admin("[key_name(src.owner)] replied to a fax message from [key_name(P.sender)]")

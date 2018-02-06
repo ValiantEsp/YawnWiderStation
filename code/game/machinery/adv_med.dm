@@ -39,24 +39,27 @@
 	else if(istype(G, /obj/item/weapon/grab))
 		var/obj/item/weapon/grab/H = G
 		if(panel_open)
-			user << "<span class='notice'>Close the maintenance panel first.</span>"
+			to_chat(user, "<span class='notice'>Close the maintenance panel first.</span>")
 			return
 		if(!ismob(H.affecting))
 			return
-		if(occupant)
-			user << "<span class='notice'>The scanner is already occupied!</span>"
+		if(!ishuman(H.affecting))
+			to_chat(user, "<span class='warning'>\The [src] is not designed for that organism!</span>")
 			return
-		for(var/mob/living/carbon/slime/M in range(1, H.affecting))
-			if(M.Victim == H.affecting)
-				user << "<span class='danger'>[H.affecting.name] has a fucking slime attached to them, deal with that first.</span>"
+		if(occupant)
+			to_chat(user, "<span class='notice'>\The [src] is already occupied!</span>")
+			return
+		for(var/mob/living/simple_animal/slime/M in range(1, H.affecting))
+			if(M.victim == H.affecting)
+				to_chat(user, "<span class='danger'>[H.affecting.name] has a slime attached to them, deal with that first.</span>")
 				return
 		var/mob/M = H.affecting
 		if(M.abiotic())
-			user << "<span class='notice'>Subject cannot have abiotic items on.</span>"
+			to_chat(user, "<span class='notice'>Subject cannot have abiotic items on.</span>")
 			return
 		M.forceMove(src)
 		occupant = M
-		icon_state = "body_scanner_1"
+		update_icon() //icon_state = "body_scanner_1" //VOREStation Edit - Health display for consoles with light and such.
 		add_fingerprint(user)
 		qdel(G)
 
@@ -72,20 +75,20 @@
 	if(!ishuman(user) && !isrobot(user))
 		return 0 //not a borg or human
 	if(panel_open)
-		user << "<span class='notice'>Close the maintenance panel first.</span>"
+		to_chat(user, "<span class='notice'>Close the maintenance panel first.</span>")
 		return 0 //panel open
 	if(occupant)
-		user << "<span class='notice'>\The [src] is already occupied.</span>"
+		to_chat(user, "<span class='notice'>\The [src] is already occupied.</span>")
 		return 0 //occupied
 
 	if(O.buckled)
 		return 0
 	if(O.abiotic())
-		user << "<span class='notice'>Subject cannot have abiotic items on.</span>"
+		to_chat(user, "<span class='notice'>Subject cannot have abiotic items on.</span>")
 		return 0
-	for(var/mob/living/carbon/slime/M in range(1, O))
-		if(M.Victim == O)
-			user << "<span class='danger'>[O] has a fucking slime attached to them, deal with that first.</span>"
+	for(var/mob/living/simple_animal/slime/M in range(1, O))
+		if(M.victim == O)
+			to_chat(user, "<span class='danger'>[O] has a slime attached to them, deal with that first.</span>")
 			return 0
 
 	if(O == user)
@@ -95,7 +98,7 @@
 
 	O.forceMove(src)
 	occupant = O
-	icon_state = "body_scanner_1"
+	update_icon() //icon_state = "body_scanner_1" //VOREStation Edit - Health display for consoles with light and such.
 	add_fingerprint(user)
 
 /obj/machinery/bodyscanner/relaymove(mob/user as mob)
@@ -121,7 +124,7 @@
 		occupant.client.perspective = MOB_PERSPECTIVE
 	occupant.loc = src.loc
 	occupant = null
-	icon_state = "body_scanner_0"
+	update_icon() //icon_state = "body_scanner_1" //VOREStation Edit - Health display for consoles with light and such.
 	return
 
 /obj/machinery/bodyscanner/ex_act(severity)
@@ -158,7 +161,7 @@
 //Body Scan Console
 /obj/machinery/body_scanconsole
 	var/obj/machinery/bodyscanner/scanner
-	var/known_implants = list(/obj/item/weapon/implant/health, /obj/item/weapon/implant/chem, /obj/item/weapon/implant/death_alarm, /obj/item/weapon/implant/loyalty, /obj/item/weapon/implant/tracking, /obj/item/weapon/implant/language, /obj/item/weapon/implant/language/eal, /obj/item/weapon/implant/backup) //VOREStation Add - Backup Implant
+	var/known_implants = list(/obj/item/weapon/implant/health, /obj/item/weapon/implant/chem, /obj/item/weapon/implant/death_alarm, /obj/item/weapon/implant/loyalty, /obj/item/weapon/implant/tracking, /obj/item/weapon/implant/language, /obj/item/weapon/implant/language/eal, /obj/item/weapon/implant/backup, /obj/item/device/nif) //VOREStation Add - Backup Implant, NIF
 	var/delete
 	var/temphtml
 	name = "Body Scanner Console"
@@ -185,15 +188,16 @@
 				var/obj/machinery/bodyscanner/C = P.connectable
 				scanner = C
 				C.console = src
-				user << "<span class='warning'> You link the [src] to the [P.connectable]!</span>"
+				to_chat(user, "<span class='warning'> You link the [src] to the [P.connectable]!</span>")
 		else
-			user << "<span class='warning'> You store the [src] in the [P]'s buffer!</span>"
+			to_chat(user, "<span class='warning'> You store the [src] in the [P]'s buffer!</span>")
 			P.connectable = src
 		return
 	else
 		return attack_hand(user)
 
 /obj/machinery/body_scanconsole/power_change()
+	/* VOREStation Removal
 	if(stat & BROKEN)
 		icon_state = "body_scannerconsole-p"
 	else if(powered() && !panel_open)
@@ -203,6 +207,8 @@
 		spawn(rand(0, 15))
 			icon_state = "body_scannerconsole-p"
 			stat |= NOPOWER
+	*/
+	update_icon() //icon_state = "body_scanner_1" //VOREStation Edit - Health display for consoles with light and such.
 
 /obj/machinery/body_scanconsole/ex_act(severity)
 	switch(severity)
@@ -240,7 +246,7 @@
 		return
 
 	if (scanner.panel_open)
-		user << "<span class='notice'>Close the maintenance panel first.</span>"
+		to_chat(user, "<span class='notice'>Close the maintenance panel first.</span>")
 		return
 
 	if(!scanner)
@@ -250,7 +256,7 @@
 	else if(scanner)
 		return ui_interact(user)
 	else
-		user << "<span class='warning'>Scanner not found!</span>"
+		to_chat(user, "<span class='warning'>Scanner not found!</span>")
 
 /obj/machinery/body_scanconsole/ui_interact(mob/user, ui_key = "main", var/datum/nanoui/ui = null, var/force_open = 1)
 	var/data[0]
@@ -262,10 +268,12 @@
 
 		var/occupantData[0]
 		if(scanner.occupant && ishuman(scanner.occupant))
+			update_icon() //VOREStation Edit - Health display for consoles with light and such.
 			var/mob/living/carbon/human/H = scanner.occupant
 			occupantData["name"] = H.name
 			occupantData["stat"] = H.stat
 			occupantData["health"] = H.health
+			occupantData["maxHealth"] = H.getMaxHealth()
 
 			occupantData["hasVirus"] = H.virus2.len
 
@@ -287,8 +295,9 @@
 			var/bloodData[0]
 			if(H.vessel)
 				var/blood_volume = round(H.vessel.get_reagent_amount("blood"))
+				var/blood_max = H.species.blood_volume
 				bloodData["volume"] = blood_volume
-				bloodData["percent"] = round(((blood_volume / 560)*100))
+				bloodData["percent"] = round(((blood_volume / blood_max)*100))
 
 			occupantData["blood"] = bloodData
 
@@ -300,6 +309,15 @@
 				reagentData = null
 
 			occupantData["reagents"] = reagentData
+
+			var/ingestedData[0]
+			if(H.ingested.reagent_list.len >= 1)
+				for(var/datum/reagent/R in H.ingested.reagent_list)
+					ingestedData[++ingestedData.len] = list("name" = R.name, "amount" = R.volume)
+			else
+				ingestedData = null
+
+			occupantData["ingested"] = ingestedData
 
 			var/extOrganData[0]
 			for(var/obj/item/organ/external/E in H.organs)
@@ -335,16 +353,15 @@
 					organStatus["bleeding"] = 1
 				if(E.status & ORGAN_DEAD)
 					organStatus["dead"] = 1
+				for(var/datum/wound/W in E.wounds)
+					if(W.internal)
+						organStatus["internalBleeding"] = 1
+						break
 
 				organData["status"] = organStatus
 
 				if(istype(E, /obj/item/organ/external/chest) && H.is_lung_ruptured())
 					organData["lungRuptured"] = 1
-
-				for(var/datum/wound/W in E.wounds)
-					if(W.internal)
-						organData["internalBleeding"] = 1
-						break
 
 				extOrganData.Add(list(organData))
 
@@ -395,7 +412,7 @@
 			P.info += "<b>Time of scan:</b> [worldtime2stationtime(world.time)]<br><br>"
 			P.info += "[printing_text]"
 			P.info += "<br><br><b>Notes:</b><br>"
-			P.name = "Body Scan - [href_list["name"]]"
+			P.name = "Body Scan - [href_list["name"]] ([worldtime2stationtime(world.time)])"
 			printing = null
 			printing_text = null
 
@@ -414,7 +431,7 @@
 					t1 = "Unconscious"
 				else
 					t1 = "*dead*"
-			dat += "<font color=[occupant.health > 50 ? "blue" : "red"]>\tHealth %: [occupant.health], ([t1])</font><br>"
+			dat += "<font color=[occupant.health > (occupant.getMaxHealth() / 2) ? "blue" : "red"]>\tHealth %: [(occupant.health / occupant.getMaxHealth())*100], ([t1])</font><br>"
 
 			if(occupant.virus2.len)
 				dat += "<font color='red'>Viral pathogen detected in blood stream.</font><BR>"
@@ -451,15 +468,20 @@
 
 			if(occupant.vessel)
 				var/blood_volume = round(occupant.vessel.get_reagent_amount("blood"))
-				var/blood_percent =  blood_volume / 560
+				var/blood_max = occupant.species.blood_volume
+				var/blood_percent =  blood_volume / blood_max
 				blood_percent *= 100
 
 				extra_font = "<font color=[blood_volume > 448 ? "blue" : "red"]>"
 				dat += "[extra_font]\tBlood Level %: [blood_percent] ([blood_volume] units)</font><br>"
 
 			if(occupant.reagents)
-				for(var/datum/reagent/R in occupant.reagents)
+				for(var/datum/reagent/R in occupant.reagents.reagent_list)
 					dat += "Reagent: [R.name], Amount: [R.volume]<br>"
+
+			if(occupant.ingested)
+				for(var/datum/reagent/R in occupant.ingested.reagent_list)
+					dat += "Stomach: [R.name], Amount: [R.volume]<br>"
 
 			dat += "<hr><table border='1'>"
 			dat += "<tr>"

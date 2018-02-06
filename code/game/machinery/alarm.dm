@@ -93,7 +93,7 @@
 	req_access = list(access_rd, access_atmospherics, access_engine_equip)
 	TLV["oxygen"] =			list(-1.0, -1.0,-1.0,-1.0) // Partial pressure, kpa
 	TLV["carbon dioxide"] = list(-1.0, -1.0,   5,  10) // Partial pressure, kpa
-	TLV["phoron"] =			list(-1.0, -1.0, 0.2, 0.5) // Partial pressure, kpa
+	TLV["phoron"] =			list(-1.0, -1.0, 0, 0.5) // Partial pressure, kpa
 	TLV["other"] =			list(-1.0, -1.0, 0.5, 1.0) // Partial pressure, kpa
 	TLV["pressure"] =		list(0,ONE_ATMOSPHERE*0.10,ONE_ATMOSPHERE*1.40,ONE_ATMOSPHERE*1.60) /* kpa */
 	TLV["temperature"] =	list(20, 40, 140, 160) // K
@@ -103,6 +103,9 @@
 	unregister_radio(src, frequency)
 	qdel(wires)
 	wires = null
+	if(alarm_area && alarm_area.master_air_alarm == src)
+		alarm_area.master_air_alarm = null
+		elect_master(exclude_self = TRUE)
 	return ..()
 
 /obj/machinery/alarm/New()
@@ -121,7 +124,7 @@
 	// breathable air according to human/Life()
 	TLV["oxygen"] =			list(16, 19, 135, 140) // Partial pressure, kpa
 	TLV["carbon dioxide"] = list(-1.0, -1.0, 5, 10) // Partial pressure, kpa
-	TLV["phoron"] =			list(-1.0, -1.0, 0.2, 0.5) // Partial pressure, kpa
+	TLV["phoron"] =			list(-1.0, -1.0, 0, 0.5) // Partial pressure, kpa
 	TLV["other"] =			list(-1.0, -1.0, 0.5, 1.0) // Partial pressure, kpa
 	TLV["pressure"] =		list(ONE_ATMOSPHERE * 0.80, ONE_ATMOSPHERE * 0.90, ONE_ATMOSPHERE * 1.10, ONE_ATMOSPHERE * 1.20) /* kpa */
 	TLV["temperature"] =	list(T0C - 26, T0C, T0C + 40, T0C + 66) // K
@@ -180,15 +183,17 @@
 		if(!get_danger_level(target_temperature, TLV["temperature"]) && abs(environment.temperature - target_temperature) > 2.0)
 			update_use_power(2)
 			regulating_temperature = 1
-			visible_message("\The [src] clicks as it starts [environment.temperature > target_temperature ? "cooling" : "heating"] the room.",\
+			audible_message("\The [src] clicks as it starts [environment.temperature > target_temperature ? "cooling" : "heating"] the room.",\
 			"You hear a click and a faint electronic hum.")
+			playsound(src.loc, 'sound/machines/click.ogg', 50, 1)
 	else
 		//check for when we should stop adjusting temperature
 		if(get_danger_level(target_temperature, TLV["temperature"]) || abs(environment.temperature - target_temperature) <= 0.5)
 			update_use_power(1)
 			regulating_temperature = 0
-			visible_message("\The [src] clicks quietly as it stops [environment.temperature > target_temperature ? "cooling" : "heating"] the room.",\
+			audible_message("\The [src] clicks quietly as it stops [environment.temperature > target_temperature ? "cooling" : "heating"] the room.",\
 			"You hear a click as a faint electronic humming stops.")
+			playsound(src.loc, 'sound/machines/click.ogg', 50, 1)
 
 	if(regulating_temperature)
 		if(target_temperature > T0C + MAX_TEMPERATURE)
@@ -262,15 +267,18 @@
 
 	if(environment_pressure <= pressure_levels[1])		//low pressures
 		if(!(mode == AALARM_MODE_PANIC || mode == AALARM_MODE_CYCLE))
+			playsound(src.loc, 'sound/machines/airalarm.ogg', 25, 0, 4)
 			return 1
 
 	return 0
 
 /obj/machinery/alarm/proc/master_is_operating()
-	return alarm_area.master_air_alarm && !(alarm_area.master_air_alarm.stat & (NOPOWER | BROKEN))
+	return alarm_area && alarm_area.master_air_alarm && !(alarm_area.master_air_alarm.stat & (NOPOWER | BROKEN))
 
-/obj/machinery/alarm/proc/elect_master()
+/obj/machinery/alarm/proc/elect_master(exclude_self = FALSE)
 	for(var/obj/machinery/alarm/AA in alarm_area)
+		if(exclude_self && AA == src)
+			continue
 		if(!(AA.stat & (NOPOWER|BROKEN)))
 			alarm_area.master_air_alarm = AA
 			return 1
@@ -548,6 +556,7 @@
 				scrubbers[scrubbers.len]["filters"] += list(list("name" = "Carbon Dioxide", "command" = "co2_scrub","val" = info["filter_co2"]))
 				scrubbers[scrubbers.len]["filters"] += list(list("name" = "Toxin"	, 		"command" = "tox_scrub","val" = info["filter_phoron"]))
 				scrubbers[scrubbers.len]["filters"] += list(list("name" = "Nitrous Oxide",	"command" = "n2o_scrub","val" = info["filter_n2o"]))
+				scrubbers[scrubbers.len]["filters"] += list(list("name" = "Fuel",			"command" = "fuel_scrub","val" = info["filter_fuel"]))
 			data["scrubbers"] = scrubbers
 		if(AALARM_SCREEN_MODE)
 			var/modes[0]
@@ -654,6 +663,7 @@
 					"co2_scrub",
 					"tox_scrub",
 					"n2o_scrub",
+					"fuel_scrub",
 					"panic_siphon",
 					"scrubbing",
 					"direction")
@@ -719,9 +729,9 @@
 		if(href_list["atmos_unlock"])
 			switch(href_list["atmos_unlock"])
 				if("0")
-					alarm_area.air_doors_close()
+					alarm_area.firedoors_close()
 				if("1")
-					alarm_area.air_doors_open()
+					alarm_area.firedoors_open()
 			return 1
 
 		if(href_list["atmos_alarm"])
@@ -758,6 +768,7 @@
 				user << "<span class='notice'>You [ locked ? "lock" : "unlock"] the Air Alarm interface.</span>"
 			else
 				user << "<span class='warning'>Access denied.</span>"
+			return
 	return ..()
 
 /obj/machinery/alarm/power_change()
@@ -971,7 +982,7 @@ FIRE ALARM
 	for(var/obj/machinery/firealarm/FA in area)
 		fire_alarm.triggerAlarm(loc, FA, duration)
 	update_icon()
-	//playsound(src.loc, 'sound/ambience/signal.ogg', 75, 0)
+	playsound(src.loc, 'sound/machines/airalarm.ogg', 25, 0, 4)
 	return
 
 /obj/machinery/firealarm/proc/set_security_level(var/newlevel)

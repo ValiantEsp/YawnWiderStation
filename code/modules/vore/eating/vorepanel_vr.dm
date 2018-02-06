@@ -6,10 +6,11 @@
 #define BELLIES_NAME_MIN 2
 #define BELLIES_NAME_MAX 12
 #define BELLIES_DESC_MAX 1024
+#define FLAVOR_MAX 40
 
 /mob/living/proc/insidePanel()
 	set name = "Vore Panel"
-	set category = "Vore"
+	set category = "IC"
 
 	var/datum/vore_look/picker_holder = new()
 	picker_holder.loop = picker_holder
@@ -20,6 +21,19 @@
 	picker_holder.popup = new(src, "insidePanel","Inside!", 400, 600, picker_holder)
 	picker_holder.popup.set_content(dat)
 	picker_holder.popup.open()
+	src.openpanel = 1
+
+/mob/living/proc/updateVRPanel() //Panel popup update call from belly events.
+	if(src.openpanel == 1)
+		var/datum/vore_look/picker_holder = new()
+		picker_holder.loop = picker_holder
+		picker_holder.selected = vore_organs[vore_selected]
+
+		var/dat = picker_holder.gen_ui(src)
+
+		picker_holder.popup = new(src, "insidePanel","Inside!", 400, 600, picker_holder)
+		picker_holder.popup.set_content(dat)
+		picker_holder.popup.open()
 
 //
 // Callback Handler for the Inside form
@@ -29,6 +43,11 @@
 	var/show_interacts = 0
 	var/datum/browser/popup
 	var/loop = null;  // Magic self-reference to stop the handler from being GC'd before user takes action.
+
+/datum/vore_look/Destroy()
+	loop = null
+	selected = null
+	return QDEL_HINT_HARDDEL // TODO - Until I can better analyze how this weird thing works, lets be safe
 
 /datum/vore_look/Topic(href,href_list[])
 	if (vp_interact(href, href_list))
@@ -93,21 +112,37 @@
 				spanstyle = ""
 			if(DM_DIGEST)
 				spanstyle = "color:red;"
+			if(DM_ITEMWEAK)
+				spanstyle = "color:red;"
+			if(DM_STRIPDIGEST)
+				spanstyle = "color:red;"
 			if(DM_HEAL)
 				spanstyle = "color:green;"
 			if(DM_ABSORB)
 				spanstyle = "color:purple;"
 			if(DM_DRAIN)
 				spanstyle = "color:purple;"
+			if(DM_SHRINK)
+				spanstyle = "color:purple;"
+			if(DM_GROW)
+				spanstyle = "color:purple;"
+			if(DM_SIZE_STEAL)
+				spanstyle = "color:purple;"
 			if(DM_TRANSFORM_MALE)
+				spanstyle = "color:purple;"
+			if(DM_TRANSFORM_HAIR_AND_EYES)
 				spanstyle = "color:purple;"
 			if(DM_TRANSFORM_FEMALE)
 				spanstyle = "color:purple;"
 			if(DM_TRANSFORM_KEEP_GENDER)
 				spanstyle = "color:purple;"
-			if(DM_TRANSFORM_CHANGE_SPECIES)
+			if(DM_TRANSFORM_CHANGE_SPECIES_AND_TAUR)
 				spanstyle = "color:purple;"
-			if(DM_TRANSFORM_CHANGE_SPECIES_EGG)
+			if(DM_TRANSFORM_CHANGE_SPECIES_AND_TAUR_EGG)
+				spanstyle = "color:purple;"
+			if(DM_TRANSFORM_REPLICA)
+				spanstyle = "color:purple;"
+			if(DM_TRANSFORM_REPLICA_EGG)
 				spanstyle = "color:purple;"
 			if(DM_TRANSFORM_KEEP_GENDER_EGG)
 				spanstyle = "color:purple;"
@@ -177,6 +212,26 @@
 		//Belly messages
 		dat += "<br><a href='?src=\ref[src];b_msgs=\ref[selected]'>Belly Messages</a>"
 
+		//Can belly taste?
+		dat += "<br><a href='?src=\ref[src];b_tastes=\ref[selected]'>Can Taste:</a>"
+		dat += " [selected.can_taste ? "Yes" : "No"]"
+
+		//How much brute damage
+		dat += "<br><a href='?src=\ref[src];b_brute_dmg=\ref[selected]'>Digest Brute Damage:</a>"
+		dat += " [selected.digest_brute]"
+
+		//How much burn damage
+		dat += "<br><a href='?src=\ref[src];b_burn_dmg=\ref[selected]'>Digest Burn Damage:</a>"
+		dat += " [selected.digest_burn]"
+
+		//Minimum size prey must be to show up.
+		dat += "<br><a href='?src=\ref[src];b_bulge_size=\ref[selected]'>Required examine size:</a>"
+		dat += " [selected.bulge_size*100]%"
+
+		//Size that prey will be grown/shrunk to.
+		dat += "<br><a href='?src=\ref[src];b_grow_shrink=\ref[selected]'>Shrink/Grow size:</a>"
+		dat += "[selected.shrink_grow_size*100]%"
+
 		//Belly escapability
 		dat += "<br><a href='?src=\ref[src];b_escapable=\ref[selected]'>Belly Interactions ([selected.escapable ? "On" : "Off"])</a>"
 		if(selected.escapable)
@@ -213,15 +268,28 @@
 
 	dat += "<HR>"
 
-	//Under the last HR, save and stuff.
-	dat += "<a href='?src=\ref[src];saveprefs=1'>Save Prefs</a>"
-	dat += "<a href='?src=\ref[src];refresh=1'>Refresh</a>"
-
 	switch(user.digestable)
 		if(1)
 			dat += "<a href='?src=\ref[src];toggledg=1'>Toggle Digestable</a>"
 		if(0)
 			dat += "<a href='?src=\ref[src];toggledg=1'><span style='color:green;'>Toggle Digestable</span></a>"
+
+	switch(user.allowmobvore)
+		if(1)
+			dat += "<a href='?src=\ref[src];togglemv=1'>Toggle Mob Vore</a>"
+		if(0)
+			dat += "<a href='?src=\ref[src];togglemv=1'><span style='color:green;'>Toggle Mob Vore</span></a>"
+
+	dat += "<br><a href='?src=\ref[src];toggle_dropnom_prey=1'>Toggle Drop-nom Prey</a>" //These two get their own, custom row, too.
+	dat += "<a href='?src=\ref[src];toggle_dropnom_pred=1'>Toggle Drop-nom Pred</a>"
+	dat += "<br><a href='?src=\ref[src];setflavor=1'>Set Your Taste</a>"
+	dat += "<a href='?src=\ref[src];togglenoisy=1'>Toggle Hunger Noises</a>"
+
+	dat += "<HR>"
+
+	//Under the last HR, save and stuff.
+	dat += "<a href='?src=\ref[src];saveprefs=1'>Save Prefs</a>"
+	dat += "<a href='?src=\ref[src];refresh=1'>Refresh</a>"
 
 	//Returns the dat html to the vore_look
 	return dat
@@ -231,7 +299,8 @@
 	for(var/H in href_list)
 
 	if(href_list["close"])
-		del(src)  // Cleanup
+		qdel(src)  // Cleanup
+		user.openpanel = 0
 		return
 
 	if(href_list["show_int"])
@@ -350,12 +419,8 @@
 					else
 						var/datum/belly/B = user.vore_organs[choice]
 						for(var/atom/movable/tgt in selected.internal_contents)
-							if (!(tgt in selected.internal_contents))
-								continue
-							selected.internal_contents -= tgt
-							B.internal_contents += tgt
-
 							tgt << "<span class='warning'>You're squished from [user]'s [selected] to their [B]!</span>"
+							selected.transfer_contents(tgt, B, 1)
 
 						for(var/mob/hearer in range(1,user))
 							hearer << sound('sound/vore/squish2.ogg',volume=80)
@@ -390,12 +455,9 @@
 					var/datum/belly/B = user.vore_organs[choice]
 					if (!(tgt in selected.internal_contents))
 						return 0
-					selected.internal_contents -= tgt
-					B.internal_contents += tgt
-
 					tgt << "<span class='warning'>You're squished from [user]'s [lowertext(selected.name)] to their [lowertext(B.name)]!</span>"
-					for(var/mob/hearer in range(1,user))
-						hearer << sound('sound/vore/squish2.ogg',volume=80)
+					selected.transfer_contents(tgt, B)
+
 
 	if(href_list["newbelly"])
 		if(user.vore_organs.len >= BELLIES_MAX)
@@ -439,6 +501,9 @@
 	if(href_list["b_mode"])
 		var/list/menu_list = selected.digest_modes
 		if(istype(usr,/mob/living/carbon/human))
+			//var/mob/living/carbon/human/H = usr
+			//if(H.species.vore_numbing)
+				//menu_list += DM_DIGEST_NUMB
 			menu_list += selected.transform_modes
 
 		if(selected.digest_modes.len == 1) // Don't do anything
@@ -452,6 +517,7 @@
 					selected.digest_mode = selected.digest_modes[1]
 		else
 			selected.digest_mode = input("Choose Mode (currently [selected.digest_mode])") in menu_list
+			selected.items_preserved.Cut() //Re-evaltuate all items in belly on belly-mode change
 
 	if(href_list["b_desc"])
 		var/new_desc = html_encode(input(usr,"Belly Description (1024 char limit):","New Description",selected.inside_flavor) as message|null)
@@ -502,7 +568,7 @@
 					selected.set_messages(new_message,"smi")
 
 			if("Examine Message (when full)")
-				var/new_message = input(user,"These are sent to people who examine you when this belly has contents. Write them in 3rd person ('Their %belly is bulging'). Do not use %pred or %prey in this type."+help,"Examine Message (when full)",selected.get_messages("em")) as message
+				var/new_message = input(user,"These are sent to people who examine you when this belly has contents. Write them in 3rd person ('Their %belly is bulging')."+help,"Examine Message (when full)",selected.get_messages("em")) as message
 				if(new_message)
 					selected.set_messages(new_message,"em")
 
@@ -536,6 +602,45 @@
 
 	if(href_list["b_soundtest"])
 		user << selected.vore_sound
+
+	if(href_list["b_tastes"])
+		selected.can_taste = !selected.can_taste
+
+	if(href_list["b_bulge_size"])
+		var/new_bulge = input(user, "Choose the required size prey must be to show up on examine, ranging from 25% to 200% Set this to 0 for no text on examine.", "Set Belly Examine Size.") as num|null
+		if(new_bulge == null)
+			return
+		if(new_bulge == 0) //Disable.
+			selected.bulge_size = 0
+			user << "<span class='notice'>Your stomach will not be seen on examine.</span>"
+		else if (!IsInRange(new_bulge,25,200))
+			selected.bulge_size = 0.25 //Set it to the default.
+			user << "<span class='notice'>Invalid size.</span>"
+		else if(new_bulge)
+			selected.bulge_size = (new_bulge/100)
+	if(href_list["b_grow_shrink"])
+		var/new_grow = input(user, "Choose the size that prey will be grown/shrunk to, ranging from 25% to 200%", "Set Growth Shrink Size.") as num|null
+		if (new_grow == null)
+			return
+		if (!IsInRange(new_grow,25,200))
+			selected.shrink_grow_size = 1 //Set it to the default
+			user << "<span class='notice'>Invalid size.</span>"
+		else if(new_grow)
+			selected.shrink_grow_size = (new_grow/100)
+
+	if(href_list["b_burn_dmg"])
+		var/new_damage = input(user, "Choose the amount of burn damage prey will take per tick. Ranges from 0 to 6.", "Set Belly Burn Damage.") as num|null
+		if(new_damage == null)
+			return
+		var/new_new_damage = Clamp(new_damage, 0, 6)
+		selected.digest_burn = new_new_damage
+
+	if(href_list["b_brute_dmg"])
+		var/new_damage = input(user, "Choose the amount of brute damage prey will take per tick. Ranges from 0 to 6", "Set Belly Brute Damage.") as num|null
+		if(new_damage == null)
+			return
+		var/new_new_damage = Clamp(new_damage, 0, 6)
+		selected.digest_brute = new_new_damage
 
 	if(href_list["b_escapable"])
 		if(selected.escapable == 0) //Possibly escapable and special interactions.
@@ -620,6 +725,38 @@
 		else
 			user << "<span class='notice'>Virgo-specific preferences saved!</span>"
 
+	if(href_list["setflavor"])
+		var/new_flavor = html_encode(input(usr,"What your character tastes like (40ch limit). This text will be printed to the pred after 'X tastes of...' so just put something like 'strawberries and cream':","Character Flavor",user.vore_taste) as text|null)
+
+		if(new_flavor)
+			new_flavor = readd_quotes(new_flavor)
+			if(length(new_flavor) > FLAVOR_MAX)
+				alert("Entered flavor/taste text too long. [FLAVOR_MAX] character limit.","Error")
+				return 0
+			user.vore_taste = new_flavor
+		else //Returned null
+			return 0
+
+	if(href_list["toggle_dropnom_pred"])
+		var/choice = alert(user, "You are currently [user.can_be_drop_pred ? " able to eat prey that fall from above or that you fall onto" : "not able to eat prey that fall from above or that you fall onto."]", "", "Be Pred", "Cancel", "Don't be Pred")
+		switch(choice)
+			if("Cancel")
+				return 0
+			if("Be Pred")
+				user.can_be_drop_pred = 1
+			if("Don't be Pred")
+				user.can_be_drop_pred = 0
+
+	if(href_list["toggle_dropnom_prey"])
+		var/choice = alert(user, "You are currently [user.can_be_drop_prey ? "able to be eaten." : "not able to be eaten."]", "", "Be Prey", "Cancel", "Don't Be Prey")
+		switch(choice)
+			if("Cancel")
+				return 0
+			if("Be Prey")
+				user.can_be_drop_prey = 1
+			if("Don't Be Prey")
+				user.can_be_drop_prey = 0
+
 	if(href_list["toggledg"])
 		var/choice = alert(user, "This button is for those who don't like being digested. It can make you undigestable. Don't abuse this button by toggling it back and forth to extend a scene or whatever, or you'll make the admins cry. Digesting you is currently: [user.digestable ? "Allowed" : "Prevented"]", "", "Allow Digestion", "Cancel", "Prevent Digestion")
 		switch(choice)
@@ -634,6 +771,31 @@
 
 		if(user.client.prefs_vr)
 			user.client.prefs_vr.digestable = user.digestable
+
+	if(href_list["togglemv"])
+		var/choice = alert(user, "This button is for those who don't like being eaten by mobs. Don't abuse this button by toggling it back and forth in combat or whatever, or you'll make the admins cry. Mobs are currently: [user.allowmobvore ? "Allowed to eat" : "Prevented from eating"] you.", "", "Allow Mob Predation", "Cancel", "Prevent Mob Predation")
+		switch(choice)
+			if("Cancel")
+				return 0
+			if("Allow Mob Predation")
+				user.allowmobvore = 1
+			if("Prevent Mob Predation")
+				user.allowmobvore = 0
+
+		message_admins("[key_name(user)] toggled their mob vore preference to [user.allowmobvore] ([user ? "<a href='?_src_=holder;adminplayerobservecoodjump=1;X=[user.loc.];Y=[user.loc.y];Z=[user.loc.z]'>JMP</a>" : "null"])")
+
+		if(user.client.prefs_vr)
+			user.client.prefs_vr.allowmobvore = user.allowmobvore
+
+	if(href_list["togglenoisy"])
+		var/choice = alert(user, "Toggle audible hunger noises. Currently: [user.noisy ? "Enabled" : "Disabled"]", "", "Enable audible hunger", "Cancel", "Disable audible hunger")
+		switch(choice)
+			if("Cancel")
+				return 0
+			if("Enable audible hunger")
+				user.noisy = 1
+			if("Disable audible hunger")
+				user.noisy = 0
 
 	//Refresh when interacted with, returning 1 makes vore_look.Topic update
 	return 1

@@ -47,6 +47,10 @@
 	air2.volume = ATMOS_DEFAULT_VOLUME_PUMP
 	icon = null
 
+/obj/machinery/atmospherics/binary/dp_vent_pump/Destroy()
+	unregister_radio(src, frequency)
+	. = ..()
+
 /obj/machinery/atmospherics/binary/dp_vent_pump/high_volume
 	name = "Large Dual Port Air Vent"
 
@@ -164,7 +168,7 @@
 	radio_controller.remove_object(src, frequency)
 	frequency = new_frequency
 	if(frequency)
-		radio_connection = radio_controller.add_object(src, frequency, filter = RADIO_ATMOSIA)
+		radio_connection = radio_controller.add_object(src, frequency, radio_filter = RADIO_ATMOSIA)
 
 /obj/machinery/atmospherics/binary/dp_vent_pump/proc/broadcast_status()
 	if(!radio_connection)
@@ -185,7 +189,7 @@
 		"external" = external_pressure_bound,
 		"sigtype" = "status"
 	)
-	radio_connection.post_signal(src, signal, filter = RADIO_ATMOSIA)
+	radio_connection.post_signal(src, signal, radio_filter = RADIO_ATMOSIA)
 
 	return 1
 

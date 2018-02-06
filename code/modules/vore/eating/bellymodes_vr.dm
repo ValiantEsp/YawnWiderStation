@@ -4,13 +4,13 @@
 
 /////////////////////////// Auto-Emotes ///////////////////////////
 	if((digest_mode in emote_lists) && !emotePend)
-		emotePend = 1
+		emotePend = TRUE
 
 		spawn(emoteTime)
 			var/list/EL = emote_lists[digest_mode]
 			for(var/mob/living/M in internal_contents)
 				M << "<span class='notice'>[pick(EL)]</span>"
-			src.emotePend = 0
+			src.emotePend = FALSE
 
 //////////////////////// Absorbed Handling ////////////////////////
 	for(var/mob/living/M in internal_contents)
@@ -22,7 +22,10 @@
 		return //Pretty boring, huh
 
 //////////////////////////// DM_DIGEST ////////////////////////////
-	if(digest_mode == DM_DIGEST)
+	if(digest_mode == DM_DIGEST || digest_mode == DM_DIGEST_NUMB || digest_mode == DM_ITEMWEAK)
+		var/list/touchable_items = internal_contents - items_preserved
+		if(!length(touchable_items))
+			return
 
 		/*if(prob(50)) //Was SO OFTEN. AAAA.
 			var/churnsound = pick(digestion_sounds)
@@ -52,13 +55,17 @@
 				owner << "<span class='notice'>" + digest_alert_owner + "</span>"
 				M << "<span class='notice'>" + digest_alert_prey + "</span>"
 
-				owner.nutrition += 20 // so eating dead mobs gives you *something*.
 				var/deathsound = pick(death_sounds)
 				for(var/mob/hearer in range(1,owner))
 					hearer << deathsound
 				digestion_death(M)
 				owner.update_icons()
 				continue
+
+			if(digest_mode == DM_DIGEST_NUMB && ishuman(M))
+				var/mob/living/carbon/human/H = M
+				if(H.bloodstr.get_reagent_amount("numbenzyme") < 5)
+					H.bloodstr.add_reagent("numbenzyme",10)
 
 			// Deal digestion damage (and feed the pred)
 			if(!(M.status_flags & GODMODE))
@@ -67,11 +74,56 @@
 
 				var/offset = (1 + ((M.weight - 137) / 137)) // 130 pounds = .95 140 pounds = 1.02
 				var/difference = owner.size_multiplier / M.size_multiplier
+				if(isrobot(owner))
+					var/mob/living/silicon/robot/R = owner
+					R.cell.charge += 20*(digest_brute+digest_burn)
 				if(offset) // If any different than default weight, multiply the % of offset.
-					owner.nutrition += offset*(10/difference) // 9.5 nutrition per digestion tick if they're 130 pounds and it's same size. 10.2 per digestion tick if they're 140 and it's same size. Etc etc.
+					owner.nutrition += offset*(2*(digest_brute+digest_burn)/difference) // 9.5 nutrition per digestion tick if they're 130 pounds and it's same size. 10.2 per digestion tick if they're 140 and it's same size. Etc etc.
 				else
-					owner.nutrition += (10/difference)
+					owner.nutrition += 2*(digest_brute+digest_burn)/difference
+			M.updateVRPanel()
 
+		//Contaminate or gurgle items
+		var/obj/item/T = pick(touchable_items)
+		if(istype(T))
+			if(digest_mode == DM_ITEMWEAK)
+				T.gurgle_contaminate(internal_contents, owner)
+				items_preserved |= T
+			else
+				digest_item(T)
+
+		owner.updateVRPanel()
+		return
+
+//////////////////////////// DM_STRIPDIGEST ////////////////////////////
+	if(digest_mode == DM_STRIPDIGEST) // Only gurgle the gear off your prey.
+		var/list/touchable_items = internal_contents - items_preserved
+		if(!length(touchable_items))
+			return
+
+		if(prob(50))
+			var/churnsound = pick(digestion_sounds)
+			for(var/mob/hearer in range(1,owner))
+				hearer << sound(churnsound,volume=80)
+
+		// Handle loose items first.
+		var/obj/item/T = pick(touchable_items)
+		if(istype(T))
+			digest_item(T)
+
+		for(var/mob/living/carbon/human/M in internal_contents)
+			if (M.absorbed)
+				continue
+			for(var/slot in slots)
+				var/obj/item/thingy = M.get_equipped_item(slot = slot)
+				if(thingy)
+					M.unEquip(thingy,force = TRUE)
+					thingy.forceMove(owner)
+					internal_contents |= thingy
+					digest_item(T)
+			M.updateVRPanel()
+
+		owner.updateVRPanel()
 		return
 
 //////////////////////////// DM_ABSORB ////////////////////////////
@@ -127,6 +179,60 @@
 				return
 		return
 
+//////////////////////////// DM_SHRINK ////////////////////////////
+	if(digest_mode == DM_SHRINK)
+
+		for (var/mob/living/M in internal_contents)
+
+			if(prob(10)) //Infinite gurgles!
+				var/shrinksound = pick(digestion_sounds)
+				M << sound(shrinksound,volume=80)
+				owner << sound(shrinksound,volume=80)
+
+			if(M.size_multiplier > shrink_grow_size) //Shrink until smol.
+				M.resize(M.size_multiplier-0.01) //Shrink by 1% per tick.
+				if(M.nutrition >= 100) //Absorbing bodymass results in nutrition if possible.
+					var/oldnutrition = (M.nutrition * 0.05)
+					M.nutrition = (M.nutrition * 0.95)
+					owner.nutrition += oldnutrition
+				return
+		return
+
+//////////////////////////// DM_GROW ////////////////////////////
+	if(digest_mode == DM_GROW)
+
+		for (var/mob/living/M in internal_contents)
+
+			if(prob(10))
+				var/growsound = pick(digestion_sounds)
+				M << sound(growsound,volume=80)
+				owner << sound(growsound,volume=80)
+
+			if(M.size_multiplier < shrink_grow_size) //Grow until large.
+				M.resize(M.size_multiplier+0.01) //Grow by 1% per tick.
+				if(M.nutrition >= 100)
+					owner.nutrition = (owner.nutrition * 0.95)
+		return
+
+//////////////////////////// DM_SIZE_STEAL ////////////////////////////
+	if(digest_mode == DM_SIZE_STEAL)
+
+		for (var/mob/living/M in internal_contents)
+
+			if(prob(10))
+				var/growsound = pick(digestion_sounds)
+				M << sound(growsound,volume=80)
+				owner << sound(growsound,volume=80)
+
+			if(M.size_multiplier > shrink_grow_size && owner.size_multiplier < 2) //Grow until either pred is large or prey is small.
+				owner.resize(owner.size_multiplier+0.01) //Grow by 1% per tick.
+				M.resize(M.size_multiplier-0.01) //Shrink by 1% per tick
+				if(M.nutrition >= 100)
+					var/oldnutrition = (M.nutrition * 0.05)
+					M.nutrition = (M.nutrition * 0.95)
+					owner.nutrition += oldnutrition
+		return
+
 ///////////////////////////// DM_HEAL /////////////////////////////
 	if(digest_mode == DM_HEAL)
 		/*if(prob(50)) //Wet heals!
@@ -142,1095 +248,269 @@
 					owner.nutrition -= 2
 					if(M.nutrition <= 400)
 						M.nutrition += 1
+				else if(owner.nutrition > 90 && (M.nutrition <= 400))
+					owner.nutrition -= 1
+					M.nutrition += 1
 		return
 
-///////////////////////////// DM_TRANSFORM_MALE /////////////////////////////
-	if(digest_mode == DM_TRANSFORM_MALE && ishuman(owner))
+///////////////////////////// DM_TRANSFORM_HAIR_AND_EYES /////////////////////////////
+	if(digest_mode == DM_TRANSFORM_HAIR_AND_EYES && ishuman(owner))
 		for (var/mob/living/carbon/human/P in internal_contents)
-			if(P.stat)
+			if(P.stat == DEAD)
 				continue
 
 			var/mob/living/carbon/human/O = owner
 
-			var/TFchance = 1
-			if(TFchance == 1)
-
-				var/TFmodify = rand(1,3)
-				if(TFmodify == 1 && P.r_eyes != O.r_eyes || P.g_eyes != O.g_eyes || P.b_eyes != O.b_eyes)
-					P.r_eyes = O.r_eyes
-					P.g_eyes = O.g_eyes
-					P.b_eyes = O.b_eyes
-					P << "<span class='notice'>You feel lightheaded and drowsy...</span>"
-					owner << "<span class='notice'>You feel warm as you make subtle changes to your captive's body.</span>"
-					P.update_eyes()
-
-				if(TFmodify == 2 && P.r_hair != O.r_hair || P.g_hair != O.g_hair || P.b_hair != O.b_hair || P.r_skin != O.r_skin || P.g_skin != O.g_skin || P.b_skin != O.b_skin || P.r_facial != O.r_facial || P.g_facial != O.g_facial || P.b_facial != O.b_facial)
-					P.r_hair = O.r_hair
-					P.r_facial = O.r_facial
-					P.g_hair = O.g_hair
-					P.g_facial = O.g_facial
-					P.b_hair = O.b_hair
-					P.b_facial = O.b_facial
-					P.r_skin = O.r_skin
-					P.g_skin = O.g_skin
-					P.b_skin = O.b_skin
-					P.h_style = O.h_style
-					P << "<span class='notice'>Your body tingles all over...</span>"
-					owner << "<span class='notice'>You tingle as you make noticeable changes to your captive's body.</span>"
-					P.update_hair()
-					P.update_body()
-					P.updateicon()
-
-				if(TFmodify == 3 && P.gender != MALE)
-					P.gender = MALE
-					P << "<span class='notice'>Your body feels very strange...</span>"
-					owner << "<span class='notice'>You feel strange as you alter your captive's gender.</span>"
-					P.update_body()
-					P.updateicon()
-
-			if(O.nutrition > 0)
+			if(O.nutrition > 400 && P.nutrition < 400)
 				O.nutrition -= 2
-			if(P.nutrition < 400)
-				P.nutrition += 1
+				P.nutrition += 1.5
+
+			if(check_eyes(P) || check_hair(P))
+				change_eyes(P)
+				change_hair(P,1)
+
+		return
+///////////////////////////// DM_TRANSFORM_MALE /////////////////////////////
+	if(digest_mode == DM_TRANSFORM_MALE && ishuman(owner))
+		for (var/mob/living/carbon/human/P in internal_contents)
+			if(P.stat == DEAD)
+				continue
+
+			var/mob/living/carbon/human/O = owner
+
+			if(O.nutrition > 400 && P.nutrition < 400)
+				O.nutrition -= 2
+				P.nutrition += 1.5
+
+			if(check_eyes(P))
+				change_eyes(P,1)
+				continue
+
+			if(check_hair(P) || check_skin(P))
+				change_hair(P)
+				change_skin(P,1)
+				continue
+
+			if(check_gender(P,MALE))
+				change_gender(P,MALE,1)
+
 		return
 
 
 ///////////////////////////// DM_TRANSFORM_FEMALE /////////////////////////////
 	if(digest_mode == DM_TRANSFORM_FEMALE && ishuman(owner))
 		for (var/mob/living/carbon/human/P in internal_contents)
-			if(P.stat)
+			if(P.stat == DEAD)
 				continue
 
 			var/mob/living/carbon/human/O = owner
 
-			var/TFchance = 1
-			if(TFchance == 1)
-				var/TFmodify = rand(1,3)
-				if(TFmodify == 1 && P.r_eyes != O.r_eyes || P.g_eyes != O.g_eyes || P.b_eyes != O.b_eyes)
-					P.r_eyes = O.r_eyes
-					P.g_eyes = O.g_eyes
-					P.b_eyes = O.b_eyes
-					P << "<span class='notice'>You feel lightheaded and drowsy...</span>"
-					owner << "<span class='notice'>You feel warm as your make subtle changes to your captive's body.</span>"
-					P.update_eyes()
-
-				if(TFmodify == 2 && P.r_hair != O.r_hair || P.g_hair != O.g_hair || P.b_hair != O.b_hair || P.r_skin != O.r_skin || P.g_skin != O.g_skin || P.b_skin != O.b_skin)
-					P.r_hair = O.r_hair
-					P.g_hair = O.g_hair
-					P.b_hair = O.b_hair
-					P.r_skin = O.r_skin
-					P.g_skin = O.g_skin
-					P.b_skin = O.b_skin
-					P.h_style = O.h_style
-					P << "<span class='notice'>Your body tingles all over...</span>"
-					owner << "<span class='notice'>You tingle as your make noticeable changes to your captive's body.</span>"
-					P.update_hair()
-					P.update_body()
-					P.updateicon()
-
-				if(TFmodify == 3 && P.gender != FEMALE)
-					P.f_style = "Shaved"
-					P.gender = FEMALE
-					P << "<span class='notice'>Your body feels very strange...</span>"
-					owner << "<span class='notice'>You feel strange as you alter your captive's gender.</span>"
-					P.update_body()
-					P.updateicon()
-
-			if(O.nutrition > 0)
+			if(O.nutrition > 400 && P.nutrition < 400)
 				O.nutrition -= 2
-			if(P.nutrition < 400)
-				P.nutrition += 1
+				P.nutrition += 1.5
+
+			if(check_eyes(P))
+				change_eyes(P,1)
+				continue
+
+			if(check_hair(P) || check_skin(P))
+				change_hair(P)
+				change_skin(P,1)
+				continue
+
+			if(check_gender(P,FEMALE))
+				change_gender(P,FEMALE,1)
+
 		return
 
 ///////////////////////////// DM_TRANSFORM_KEEP_GENDER  /////////////////////////////
 	if(digest_mode == DM_TRANSFORM_KEEP_GENDER && ishuman(owner))
 		for (var/mob/living/carbon/human/P in internal_contents)
-			if(P.stat)
+			if(P.stat == DEAD)
 				continue
 
 			var/mob/living/carbon/human/O = owner
 
-			var/TFchance = 1
-			if(TFchance == 1)
-
-				var/TFmodify = rand(1,2)
-				if(TFmodify == 1 && P.r_eyes != O.r_eyes || P.g_eyes != O.g_eyes || P.b_eyes != O.b_eyes)
-					P.r_eyes = O.r_eyes
-					P.g_eyes = O.g_eyes
-					P.b_eyes = O.b_eyes
-					P << "<span class='notice'>You feel lightheaded and drowsy...</span>"
-					owner << "<span class='notice'>You feel warm as you make subtle changes to your captive's body.</span>"
-					P.update_eyes()
-
-				if(TFmodify == 2 && P.r_hair != O.r_hair || P.g_hair != O.g_hair || P.b_hair != O.b_hair || P.r_skin != O.r_skin || P.g_skin != O.g_skin || P.b_skin != O.b_skin || P.r_facial != O.r_facial || P.g_facial != O.g_facial || P.b_facial != O.b_facial)
-					P.r_hair = O.r_hair
-					P.r_facial = O.r_facial
-					P.g_hair = O.g_hair
-					P.g_facial = O.g_facial
-					P.b_hair = O.b_hair
-					P.b_facial = O.b_facial
-					P.r_skin = O.r_skin
-					P.g_skin = O.g_skin
-					P.b_skin = O.b_skin
-					P.h_style = O.h_style
-					P << "<span class='notice'>Your body tingles all over...</span>"
-					owner << "<span class='notice'>You tingle as you make noticeable changes to your captive's body.</span>"
-					P.update_hair()
-					P.update_body()
-					P.updateicon()
-
-			if(O.nutrition > 0)
+			if(O.nutrition > 400 && P.nutrition < 400)
 				O.nutrition -= 2
-			if(P.nutrition < 400)
-				P.nutrition += 1
+				P.nutrition += 1.5
+
+			if(check_eyes(P))
+				change_eyes(P,1)
+				continue
+
+			if(check_hair(P) || check_skin(P))
+				change_hair(P)
+				change_skin(P,1)
+
 		return
 
-///////////////////////////// DM_TRANSFORM_CHANGE_SPECIES  /////////////////////////////
-	if(digest_mode == DM_TRANSFORM_CHANGE_SPECIES && ishuman(owner))
+///////////////////////////// DM_TRANSFORM_CHANGE_SPECIES_AND_TAUR  /////////////////////////////
+	if(digest_mode == DM_TRANSFORM_CHANGE_SPECIES_AND_TAUR && ishuman(owner))
 		for (var/mob/living/carbon/human/P in internal_contents)
-			if(P.stat)
+			if(P.stat == DEAD)
 				continue
 
 			var/mob/living/carbon/human/O = owner
 
-			var/TFchance = 1 //This used to be RNG, resulting people waiting ages. This way does it instantly.
-			if(TFchance == 1)
-				var/TFmodify = rand(1,3)
-				if(TFmodify == 1 && P.r_eyes != O.r_eyes || P.g_eyes != O.g_eyes || P.b_eyes != O.b_eyes)
-					P.r_eyes = O.r_eyes
-					P.g_eyes = O.g_eyes
-					P.b_eyes = O.b_eyes
-					P << "<span class='notice'>You feel lightheaded and drowsy...</span>"
-					owner << "<span class='notice'>You feel warm as you make subtle changes to your captive's body.</span>"
-					P.update_eyes()
-
-				if(TFmodify == 2 && P.r_hair != O.r_hair || P.g_hair != O.g_hair || P.b_hair != O.b_hair || P.r_skin != O.r_skin || P.g_skin != O.g_skin || P.b_skin != O.b_skin || P.r_facial != O.r_facial || P.g_facial != O.g_facial || P.b_facial != O.b_facial)
-					P.r_hair = O.r_hair
-					P.r_facial = O.r_facial
-					P.g_hair = O.g_hair
-					P.g_facial = O.g_facial
-					P.b_hair = O.b_hair
-					P.b_facial = O.b_facial
-					P.r_skin = O.r_skin
-					P.g_skin = O.g_skin
-					P.b_skin = O.b_skin
-					P.h_style = O.h_style
-					P << "<span class='notice'>Your body tingles all over...</span>"
-					owner << "<span class='notice'>You tingle as you make noticeable changes to your captive's body.</span>"
-					P.update_hair()
-					P.update_body()
-					P.updateicon()
-
-				if(TFmodify == 3 && P.r_hair != O.r_hair || P.g_hair != O.g_hair || P.species != O.species || P.b_hair != O.b_hair || P.r_skin != O.r_skin || P.g_skin != O.g_skin || P.b_skin != O.b_skin || P.tail_style != O.tail_style || P.r_tail != O.r_tail || P.g_tail != O.g_tail || P.b_tail != O.b_tail || P.ear_style != O.ear_style || P.r_facial != O.r_facial || P.g_facial != O.g_facial || P.b_facial != O.b_facial || P.custom_species != O.custom_species)
-					P.r_hair = O.r_hair
-					P.r_facial = O.r_facial
-					P.g_hair = O.g_hair
-					P.g_facial = O.g_facial
-					P.b_hair = O.b_hair
-					P.b_facial = O.b_facial
-					P.r_skin = O.r_skin
-					P.g_skin = O.g_skin
-					P.b_skin = O.b_skin
-					P.tail_style = O.tail_style
-					P.r_tail = O.r_tail
-					P.g_tail = O.g_tail
-					P.b_tail = O.b_tail
-					P.ear_style = O.ear_style
-					P.species = O.species
-					P.custom_species = O.custom_species
-					for(var/obj/item/organ/I in P.internal_organs) //This prevents organ rejection
-						I.species = O.species
-					for(var/obj/item/organ/external/chest/A in O.organs)
-						for(var/obj/item/organ/external/Z in P.organs) //This makes their limb sprites look correct.
-							Z.species = O.species
-							Z.h_col = A.h_col
-							Z.s_col = A.s_col
-					P << "<span class='notice'>You lose sensation of your body, feeling only the warmth of everything around you... </span>"
-					owner << "<span class='notice'>Your body shifts as you make dramatic changes to your captive's body.</span>"
-					P.fixblood()
-					P.update_hair()
-					P.update_body()
-					P.update_tail_showing()
-					P.updateicon()
-
-			if(O.nutrition > 0)
+			if(O.nutrition > 400 && P.nutrition < 400)
 				O.nutrition -= 2
-			if(P.nutrition < 400)
-				P.nutrition += 1
+				P.nutrition += 1.5
+
+			if(check_ears(P) || check_tail_nocolor(P) || check_wing_nocolor(P) || check_species(P))
+				change_ears(P)
+				change_tail_nocolor(P)
+				change_wing_nocolor(P)
+				change_species(P,1)
+
 		return
 
-
-///////////////////////////// DM_TRANSFORM_CHANGE_SPECIES_EGG /////////////////////////////
-	if(digest_mode == DM_TRANSFORM_CHANGE_SPECIES_EGG && ishuman(owner))
+///////////////////////////// DM_TRANSFORM_REPLICA /////////////////////////////
+	if(digest_mode == DM_TRANSFORM_REPLICA && ishuman(owner))
 		for (var/mob/living/carbon/human/P in internal_contents)
-			if(P.stat)
+			if(P.stat == DEAD)
 				continue
-			if(P.absorbed) //If they're absorbed, don't egg them
-				return
+
 			var/mob/living/carbon/human/O = owner
 
-			if (O.custom_species)
-				var/defined_species = O.custom_species
-				P.r_hair 			= O.r_hair
-				P.r_facial 			= O.r_facial
-				P.g_hair 			= O.g_hair
-				P.g_facial 			= O.g_facial
-				P.b_hair 			= O.b_hair
-				P.b_facial 			= O.b_facial
-				P.r_skin 			= O.r_skin
-				P.g_skin 			= O.g_skin
-				P.b_skin 			= O.b_skin
-				P.tail_style 		= O.tail_style
-				P.r_tail 			= O.r_tail
-				P.g_tail 			= O.g_tail
-				P.b_tail 			= O.b_tail
-				P.ear_style 		= O.ear_style
-				P.h_style 			= O.h_style //Since some things are required, like the cobra hood.
-				P.species 			= O.species
-				P.custom_species 	= O.custom_species
-				P.r_eyes 			= O.r_eyes
-				P.g_eyes 			= O.g_eyes
-				P.b_eyes 			= O.b_eyes
+			if(O.nutrition > 400 && P.nutrition < 400)
+				O.nutrition -= 2
+				P.nutrition += 1.5
 
-				for(var/obj/item/organ/I in P.internal_organs) //This prevents organ rejection
-					I.species = O.species
+			if(check_eyes(P))
+				change_eyes(P,1)
+				continue
 
-				for(var/obj/item/organ/external/chest/A in O.organs)
-					for(var/obj/item/organ/external/Z in P.organs) //This makes their limb sprites look correct.
-						Z.species = O.species
-						Z.h_col = A.h_col
-						Z.s_col = A.s_col
-				P << "<span class='notice'>You lose sensation of your body, feeling only the warmth around you as you're encased in an egg. </span>"
-				owner << "<span class='notice'>You shift as you make dramatic changes to your captive's body as you encase them in an egg.</span>"
-				P.fixblood()
-				P.update_hair()
-				P.update_body()
-				P.update_tail_showing()
-				P.update_eyes()
-				P.updateicon()
-				switch(O.egg_type)
-					if("Unathi")
-						var/obj/structure/closet/secure_closet/egg/unathi/J = new /obj/structure/closet/secure_closet/egg/unathi(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						for(var/mob/living/M in internal_contents)
-						internal_contents -= P
-					if("Tajaran")
-						var/obj/structure/closet/secure_closet/egg/tajaran/J = new /obj/structure/closet/secure_closet/egg/tajaran(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Akula")
-						var/obj/structure/closet/secure_closet/egg/shark/J = new /obj/structure/closet/secure_closet/egg/shark(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Skrell")
-						var/obj/structure/closet/secure_closet/egg/skrell/J = new /obj/structure/closet/secure_closet/egg/skrell(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Sergal")
-						var/obj/structure/closet/secure_closet/egg/sergal/J = new /obj/structure/closet/secure_closet/egg/sergal(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Human")
-						var/obj/structure/closet/secure_closet/egg/human/J = new /obj/structure/closet/secure_closet/egg/human(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Slime")
-						var/obj/structure/closet/secure_closet/egg/slime/J = new /obj/structure/closet/secure_closet/egg/slime(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Egg")
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Xenochimera")
-						var/obj/structure/closet/secure_closet/egg/scree/J = new /obj/structure/closet/secure_closet/egg/scree(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Xenomorph")
-						var/obj/structure/closet/secure_closet/egg/xenomorph/J = new /obj/structure/closet/secure_closet/egg/xenomorph(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					else
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-			else
-				P.r_hair 			= O.r_hair
-				P.r_facial 			= O.r_facial
-				P.g_hair 			= O.g_hair
-				P.g_facial 			= O.g_facial
-				P.b_hair 			= O.b_hair
-				P.b_facial 			= O.b_facial
-				P.r_skin 			= O.r_skin
-				P.g_skin 			= O.g_skin
-				P.b_skin 			= O.b_skin
-				P.tail_style 		= O.tail_style
-				P.r_tail 			= O.r_tail
-				P.g_tail 			= O.g_tail
-				P.b_tail 			= O.b_tail
-				P.ear_style 		= O.ear_style
-				P.h_style 			= O.h_style
-				P.species 			= O.species
-				P.custom_species 	= O.custom_species
-				P.r_eyes 			= O.r_eyes
-				P.g_eyes 			= O.g_eyes
-				P.b_eyes 			= O.b_eyes
-				for(var/obj/item/organ/I in P.internal_organs) //This prevents organ rejection
-					I.species = O.species
-				for(var/obj/item/organ/external/chest/A in O.organs)
-					for(var/obj/item/organ/external/Z in P.organs) //This makes their limb sprites look correct.
-						Z.species = O.species
-						Z.h_col = A.h_col
-						Z.s_col = A.s_col
-				P << "<span class='notice'>You lose sensation of your body, feeling only the warmth around you as are you as you're encased in an egg. </span>"
-				owner << "<span class='notice'>You shift as you make dramatic changes to your captive's body as you encase them in an egg.</span>"
-				P.fixblood()
-				P.update_hair()
-				P.update_body()
-				P.update_tail_showing()
-				P.update_eyes()
-				P.updateicon()
-				switch(O.egg_type)
-					if("Unathi")
-						var/obj/structure/closet/secure_closet/egg/unathi/J = new /obj/structure/closet/secure_closet/egg/unathi(O.loc)
-						P.forceMove(J)
-						J.name = "Unathi egg"
-						internal_contents -= P
-					if("Tajaran")
-						var/obj/structure/closet/secure_closet/egg/tajaran/J = new /obj/structure/closet/secure_closet/egg/tajaran(O.loc)
-						P.forceMove(J)
-						J.name = "Tajaran egg"
-						internal_contents -= P
-					if("Akula")
-						var/obj/structure/closet/secure_closet/egg/shark/J = new /obj/structure/closet/secure_closet/egg/shark(O.loc)
-						P.forceMove(J)
-						J.name = "Akula egg"
-						internal_contents -= P
-					if("Skrell")
-						var/obj/structure/closet/secure_closet/egg/skrell/J = new /obj/structure/closet/secure_closet/egg/skrell(O.loc)
-						P.forceMove(J)
-						J.name = "Skrell egg"
-						internal_contents -= P
-					if("Sergal")
-						var/obj/structure/closet/secure_closet/egg/sergal/J = new /obj/structure/closet/secure_closet/egg/sergal(O.loc)
-						P.forceMove(J)
-						J.name = "Segal egg"
-						internal_contents -= P
-					if("Human")
-						var/obj/structure/closet/secure_closet/egg/human/J = new /obj/structure/closet/secure_closet/egg/human(O.loc)
-						P.forceMove(J)
-						J.name = "Human egg"
-						internal_contents -= P
-					if("Slime")
-						var/obj/structure/closet/secure_closet/egg/slime/J = new /obj/structure/closet/secure_closet/egg/slime(O.loc)
-						P.forceMove(J)
-						J.name = "Slime egg"
-						internal_contents -= P
-					if("Egg")
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "Egg"
-						internal_contents -= P
-					if("Xenochimera")
-						var/obj/structure/closet/secure_closet/egg/scree/J = new /obj/structure/closet/secure_closet/egg/scree(O.loc)
-						P.forceMove(J)
-						internal_contents -= P
-					if("Xenomorph")
-						var/obj/structure/closet/secure_closet/egg/xenomorph/J = new /obj/structure/closet/secure_closet/egg/xenomorph(O.loc)
-						P.forceMove(J)
-						internal_contents -= P
-					else
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "Odd egg" //Something went wrong. Since the default is "egg", they shouldn't see this.
-						internal_contents -= P
+			if(check_hair(P) || check_skin(P))
+				change_hair(P)
+				change_skin(P,1)
+				continue
+
+			if(check_ears(P) || check_tail(P) || check_wing(P) || check_species(P))
+				change_ears(P)
+				change_tail(P)
+				change_wing(P)
+				change_species(P,1)
+
+		return
+
+///////////////////////////// DM_TRANSFORM_CHANGE_SPECIES_AND_TAUR_EGG /////////////////////////////
+	if(digest_mode == DM_TRANSFORM_CHANGE_SPECIES_AND_TAUR_EGG && ishuman(owner))
+		for (var/mob/living/carbon/human/P in internal_contents)
+			if(P.stat == DEAD)
+				continue
+
+			if(check_ears(P) || check_tail_nocolor(P) || check_wing_nocolor(P)|| check_species(P))
+				change_ears(P)
+				change_tail_nocolor(P)
+				change_wing_nocolor(P)
+				change_species(P,1)
+				continue
+
+			if(!P.absorbed)
+				put_in_egg(P,1)
+
 		return
 
 ///////////////////////////// DM_TRANSFORM_KEEP_GENDER_EGG  /////////////////////////////
 	if(digest_mode == DM_TRANSFORM_KEEP_GENDER_EGG && ishuman(owner))
 		for (var/mob/living/carbon/human/P in internal_contents)
-			if(P.stat)
+			if(P.stat == DEAD)
 				continue
-			if(P.absorbed) //If they're absorbed, don't egg them
-				return
-			var/mob/living/carbon/human/O = owner
 
-			if (O.custom_species)
-				var/defined_species = O.custom_species
-				P.r_hair 			= O.r_hair
-				P.r_facial 			= O.r_facial
-				P.g_hair 			= O.g_hair
-				P.g_facial 			= O.g_facial
-				P.b_hair 			= O.b_hair
-				P.b_facial 			= O.b_facial
-				P.r_skin 			= O.r_skin
-				P.g_skin 			= O.g_skin
-				P.b_skin 			= O.b_skin
-				P.h_style 			= O.h_style
-				P.r_eyes 			= O.r_eyes
-				P.g_eyes 			= O.g_eyes
-				P.b_eyes 			= O.b_eyes
-				P << "<span class='notice'>Your body tingles all over...</span>"
-				owner << "<span class='notice'>You tingle as you make noticeable changes to your captive's body.</span>"
-				P.update_hair()
-				P.update_body()
-				P.update_eyes()
-				P.updateicon()
-				switch(O.egg_type)
-					if("Unathi")
-						var/obj/structure/closet/secure_closet/egg/unathi/J = new /obj/structure/closet/secure_closet/egg/unathi(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Tajaran")
-						var/obj/structure/closet/secure_closet/egg/tajaran/J = new /obj/structure/closet/secure_closet/egg/tajaran(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Akula")
-						var/obj/structure/closet/secure_closet/egg/shark/J = new /obj/structure/closet/secure_closet/egg/shark(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Skrell")
-						var/obj/structure/closet/secure_closet/egg/skrell/J = new /obj/structure/closet/secure_closet/egg/skrell(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Sergal")
-						var/obj/structure/closet/secure_closet/egg/sergal/J = new /obj/structure/closet/secure_closet/egg/sergal(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Human")
-						var/obj/structure/closet/secure_closet/egg/human/J = new /obj/structure/closet/secure_closet/egg/human(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Slime")
-						var/obj/structure/closet/secure_closet/egg/slime/J = new /obj/structure/closet/secure_closet/egg/slime(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Egg")
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Xenochimera")
-						var/obj/structure/closet/secure_closet/egg/scree/J = new /obj/structure/closet/secure_closet/egg/scree(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Xenomorph")
-						var/obj/structure/closet/secure_closet/egg/xenomorph/J = new /obj/structure/closet/secure_closet/egg/xenomorph(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					else
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
+			if(check_eyes(P))
+				change_eyes(P,1)
+				continue
 
-			else
-				P.r_hair 			= O.r_hair
-				P.r_facial 			= O.r_facial
-				P.g_hair 			= O.g_hair
-				P.g_facial 			= O.g_facial
-				P.b_hair 			= O.b_hair
-				P.b_facial 			= O.b_facial
-				P.r_skin 			= O.r_skin
-				P.g_skin 			= O.g_skin
-				P.b_skin 			= O.b_skin
-				P.h_style 			= O.h_style
-				P.r_eyes 			= O.r_eyes
-				P.g_eyes 			= O.g_eyes
-				P.b_eyes 			= O.b_eyes
-				P << "<span class='notice'>Your body tingles all over...</span>"
-				owner << "<span class='notice'>You tingle as you make noticeable changes to your captive's body.</span>"
-				P.update_hair()
-				P.update_body()
-				P.update_eyes()
-				P.updateicon()
-				switch(O.egg_type)
-					if("Unathi")
-						var/obj/structure/closet/secure_closet/egg/unathi/J = new /obj/structure/closet/secure_closet/egg/unathi(O.loc)
-						P.forceMove(J)
-						J.name = "Unathi egg"
-						internal_contents -= P
-					if("Tajaran")
-						var/obj/structure/closet/secure_closet/egg/tajaran/J = new /obj/structure/closet/secure_closet/egg/tajaran(O.loc)
-						P.forceMove(J)
-						J.name = "Tajaran egg"
-						internal_contents -= P
-					if("Akula")
-						var/obj/structure/closet/secure_closet/egg/shark/J = new /obj/structure/closet/secure_closet/egg/shark(O.loc)
-						P.forceMove(J)
-						J.name = "Akula egg"
-						internal_contents -= P
-					if("Skrell")
-						var/obj/structure/closet/secure_closet/egg/skrell/J = new /obj/structure/closet/secure_closet/egg/skrell(O.loc)
-						P.forceMove(J)
-						J.name = "Skrell egg"
-						internal_contents -= P
-					if("Sergal")
-						var/obj/structure/closet/secure_closet/egg/sergal/J = new /obj/structure/closet/secure_closet/egg/sergal(O.loc)
-						P.forceMove(J)
-						J.name = "Segal egg"
-						internal_contents -= P
-					if("Human")
-						var/obj/structure/closet/secure_closet/egg/human/J = new /obj/structure/closet/secure_closet/egg/human(O.loc)
-						P.forceMove(J)
-						J.name = "Human egg"
-						internal_contents -= P
-					if("Slime")
-						var/obj/structure/closet/secure_closet/egg/slime/J = new /obj/structure/closet/secure_closet/egg/slime(O.loc)
-						P.forceMove(J)
-						J.name = "Slime egg"
-						internal_contents -= P
-					if("Egg")
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "Egg"
-						internal_contents -= P
-					if("Xenochimera")
-						var/obj/structure/closet/secure_closet/egg/scree/J = new /obj/structure/closet/secure_closet/egg/scree(O.loc)
-						J.name = "Xenochimera egg"
-						P.forceMove(J)
-						internal_contents -= P
-					if("Xenomorph")
-						var/obj/structure/closet/secure_closet/egg/xenomorph/J = new /obj/structure/closet/secure_closet/egg/xenomorph(O.loc)
-						P.forceMove(J)
-						J.name = "Xenomorph egg"
-						internal_contents -= P
-					else
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "Odd egg" //Something went wrong. Since the default is "egg", they shouldn't see this.
-						internal_contents -= P
+			if(check_hair(P) || check_skin(P))
+				change_hair(P)
+				change_skin(P,1)
+				continue
+
+			if(!P.absorbed)
+				put_in_egg(P,1)
+
+		return
+
+///////////////////////////// DM_TRANSFORM_REPLICA_EGG /////////////////////////////
+	if(digest_mode == DM_TRANSFORM_REPLICA_EGG && ishuman(owner))
+		for (var/mob/living/carbon/human/P in internal_contents)
+			if(P.stat == DEAD)
+				continue
+
+			if(check_eyes(P))
+				change_eyes(P,1)
+				continue
+
+			if(check_hair(P) || check_skin(P))
+				change_hair(P)
+				change_skin(P,1)
+				continue
+
+			if(check_ears(P) || check_tail(P) || check_wing(P) || check_species(P))
+				change_ears(P)
+				change_tail(P)
+				change_wing(P)
+				change_species(P,1)
+				continue
+
+			if(!P.absorbed)
+				put_in_egg(P,1)
+
 		return
 
 ///////////////////////////// DM_TRANSFORM_MALE_EGG /////////////////////////////
 	if(digest_mode == DM_TRANSFORM_MALE_EGG && ishuman(owner))
 		for (var/mob/living/carbon/human/P in internal_contents)
-			if(P.stat)
+			if(P.stat == DEAD)
 				continue
-			if(P.absorbed) //If they're absorbed, don't egg them
-				return
-			var/mob/living/carbon/human/O = owner
 
-			if (O.custom_species)
-				var/defined_species = O.custom_species
-				P.r_hair 			= O.r_hair
-				P.r_facial 			= O.r_facial
-				P.g_hair 			= O.g_hair
-				P.g_facial 			= O.g_facial
-				P.b_hair 			= O.b_hair
-				P.b_facial 			= O.b_facial
-				P.r_skin 			= O.r_skin
-				P.g_skin 			= O.g_skin
-				P.b_skin 			= O.b_skin
-				P.h_style 			= O.h_style
-				P.gender 			= MALE
-				P.r_eyes 			= O.r_eyes
-				P.g_eyes 			= O.g_eyes
-				P.b_eyes 			= O.b_eyes
-				P << "<span class='notice'>Your body feels very strange...</span>"
-				owner << "<span class='notice'>Your body feels strange as you alter your captive's gender.</span>"
-				P.update_hair()
-				P.update_body()
-				P.updateicon()
-				switch(O.egg_type)
-					if("Unathi")
-						var/obj/structure/closet/secure_closet/egg/unathi/J = new /obj/structure/closet/secure_closet/egg/unathi(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Tajaran")
-						var/obj/structure/closet/secure_closet/egg/tajaran/J = new /obj/structure/closet/secure_closet/egg/tajaran(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Akula")
-						var/obj/structure/closet/secure_closet/egg/shark/J = new /obj/structure/closet/secure_closet/egg/shark(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Skrell")
-						var/obj/structure/closet/secure_closet/egg/skrell/J = new /obj/structure/closet/secure_closet/egg/skrell(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Sergal")
-						var/obj/structure/closet/secure_closet/egg/sergal/J = new /obj/structure/closet/secure_closet/egg/sergal(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Human")
-						var/obj/structure/closet/secure_closet/egg/human/J = new /obj/structure/closet/secure_closet/egg/human(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Slime")
-						var/obj/structure/closet/secure_closet/egg/slime/J = new /obj/structure/closet/secure_closet/egg/slime(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Egg")
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Xenochimera")
-						var/obj/structure/closet/secure_closet/egg/scree/J = new /obj/structure/closet/secure_closet/egg/scree(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Xenomorph")
-						var/obj/structure/closet/secure_closet/egg/xenomorph/J = new /obj/structure/closet/secure_closet/egg/xenomorph(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					else
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-			else
-				P.r_hair 			= O.r_hair
-				P.r_facial 			= O.r_facial
-				P.g_hair 			= O.g_hair
-				P.g_facial 			= O.g_facial
-				P.b_hair 			= O.b_hair
-				P.b_facial			= O.b_facial
-				P.r_skin 			= O.r_skin
-				P.g_skin 			= O.g_skin
-				P.b_skin 			= O.b_skin
-				P.h_style			= O.h_style
-				P.gender 			= MALE
-				P.r_eyes 			= O.r_eyes
-				P.g_eyes 			= O.g_eyes
-				P.b_eyes 			= O.b_eyes
-				P << "<span class='notice'>Your body feels very strange...</span>"
-				owner << "<span class='notice'>You feel strange as you alter your captive's gender.</span>"
-				P.update_hair()
-				P.update_body()
-				P.updateicon()
-				switch(O.egg_type)
-					if("Unathi")
-						var/obj/structure/closet/secure_closet/egg/unathi/J = new /obj/structure/closet/secure_closet/egg/unathi(O.loc)
-						P.forceMove(J)
-						J.name = "Unathi egg"
-						internal_contents -= P
-					if("Tajaran")
-						var/obj/structure/closet/secure_closet/egg/tajaran/J = new /obj/structure/closet/secure_closet/egg/tajaran(O.loc)
-						P.forceMove(J)
-						J.name = "Tajaran egg"
-						internal_contents -= P
-					if("Akula")
-						var/obj/structure/closet/secure_closet/egg/shark/J = new /obj/structure/closet/secure_closet/egg/shark(O.loc)
-						P.forceMove(J)
-						J.name = "Akula egg"
-						internal_contents -= P
-					if("Skrell")
-						var/obj/structure/closet/secure_closet/egg/skrell/J = new /obj/structure/closet/secure_closet/egg/skrell(O.loc)
-						P.forceMove(J)
-						J.name = "Skrell egg"
-						internal_contents -= P
-					if("Sergal")
-						var/obj/structure/closet/secure_closet/egg/sergal/J = new /obj/structure/closet/secure_closet/egg/sergal(O.loc)
-						P.forceMove(J)
-						J.name = "Segal egg"
-						internal_contents -= P
-					if("Human")
-						var/obj/structure/closet/secure_closet/egg/human/J = new /obj/structure/closet/secure_closet/egg/human(O.loc)
-						P.forceMove(J)
-						J.name = "Human egg"
-						internal_contents -= P
-					if("Slime")
-						var/obj/structure/closet/secure_closet/egg/slime/J = new /obj/structure/closet/secure_closet/egg/slime(O.loc)
-						P.forceMove(J)
-						J.name = "Slime egg"
-						internal_contents -= P
-					if("Egg")
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "Egg"
-						internal_contents -= P
-					if("Xenochimera")
-						var/obj/structure/closet/secure_closet/egg/scree/J = new /obj/structure/closet/secure_closet/egg/scree(O.loc)
-						P.forceMove(J)
-						J.name = "Scree egg"
-						internal_contents -= P
-					if("Xenomorph")
-						var/obj/structure/closet/secure_closet/egg/xenomorph/J = new /obj/structure/closet/secure_closet/egg/xenomorph(O.loc)
-						P.forceMove(J)
-						J.name = "Xenomorph egg"
-						internal_contents -= P
-					else
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "Odd egg" //Something went wrong. Since the default is "egg", they shouldn't see this.
-						internal_contents -= P
+			if(check_eyes(P))
+				change_eyes(P,1)
+				continue
+
+			if(check_hair(P) || check_skin(P))
+				change_hair(P)
+				change_skin(P,1)
+				continue
+
+			if(check_gender(P,MALE))
+				change_gender(P,MALE,1)
+				continue
+
+			if(!P.absorbed)
+				put_in_egg(P,1)
+
 		return
 
 ///////////////////////////// DM_TRANSFORM_FEMALE_EGG /////////////////////////////
 	if(digest_mode == DM_TRANSFORM_FEMALE_EGG && ishuman(owner))
 		for (var/mob/living/carbon/human/P in internal_contents)
-			if(P.stat)
+			if(P.stat == DEAD)
 				continue
-			if(P.absorbed) //If they're absorbed, don't egg them
-				return
-			var/mob/living/carbon/human/O = owner
 
+			if(check_eyes(P))
+				change_eyes(P,1)
+				continue
 
-			if (O.custom_species)
-				var/defined_species = O.custom_species
-				P.r_hair 			= O.r_hair
-				P.r_facial 			= O.r_facial
-				P.g_hair 			= O.g_hair
-				P.g_facial 			= O.g_facial
-				P.b_hair 			= O.b_hair
-				P.b_facial 			= O.b_facial
-				P.r_skin 			= O.r_skin
-				P.g_skin 			= O.g_skin
-				P.b_skin 			= O.b_skin
-				P.h_style 			= O.h_style
-				P.gender 			= FEMALE
-				P.r_eyes 			= O.r_eyes
-				P.g_eyes 			= O.g_eyes
-				P.b_eyes 			= O.b_eyes
-				P << "<span class='notice'>Your body feels very strange...</span>"
-				owner << "<span class='notice'>You feels strange as you alter your captive's gender.</span>"
-				P.update_hair()
-				P.update_body()
-				P.updateicon()
-				switch(O.egg_type)
-					if("Unathi")
-						var/obj/structure/closet/secure_closet/egg/unathi/J = new /obj/structure/closet/secure_closet/egg/unathi(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Tajaran")
-						var/obj/structure/closet/secure_closet/egg/tajaran/J = new /obj/structure/closet/secure_closet/egg/tajaran(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Akula")
-						var/obj/structure/closet/secure_closet/egg/shark/J = new /obj/structure/closet/secure_closet/egg/shark(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Skrell")
-						var/obj/structure/closet/secure_closet/egg/skrell/J = new /obj/structure/closet/secure_closet/egg/skrell(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Sergal")
-						var/obj/structure/closet/secure_closet/egg/sergal/J = new /obj/structure/closet/secure_closet/egg/sergal(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Human")
-						var/obj/structure/closet/secure_closet/egg/human/J = new /obj/structure/closet/secure_closet/egg/human(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Slime")
-						var/obj/structure/closet/secure_closet/egg/slime/J = new /obj/structure/closet/secure_closet/egg/slime(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Egg")
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Xenochimera")
-						var/obj/structure/closet/secure_closet/egg/scree/J = new /obj/structure/closet/secure_closet/egg/scree(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Xenomorph")
-						var/obj/structure/closet/secure_closet/egg/xenomorph/J = new /obj/structure/closet/secure_closet/egg/xenomorph(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					else
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-			else
-				P.r_hair 			= O.r_hair
-				P.r_facial 			= O.r_facial
-				P.g_hair 			= O.g_hair
-				P.g_facial 			= O.g_facial
-				P.b_hair 			= O.b_hair
-				P.b_facial 			= O.b_facial
-				P.r_skin 			= O.r_skin
-				P.g_skin 			= O.g_skin
-				P.b_skin 			= O.b_skin
-				P.h_style 			= O.h_style
-				P.gender 			= FEMALE
-				P.r_eyes 			= O.r_eyes
-				P.g_eyes 			= O.g_eyes
-				P.b_eyes 			= O.b_eyes
-				owner << "<span class='notice'>You feel strange as you alter your captive's gender.</span>"
-				P << "<span class='notice'>Your body feels very strange...</span>"
-				P.update_hair()
-				P.update_body()
-				P.updateicon()
-				switch(O.egg_type)
-					if("Unathi")
-						var/obj/structure/closet/secure_closet/egg/unathi/J = new /obj/structure/closet/secure_closet/egg/unathi(O.loc)
-						P.forceMove(J)
-						J.name = "Unathi egg"
-						internal_contents -= P
-					if("Tajaran")
-						var/obj/structure/closet/secure_closet/egg/tajaran/J = new /obj/structure/closet/secure_closet/egg/tajaran(O.loc)
-						P.forceMove(J)
-						J.name = "Tajaran egg"
-						internal_contents -= P
-					if("Akula")
-						var/obj/structure/closet/secure_closet/egg/shark/J = new /obj/structure/closet/secure_closet/egg/shark(O.loc)
-						P.forceMove(J)
-						J.name = "Akula egg"
-						internal_contents -= P
-					if("Skrell")
-						var/obj/structure/closet/secure_closet/egg/skrell/J = new /obj/structure/closet/secure_closet/egg/skrell(O.loc)
-						P.forceMove(J)
-						J.name = "Skrell egg"
-						internal_contents -= P
-					if("Sergal")
-						var/obj/structure/closet/secure_closet/egg/sergal/J = new /obj/structure/closet/secure_closet/egg/sergal(O.loc)
-						P.forceMove(J)
-						J.name = "Segal egg"
-						internal_contents -= P
-					if("Human")
-						var/obj/structure/closet/secure_closet/egg/human/J = new /obj/structure/closet/secure_closet/egg/human(O.loc)
-						P.forceMove(J)
-						J.name = "Human egg"
-						internal_contents -= P
-					if("Slime")
-						var/obj/structure/closet/secure_closet/egg/slime/J = new /obj/structure/closet/secure_closet/egg/slime(O.loc)
-						P.forceMove(J)
-						J.name = "Slime egg"
-						internal_contents -= P
-					if("Egg")
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "Egg"
-						internal_contents -= P
-					if("Xenochimera")
-						var/obj/structure/closet/secure_closet/egg/scree/J = new /obj/structure/closet/secure_closet/egg/scree(O.loc)
-						P.forceMove(J)
-						internal_contents -= P
-					if("Xenomorph")
-						var/obj/structure/closet/secure_closet/egg/xenomorph/J = new /obj/structure/closet/secure_closet/egg/xenomorph(O.loc)
-						P.forceMove(J)
-						internal_contents -= P
-					else
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "Odd egg" //Something went wrong. Since the default is "egg", they shouldn't see this.
-						internal_contents -= P
+			if(check_hair(P) || check_skin(P))
+				change_hair(P)
+				change_skin(P,1)
+				continue
+
+			if(check_gender(P,MALE))
+				change_gender(P,MALE,1)
+				continue
+
+			if(!P.absorbed)
+				put_in_egg(P,1)
+
 		return
-
 
 ///////////////////////////// DM_EGG /////////////////////////////
 	if(digest_mode == DM_EGG && ishuman(owner))
 		for (var/mob/living/carbon/human/P in internal_contents)
-			if(P.stat)
+			if(P.absorbed || P.stat == DEAD)
 				continue
-			if(P.absorbed) //If they're absorbed, don't egg them
-				return
-			var/mob/living/carbon/human/O = owner
 
-			if (O.custom_species)
-				var/defined_species = O.custom_species
-				P << "<span class='notice'>You lose sensation of your body, feeling only the warmth around you as you're encased in an egg. </span>"
-				owner << "<span class='notice'>Your body shifts as you encase [P] in an egg.</span>"
-				switch(O.egg_type)
-					if("Unathi")
-						var/obj/structure/closet/secure_closet/egg/unathi/J = new /obj/structure/closet/secure_closet/egg/unathi(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						for(var/mob/living/M in internal_contents)
-						internal_contents -= P
-					if("Tajaran")
-						var/obj/structure/closet/secure_closet/egg/tajaran/J = new /obj/structure/closet/secure_closet/egg/tajaran(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Akula")
-						var/obj/structure/closet/secure_closet/egg/shark/J = new /obj/structure/closet/secure_closet/egg/shark(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Skrell")
-						var/obj/structure/closet/secure_closet/egg/skrell/J = new /obj/structure/closet/secure_closet/egg/skrell(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Sergal")
-						var/obj/structure/closet/secure_closet/egg/sergal/J = new /obj/structure/closet/secure_closet/egg/sergal(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Human")
-						var/obj/structure/closet/secure_closet/egg/human/J = new /obj/structure/closet/secure_closet/egg/human(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Slime")
-						var/obj/structure/closet/secure_closet/egg/slime/J = new /obj/structure/closet/secure_closet/egg/slime(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Egg")
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Xenochimera")
-						var/obj/structure/closet/secure_closet/egg/scree/J = new /obj/structure/closet/secure_closet/egg/scree(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					if("Xenomorph")
-						var/obj/structure/closet/secure_closet/egg/xenomorph/J = new /obj/structure/closet/secure_closet/egg/xenomorph(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-					else
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "[defined_species] egg"
-						J.desc = "This egg has a very unique look to it."
-						internal_contents -= P
-			else
-				P << "<span class='notice'>You lose sensation of your body, feeling only the warmth around you as you're encased in an egg. </span>"
-				owner << "<span class='notice'>Your body shifts as you encase [P] in an egg.</span>"
-				switch(O.egg_type)
-					if("Unathi")
-						var/obj/structure/closet/secure_closet/egg/unathi/J = new /obj/structure/closet/secure_closet/egg/unathi(O.loc)
-						P.forceMove(J)
-						J.name = "Unathi egg"
-						internal_contents -= P
-					if("Tajaran")
-						var/obj/structure/closet/secure_closet/egg/tajaran/J = new /obj/structure/closet/secure_closet/egg/tajaran(O.loc)
-						P.forceMove(J)
-						J.name = "Tajaran egg"
-						internal_contents -= P
-					if("Akula")
-						var/obj/structure/closet/secure_closet/egg/shark/J = new /obj/structure/closet/secure_closet/egg/shark(O.loc)
-						P.forceMove(J)
-						J.name = "Akula egg"
-						internal_contents -= P
-					if("Skrell")
-						var/obj/structure/closet/secure_closet/egg/skrell/J = new /obj/structure/closet/secure_closet/egg/skrell(O.loc)
-						P.forceMove(J)
-						J.name = "Skrell egg"
-						internal_contents -= P
-					if("Sergal")
-						var/obj/structure/closet/secure_closet/egg/sergal/J = new /obj/structure/closet/secure_closet/egg/sergal(O.loc)
-						P.forceMove(J)
-						J.name = "Segal egg"
-						internal_contents -= P
-					if("Human")
-						var/obj/structure/closet/secure_closet/egg/human/J = new /obj/structure/closet/secure_closet/egg/human(O.loc)
-						P.forceMove(J)
-						J.name = "Human egg"
-						internal_contents -= P
-					if("Slime")
-						var/obj/structure/closet/secure_closet/egg/slime/J = new /obj/structure/closet/secure_closet/egg/slime(O.loc)
-						P.forceMove(J)
-						J.name = "Slime egg"
-						internal_contents -= P
-					if("Egg")
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "Egg"
-						internal_contents -= P
-					if("Xenochimera")
-						var/obj/structure/closet/secure_closet/egg/scree/J = new /obj/structure/closet/secure_closet/egg/scree(O.loc)
-						P.forceMove(J)
-						J.name = "Xenochimera egg"
-						internal_contents -= P
-					if("Xenomorph")
-						var/obj/structure/closet/secure_closet/egg/xenomorph/J = new /obj/structure/closet/secure_closet/egg/xenomorph(O.loc)
-						P.forceMove(J)
-						J.name = "Xenomorph egg"
-						internal_contents -= P
-					else
-						var/obj/structure/closet/secure_closet/egg/J = new /obj/structure/closet/secure_closet/egg(O.loc)
-						P.forceMove(J)
-						J.name = "Odd egg" //Something went wrong. Since the default is "egg", they shouldn't see this.
-						internal_contents -= P
+			put_in_egg(P,1)

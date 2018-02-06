@@ -10,7 +10,9 @@
  *		Plant Bag
  *		Sheet Snatcher
  *		Cash Bag
- *
+ *		Chemistry Bag
+ 		Food Bag
+
  *	-Sayu
  */
 
@@ -34,15 +36,16 @@
 
 	w_class = ITEMSIZE_LARGE
 	max_w_class = ITEMSIZE_SMALL
+	max_storage_space = ITEMSIZE_SMALL * 21
 	can_hold = list() // any
 	cant_hold = list(/obj/item/weapon/disk/nuclear)
 
 /obj/item/weapon/storage/bag/trash/update_icon()
 	if(contents.len == 0)
 		icon_state = "trashbag0"
-	else if(contents.len < 12)
+	else if(contents.len < 9)
 		icon_state = "trashbag1"
-	else if(contents.len < 21)
+	else if(contents.len < 18)
 		icon_state = "trashbag2"
 	else icon_state = "trashbag3"
 
@@ -247,3 +250,29 @@
 	max_w_class = ITEMSIZE_NORMAL
 	w_class = ITEMSIZE_SMALL
 	can_hold = list(/obj/item/weapon/coin,/obj/item/weapon/spacecash)
+
+	// -----------------------------
+	//           Chemistry Bag
+	// -----------------------------
+/obj/item/weapon/storage/bag/chemistry
+	name = "chemistry bag"
+	icon = 'icons/obj/storage.dmi'
+	icon_state = "chembag"
+	desc = "A bag for storing pills, patches, and bottles."
+	max_storage_space = 200
+	w_class = ITEMSIZE_LARGE
+	slowdown = 1
+	can_hold = list(/obj/item/weapon/reagent_containers/pill,/obj/item/weapon/reagent_containers/glass/beaker,/obj/item/weapon/reagent_containers/glass/bottle)
+
+	// -----------------------------
+	//           Food Bag
+	// -----------------------------
+/obj/item/weapon/storage/bag/food
+	name = "food bag"
+	icon = 'icons/obj/storage.dmi'
+	icon_state = "foodbag"
+	desc = "A bag for storing foods of all kinds."
+	max_storage_space = ITEMSIZE_COST_NORMAL * 25
+	max_w_class = ITEMSIZE_NORMAL
+	w_class = ITEMSIZE_SMALL
+	can_hold = list(/obj/item/weapon/reagent_containers/food/snacks,/obj/item/weapon/reagent_containers/food/condiment)

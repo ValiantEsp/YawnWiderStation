@@ -1,6 +1,12 @@
+// Configure whether or not floorbot will fix hull breaches.
+// This can be a problem if it tries to pave over space or shuttles.  That should be fixed but...
+// If it can see space outside windows, it can be laggy since it keeps wondering if it should fix them.
+// Therefore that functionality is disabled for now.  But it can be turned on by uncommenting this.
+// #define FLOORBOT_PATCHES_HOLES 1
+
 /mob/living/bot/floorbot
 	name = "Floorbot"
-	desc = "A little floor repairing robot, he looks so excited!"
+	desc = "A little floor repairing robot, it looks so excited!"
 	icon_state = "floorbot0"
 	req_one_access = list(access_robotics, access_construction)
 	wait_if_pulled = 1
@@ -25,7 +31,7 @@
 
 /mob/living/bot/floorbot/attack_hand(var/mob/user)
 	user.set_machine(src)
-	var/dat
+	var/list/dat = list()
 	dat += "<TT><B>Automatic Station Floor Repairer v1.0</B></TT><BR><BR>"
 	dat += "Status: <A href='?src=\ref[src];operation=start'>[src.on ? "On" : "Off"]</A><BR>"
 	dat += "Maintenance panel is [open ? "opened" : "closed"]<BR>"
@@ -41,9 +47,9 @@
 		else
 			bmode = "Disabled"
 		dat += "<BR><BR>Bridge Mode : <A href='?src=\ref[src];operation=bridgemode'>[bmode]</A><BR>"
-
-	user << browse("<HEAD><TITLE>Repairbot v1.0 controls</TITLE></HEAD>[dat]", "window=autorepair")
-	onclose(user, "autorepair")
+	var/datum/browser/popup = new(user, "autorepair", "Repairbot v1.1 controls")
+	popup.set_content(jointext(dat,null))
+	popup.open()
 	return
 
 /mob/living/bot/floorbot/emag_act(var/remaining_charges, var/mob/user)
@@ -52,6 +58,7 @@
 		emagged = 1
 		if(user)
 			user << "<span class='notice'>The [src] buzzes and beeps.</span>"
+			playsound(src.loc, 'sound/machines/buzzbeep.ogg', 50, 0)
 		return 1
 
 /mob/living/bot/floorbot/Topic(href, href_list)
@@ -94,7 +101,8 @@
 		addTiles(1)
 
 	if(prob(1))
-		custom_emote(2, "makes an excited booping beeping sound!")
+		custom_emote(2, "makes an excited beeping sound!")
+		playsound(src.loc, 'sound/machines/twobeep.ogg', 50, 0)
 
 /mob/living/bot/floorbot/handleAdjacentTarget()
 	if(get_turf(target) == src.loc)
@@ -115,23 +123,24 @@
 					target = T
 					return
 				T = get_step(T, targetdirection)
+			return // In bridge mode we don't want to step off that line even to eat plates!
 
-		else // Fixing floors
-			for(var/turf/space/T in view(src)) // Breaches are of higher priority
-				if(confirmTarget(T))
-					target = T
-					return
+#ifdef FLOORBOT_PATCHES_HOLES
+		for(var/turf/space/T in view(src)) // Breaches are of higher priority
+			if(confirmTarget(T))
+				target = T
+				return
 
-			for(var/turf/simulated/mineral/floor/T in view(src)) // Asteroids are of smaller priority
-				if(confirmTarget(T))
-					target = T
-					return
-
-			if(improvefloors)
-				for(var/turf/simulated/floor/T in view(src))
-					if(confirmTarget(T))
-						target = T
-						return
+		for(var/turf/simulated/mineral/floor/T in view(src)) // Asteroids are of smaller priority
+			if(confirmTarget(T))
+				target = T
+				return
+#endif
+		// Look for broken floors even if we aren't improvefloors
+		for(var/turf/simulated/floor/T in view(src))
+			if(confirmTarget(T))
+				target = T
+				return
 
 	if(amount < maxAmount && (eattiles || maketiles))
 		for(var/obj/item/stack/S in view(src))
@@ -148,7 +157,11 @@
 	if(istype(A, /obj/item/stack/material/steel))
 		return (amount < maxAmount && maketiles)
 
-	if(A.loc.name == "Space")
+	// Don't pave over all of space, build there only if in bridge mode
+	if(!targetdirection && istype(A.loc, /area/space)) // Note name == "Space" does not work!
+		return 0
+
+	if(istype(A.loc, /area/shuttle)) // Do NOT mess with shuttle drop zones
 		return 0
 
 	if(emagged)
@@ -157,14 +170,16 @@
 	if(!amount)
 		return 0
 
+#ifdef FLOORBOT_PATCHES_HOLES
 	if(istype(A, /turf/space))
 		return 1
 
 	if(istype(A, /turf/simulated/mineral/floor))
 		return 1
+#endif
 
 	var/turf/simulated/floor/T = A
-	return (istype(T) && improvefloors && !T.flooring && (get_turf(T) == loc || prob(40)))
+	return (istype(T) && (T.broken || T.burnt || (improvefloors && !T.flooring)) && (get_turf(T) == loc || prob(40)))
 
 /mob/living/bot/floorbot/UnarmedAttack(var/atom/A, var/proximity)
 	if(!..())
@@ -181,12 +196,12 @@
 		busy = 1
 		update_icons()
 		if(F.flooring)
-			visible_message("<span class='warning'>[src] begins to tear the floor tile from the floor!</span>")
+			visible_message("<span class='warning'>\The [src] begins to tear the floor tile from the floor!</span>")
 			if(do_after(src, 50))
 				F.break_tile_to_plating()
 				addTiles(1)
 		else
-			visible_message("<span class='danger'>[src] begins to tear through the floor!</span>")
+			visible_message("<span class='danger'>\The [src] begins to tear through the floor!</span>")
 			if(do_after(src, 150)) // Extra time because this can and will kill.
 				F.ReplaceWithLattice()
 				addTiles(1)
@@ -201,24 +216,34 @@
 			return
 		busy = 1
 		update_icons()
-		visible_message("<span class='notice'>[src] begins to repair the hole.</span>")
+		visible_message("<span class='notice'>\The [src] begins to repair the hole.</span>")
 		if(do_after(src, 50))
 			if(A && (locate(/obj/structure/lattice, A) && building == 1 || !locate(/obj/structure/lattice, A) && building == 2)) // Make sure that it still needs repairs
 				var/obj/item/I
 				if(building == 1)
 					I = new /obj/item/stack/tile/floor(src)
 				else
-					I = PoolOrNew(/obj/item/stack/rods, src)
+					I = new /obj/item/stack/rods(src)
 				A.attackby(I, src)
 		target = null
 		busy = 0
 		update_icons()
 	else if(istype(A, /turf/simulated/floor))
 		var/turf/simulated/floor/F = A
-		if(!F.flooring && amount)
+		if(F.broken || F.burnt)
 			busy = 1
 			update_icons()
-			visible_message("<span class='notice'>[src] begins to improve the floor.</span>")
+			visible_message("<span class='notice'>\The [src] begins to remove the broken floor.</span>")
+			if(do_after(src, 50, F))
+				if(F.broken || F.burnt)
+					F.make_plating()
+			target = null
+			busy = 0
+			update_icons()
+		else if(!F.flooring && amount)
+			busy = 1
+			update_icons()
+			visible_message("<span class='notice'>\The [src] begins to improve the floor.</span>")
 			if(do_after(src, 50))
 				if(!F.flooring)
 					F.set_flooring(get_flooring_data(floor_build_type))
@@ -228,7 +253,7 @@
 			update_icons()
 	else if(istype(A, /obj/item/stack/tile/floor) && amount < maxAmount)
 		var/obj/item/stack/tile/floor/T = A
-		visible_message("<span class='notice'>[src] begins to collect tiles.</span>")
+		visible_message("<span class='notice'>\The [src] begins to collect tiles.</span>")
 		busy = 1
 		update_icons()
 		if(do_after(src, 20))
@@ -242,7 +267,7 @@
 	else if(istype(A, /obj/item/stack/material) && amount + 4 <= maxAmount)
 		var/obj/item/stack/material/M = A
 		if(M.get_material_name() == DEFAULT_WALL_MATERIAL)
-			visible_message("<span class='notice'>[src] begins to make tiles.</span>")
+			visible_message("<span class='notice'>\The [src] begins to make tiles.</span>")
 			busy = 1
 			update_icons()
 			if(do_after(50))
@@ -252,7 +277,8 @@
 
 /mob/living/bot/floorbot/explode()
 	turn_off()
-	visible_message("<span class='danger'>[src] blows apart!</span>")
+	visible_message("<span class='danger'>\The [src] blows apart!</span>")
+	playsound(src.loc, "sparks", 50, 1)
 	var/turf/Tsec = get_turf(src)
 
 	var/obj/item/weapon/storage/toolbox/mechanical/N = new /obj/item/weapon/storage/toolbox/mechanical(Tsec)

@@ -137,6 +137,10 @@
 	damage = 20
 	armor_penetration = 15
 
+/obj/item/projectile/bullet/pistol/medium/hollow
+	damage = 30
+	armor_penetration = -50
+
 /obj/item/projectile/bullet/pistol/strong //revolvers and matebas
 	damage = 60
 
@@ -172,7 +176,8 @@
 	range_step = 1
 	spread_step = 10
 
-//EMP shotgun 'slug', it's basically a beanbag that pops a tiny emp when it hits.
+
+//EMP shotgun 'slug', it's basically a beanbag that pops a tiny emp when it hits. //Not currently used
 /obj/item/projectile/bullet/shotgun/ion
 	name = "ion slug"
 	damage = 15
@@ -182,8 +187,9 @@
 
 /obj/item/projectile/bullet/shotgun/ion/on_hit(var/atom/target, var/blocked = 0)
 	..()
-	empulse(target, 0, 0)	//Only affects what it hits
+	empulse(target, 0, 0, 0, 0)	//Only affects what it hits
 	return 1
+
 
 /* "Rifle" rounds */
 
@@ -192,18 +198,38 @@
 	penetrating = 1
 
 /obj/item/projectile/bullet/rifle/a762
-	damage = 25
+	damage = 35
 
 /obj/item/projectile/bullet/rifle/a762/ap
+	damage = 30
+	armor_penetration = 50 // At 30 or more armor, this will do more damage than standard rounds.
+
+/obj/item/projectile/bullet/rifle/a762/hollow
+	damage = 40
+	armor_penetration = -50
+	penetrating = 0
+
+/obj/item/projectile/bullet/rifle/a762/hunter // Optimized for killing simple animals and not people, because Balance.
+	damage = 20
+	SA_bonus_damage = 50 // 70 total on animals.
+	SA_vulnerability = SA_ANIMAL
+
+/obj/item/projectile/bullet/rifle/a545
+	damage = 25
+
+/obj/item/projectile/bullet/rifle/a545/ap
 	damage = 20
 	armor_penetration = 50 // At 40 or more armor, this will do more damage than standard rounds.
 
-/obj/item/projectile/bullet/rifle/a556
+/obj/item/projectile/bullet/rifle/a545/hollow
 	damage = 35
+	armor_penetration = -50
+	penetrating = 0
 
-/obj/item/projectile/bullet/rifle/a556/ap
-	damage = 30
-	armor_penetration = 50 // At 30 or more armor, this will do more damage than standard rounds.
+/obj/item/projectile/bullet/rifle/a545/hunter
+	damage = 15
+	SA_bonus_damage = 35 // 50 total on animals.
+	SA_vulnerability = SA_ANIMAL
 
 /obj/item/projectile/bullet/rifle/a145
 	damage = 80
@@ -235,6 +261,32 @@
 	if(isturf(target))
 		explosion(target, -1, 0, 2)
 	..()
+
+/* Incendiary */
+
+/obj/item/projectile/bullet/incendiary
+	name = "incendiary bullet"
+	icon_state = "bullet_alt"
+	damage = 15
+	damage_type = BURN
+	incendiary = 1
+	flammability = 2
+
+/obj/item/projectile/bullet/incendiary/flamethrower
+	name = "ball of fire"
+	desc = "Don't stand in the fire."
+	icon_state = "fireball"
+	damage = 10
+	embed_chance = 0
+	incendiary = 2
+	flammability = 4
+	agony = 30
+	kill_count = 4
+	vacuum_traversal = 0
+
+/obj/item/projectile/bullet/incendiary/flamethrower/large
+	damage = 15
+	kill_count = 6
 
 /obj/item/projectile/bullet/blank
 	invisibility = 101

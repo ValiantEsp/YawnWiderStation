@@ -1,7 +1,7 @@
 /obj/structure/grille
 	name = "grille"
 	desc = "A flimsy lattice of metal rods, with screws to secure it to the floor."
-	icon = 'icons/obj/structures.dmi'
+	icon = 'icons/obj/structures_vr.dmi' // VOREStation Edit - New icons
 	icon_state = "grille"
 	density = 1
 	anchored = 1
@@ -27,7 +27,7 @@
 
 /obj/structure/grille/attack_hand(mob/user as mob)
 
-	user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+	user.setClickCooldown(user.get_attack_speed())
 	playsound(loc, 'sound/effects/grillehit.ogg', 80, 1)
 	user.do_attack_animation(src)
 
@@ -65,7 +65,7 @@
 	//Flimsy grilles aren't so great at stopping projectiles. However they can absorb some of the impact
 	var/damage = Proj.get_structure_damage()
 	var/passthrough = 0
-	
+
 	if(!damage) return
 
 	//20% chance that the grille provides a bit more cover than usual. Support structure for example might take up 20% of the grille's area.
@@ -96,12 +96,12 @@
 /obj/structure/grille/attackby(obj/item/weapon/W as obj, mob/user as mob)
 	if(iswirecutter(W))
 		if(!shock(user, 100))
-			playsound(loc, 'sound/items/Wirecutter.ogg', 100, 1)
-			PoolOrNew(/obj/item/stack/rods, list(get_turf(src), destroyed ? 1 : 2))
+			playsound(src, W.usesound, 100, 1)
+			new /obj/item/stack/rods(get_turf(src), destroyed ? 1 : 2)
 			qdel(src)
 	else if((isscrewdriver(W)) && (istype(loc, /turf/simulated) || anchored))
 		if(!shock(user, 90))
-			playsound(loc, 'sound/items/Screwdriver.ogg', 100, 1)
+			playsound(src, W.usesound, 100, 1)
 			anchored = !anchored
 			user.visible_message("<span class='notice'>[user] [anchored ? "fastens" : "unfastens"] the grille.</span>", \
 								 "<span class='notice'>You have [anchored ? "fastened the grille to" : "unfastened the grill from"] the floor.</span>")
@@ -151,7 +151,7 @@
 //window placing end
 
 	else if(!(W.flags & CONDUCT) || !shock(user, 70))
-		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+		user.setClickCooldown(user.get_attack_speed(W))
 		user.do_attack_animation(src)
 		playsound(loc, 'sound/effects/grillehit.ogg', 80, 1)
 		switch(W.damtype)
@@ -170,11 +170,11 @@
 			density = 0
 			destroyed = 1
 			update_icon()
-			PoolOrNew(/obj/item/stack/rods, get_turf(src))
+			new /obj/item/stack/rods(get_turf(src))
 
 		else
 			if(health <= -6)
-				PoolOrNew(/obj/item/stack/rods, get_turf(src))
+				new /obj/item/stack/rods(get_turf(src))
 				qdel(src)
 				return
 	return
@@ -239,3 +239,14 @@
 	if(air_group)
 		return 0 //Make sure air doesn't drain
 	..()
+
+/obj/structure/grille/broken/cult
+	icon_state = "grillecult-b"
+
+/obj/structure/grille/rustic
+	name = "rustic grille"
+	desc = "A lattice of metal, arranged in an old, rustic fashion."
+	icon_state = "grillerustic"
+
+/obj/structure/grille/broken/rustic
+	icon_state = "grillerustic-b"

@@ -34,13 +34,15 @@
 	var/status_display_freq = "1435"
 	var/stat_msg1
 	var/stat_msg2
-	var/datum/lore/atc_controller/ATC //VOREStation Add
+
+	var/datum/lore/atc_controller/ATC
 	var/datum/announcement/priority/crew_announcement = new
 
 /obj/machinery/computer/communications/New()
 	..()
+	ATC = atc
 	crew_announcement.newscast = 1
-	ATC = atc //VOREStation Add
+
 /obj/machinery/computer/communications/process()
 	if(..())
 		if(state != STATE_STATUSDISPLAY)
@@ -50,8 +52,8 @@
 /obj/machinery/computer/communications/Topic(href, href_list)
 	if(..())
 		return 1
-	if (src.z > 2)
-		usr << "\red <b>Unable to establish a connection</b>: \black You're too far away from the station!"
+	if (using_map && !(src.z in using_map.contact_levels))
+		usr << "<font color='red'><b>Unable to establish a connection:</b></font> <font color='black'>You're too far away from the station!</font>"
 		return
 	usr.set_machine(src)
 
@@ -130,10 +132,8 @@
 		if("messagelist")
 			src.currmsg = 0
 			src.state = STATE_MESSAGELIST
-		//VOREStation Add for ATC stuff
 		if("toggleatc")
 			src.ATC.squelched = !src.ATC.squelched
-		//VOREStation Add End
 		if("viewmessage")
 			src.state = STATE_VIEWMESSAGE
 			if (!src.currmsg)
@@ -180,13 +180,13 @@
 		if("MessageCentCom")
 			if(src.authenticated==2)
 				if(centcomm_message_cooldown)
-					usr << "\red Arrays recycling.  Please stand by."
+					usr << "<font color='red'>Arrays recycling.  Please stand by.</font>"
 					return
 				var/input = sanitize(input("Please choose a message to transmit to [using_map.boss_short] via quantum entanglement.  Please be aware that this process is very expensive, and abuse will lead to... termination.  Transmission does not guarantee a response. There is a 30 second delay before you may send another message, be clear, full and concise.", "To abort, send an empty message.", ""))
 				if(!input || !(usr in view(1,src)))
 					return
 				CentCom_announce(input, usr)
-				usr << "\blue Message transmitted."
+				usr << "<font color='blue'>Message transmitted.</font>"
 				log_say("[key_name(usr)] has made an IA [using_map.boss_short] announcement: [input]")
 				centcomm_message_cooldown = 1
 				spawn(300)//10 minute cooldown
@@ -197,13 +197,13 @@
 		if("MessageSyndicate")
 			if((src.authenticated==2) && (src.emagged))
 				if(centcomm_message_cooldown)
-					usr << "\red Arrays recycling.  Please stand by."
+					usr << "<font color='red'>Arrays recycling.  Please stand by.</font>"
 					return
 				var/input = sanitize(input(usr, "Please choose a message to transmit to \[ABNORMAL ROUTING CORDINATES\] via quantum entanglement.  Please be aware that this process is very expensive, and abuse will lead to... termination. Transmission does not guarantee a response. There is a 30 second delay before you may send another message, be clear, full and concise.", "To abort, send an empty message.", ""))
 				if(!input || !(usr in view(1,src)))
 					return
 				Syndicate_announce(input, usr)
-				usr << "\blue Message transmitted."
+				usr << "<font color='blue'>Message transmitted.</font>"
 				log_say("[key_name(usr)] has made an illegal announcement: [input]")
 				centcomm_message_cooldown = 1
 				spawn(300)//10 minute cooldown
@@ -274,8 +274,8 @@
 /obj/machinery/computer/communications/attack_hand(var/mob/user as mob)
 	if(..())
 		return
-	if (src.z > 6)
-		user << "\red <b>Unable to establish a connection</b>: \black You're too far away from the station!"
+	if (using_map && !(src.z in using_map.contact_levels))
+		user << "<font color='red'><b>Unable to establish a connection:</b></font> <font color='black'>You're too far away from the station!</font>"
 		return
 
 	user.set_machine(src)
@@ -315,7 +315,7 @@
 			else
 				dat += "<BR>\[ <A HREF='?src=\ref[src];operation=login'>Log In</A> \]"
 			dat += "<BR>\[ <A HREF='?src=\ref[src];operation=messagelist'>Message List</A> \]"
-			dat += "<BR>\[ <A HREF='?src=\ref[src];operation=toggleatc'>[ATC.squelched ? "Enable" : "Disable"] ATC Relay</A> \]" //VOREStation Add
+			dat += "<BR>\[ <A HREF='?src=\ref[src];operation=toggleatc'>[ATC.squelched ? "Enable" : "Disable"] ATC Relay</A> \]"
 		if(STATE_CALLSHUTTLE)
 			dat += "Are you sure you want to call the shuttle? \[ <A HREF='?src=\ref[src];operation=callshuttle2'>OK</A> | <A HREF='?src=\ref[src];operation=main'>Cancel</A> \]"
 		if(STATE_CANCELSHUTTLE)
@@ -379,7 +379,7 @@
 				dat += "<BR>\[ <A HREF='?src=\ref[src];operation=ai-callshuttle'>Call Emergency Shuttle</A> \]"
 			dat += "<BR>\[ <A HREF='?src=\ref[src];operation=ai-messagelist'>Message List</A> \]"
 			dat += "<BR>\[ <A HREF='?src=\ref[src];operation=ai-status'>Set Status Display</A> \]"
-			dat += "<BR>\[ <A HREF='?src=\ref[src];operation=toggleatc'>[ATC.squelched ? "Enable" : "Disable"] ATC Relay</A> \]" //VOREStation Add
+			dat += "<BR>\[ <A HREF='?src=\ref[src];operation=toggleatc'>[ATC.squelched ? "Enable" : "Disable"] ATC Relay</A> \]"
 		if(STATE_CALLSHUTTLE)
 			dat += "Are you sure you want to call the shuttle? \[ <A HREF='?src=\ref[src];operation=ai-callshuttle2'>OK</A> | <A HREF='?src=\ref[src];operation=ai-main'>Cancel</A> \]"
 		if(STATE_MESSAGELIST)
@@ -458,6 +458,7 @@
 	emergency_shuttle.call_evac()
 	log_game("[key_name(user)] has called the shuttle.")
 	message_admins("[key_name_admin(user)] has called the shuttle.", 1)
+	admin_chat_message(message = "Emergency evac beginning! Called by [key_name(user)]!", color = "#CC2222") //VOREStation Add
 
 
 	return
@@ -505,6 +506,7 @@
 
 	log_game("[user? key_name(user) : "Autotransfer"] has called the shuttle.")
 	message_admins("[user? key_name_admin(user) : "Autotransfer"] has called the shuttle.", 1)
+	admin_chat_message(message = "Autotransfer shuttle dispatched, shift ending soon.", color = "#2277BB") //VOREStation Add
 
 	return
 
@@ -514,7 +516,7 @@
 	if((ticker.mode.name == "blob")||(ticker.mode.name == "Meteor"))
 		return
 
-	if(!emergency_shuttle.going_to_centcom()) //check that shuttle isn't already heading to centcomm
+	if(!emergency_shuttle.going_to_centcom()) //check that shuttle isn't already heading to CentCom
 		emergency_shuttle.recall()
 		log_game("[key_name(user)] has recalled the shuttle.")
 		message_admins("[key_name_admin(user)] has recalled the shuttle.", 1)

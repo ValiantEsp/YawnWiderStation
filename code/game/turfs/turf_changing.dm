@@ -12,27 +12,35 @@
 // Called after turf replaces old one
 /turf/proc/post_change()
 	levelupdate()
-	var/turf/simulated/open/T = GetAbove(src)
-	if(istype(T))
-		T.update_icon()
+
+	var/turf/simulated/open/above = GetAbove(src)
+	if(istype(above))
+		above.update_icon()
+
+	var/turf/simulated/below = GetBelow(src)
+	if(istype(below))
+		below.update_icon() // To add or remove the 'ceiling-less' overlay.
 
 //Creates a new turf
 /turf/proc/ChangeTurf(var/turf/N, var/tell_universe=1, var/force_lighting_update = 0)
 	if (!N)
 		return
 
+	/* VOREStation Edit Start - Say Nope To This.  Tether's Z info is setup fine, trust it.
 	// This makes sure that turfs are not changed to space when one side is part of a zone
 	if(N == /turf/space)
 		var/turf/below = GetBelow(src)
 		if(istype(below) && (air_master.has_valid_zone(below) || air_master.has_valid_zone(src)))
 			N = /turf/simulated/open
+	*/ // VOREStation Edit End
 
 	var/obj/fire/old_fire = fire
 	var/old_opacity = opacity
 	var/old_dynamic_lighting = dynamic_lighting
-	var/list/old_affecting_lights = affecting_lights
+	var/old_affecting_lights = affecting_lights
 	var/old_lighting_overlay = lighting_overlay
 	var/old_weather_overlay = weather_overlay
+	var/old_corners = corners
 
 	//world << "Replacing [src.type] with [N]"
 
@@ -94,15 +102,16 @@
 		W.post_change()
 		. =  W
 
-	lighting_overlay = old_lighting_overlay
-	affecting_lights = old_affecting_lights
-	if((old_opacity != opacity) || (dynamic_lighting != old_dynamic_lighting) || force_lighting_update)
-		reconsider_lights()
-	if(dynamic_lighting != old_dynamic_lighting)
-		if(dynamic_lighting)
-			lighting_build_overlays()
-		else
-			lighting_clear_overlays()
-	else
-		if(lighting_overlay)
-			lighting_overlay.update_overlay()
+	recalc_atom_opacity()
+
+	if(lighting_overlays_initialised)
+		lighting_overlay = old_lighting_overlay
+		affecting_lights = old_affecting_lights
+		corners = old_corners
+		if((old_opacity != opacity) || (dynamic_lighting != old_dynamic_lighting))
+			reconsider_lights()
+		if(dynamic_lighting != old_dynamic_lighting)
+			if(dynamic_lighting)
+				lighting_build_overlay()
+			else
+				lighting_clear_overlay()

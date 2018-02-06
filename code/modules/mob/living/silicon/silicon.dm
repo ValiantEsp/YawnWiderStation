@@ -18,8 +18,6 @@
 	var/obj/item/device/camera/siliconcam/aiCamera = null //photography
 	var/local_transmit //If set, can only speak to others of the same type within a short range.
 
-	var/sensor_mode = 0 //Determines the current HUD.
-
 	var/next_alarm_notice
 	var/list/datum/alarm/queued_alarms = new()
 
@@ -27,8 +25,7 @@
 	var/obj/item/weapon/card/id/idcard
 	var/idcard_type = /obj/item/weapon/card/id/synthetic
 
-	#define SEC_HUD 1 //Security HUD mode
-	#define MED_HUD 2 //Medical HUD mode
+	var/hudmode = null
 
 /mob/living/silicon/New()
 	silicon_mob_list |= src
@@ -41,7 +38,7 @@
 	silicon_mob_list -= src
 	for(var/datum/alarm_handler/AH in alarm_manager.all_handlers)
 		AH.unregister_alarm(src)
-	..()
+	return ..()
 
 /mob/living/silicon/proc/init_id()
 	if(idcard)
@@ -63,10 +60,16 @@
 	switch(severity)
 		if(1)
 			src.take_organ_damage(0,20,emp=1)
-			confused = (min(confused + 5, 30))
+			Confuse(5)
 		if(2)
+			src.take_organ_damage(0,15,emp=1)
+			Confuse(4)
+		if(3)
 			src.take_organ_damage(0,10,emp=1)
-			confused = (min(confused + 2, 30))
+			Confuse(3)
+		if(4)
+			src.take_organ_damage(0,5,emp=1)
+			Confuse(2)
 	flash_eyes(affect_silicon = 1)
 	src << "<span class='danger'><B>*BZZZT*</B></span>"
 	src << "<span class='danger'>Warning: Electromagnetic pulse detected.</span>"
@@ -142,7 +145,7 @@
 // this function shows the health of the AI in the Status panel
 /mob/living/silicon/proc/show_system_integrity()
 	if(!src.stat)
-		stat(null, text("System integrity: [round((health/maxHealth)*100)]%"))
+		stat(null, text("System integrity: [round((health/getMaxHealth())*100)]%"))
 	else
 		stat(null, text("Systems nonfunctional"))
 
@@ -226,23 +229,57 @@
 				default_str = " - <a href='byond://?src=\ref[src];default_lang=\ref[L]'>set default</a>"
 
 			var/synth = (L in speech_synthesizer_langs)
-			dat += "<b>[L.name] (:[L.key])</b>[synth ? default_str : null]<br/>Speech Synthesizer: <i>[synth ? "YES" : "NOT SUPPORTED"]</i><br/>[L.desc]<br/><br/>"
+			dat += "<b>[L.name] ([get_language_prefix()][L.key])</b>[synth ? default_str : null]<br/>Speech Synthesizer: <i>[synth ? "YES" : "NOT SUPPORTED"]</i><br/>[L.desc]<br/><br/>"
 
 	src << browse(dat, "window=checklanguage")
 	return
 
 /mob/living/silicon/proc/toggle_sensor_mode()
-	var/sensor_type = input("Please select sensor type.", "Sensor Integration", null) in list("Security", "Medical","Disable")
+	var/sensor_type = input("Please select sensor type.", "Sensor Integration", null) in list("Security","Medical","Disable")
 	switch(sensor_type)
 		if ("Security")
-			sensor_mode = SEC_HUD
-			src << "<span class='notice'>Security records overlay enabled.</span>"
+			if(plane_holder)
+				//Enable Security planes
+				plane_holder.set_vis(VIS_CH_ID,TRUE)
+				plane_holder.set_vis(VIS_CH_WANTED,TRUE)
+				plane_holder.set_vis(VIS_CH_IMPLOYAL,TRUE)
+				plane_holder.set_vis(VIS_CH_IMPTRACK,TRUE)
+				plane_holder.set_vis(VIS_CH_IMPCHEM,TRUE)
+
+				//Disable Medical planes
+				plane_holder.set_vis(VIS_CH_STATUS,FALSE)
+				plane_holder.set_vis(VIS_CH_HEALTH,FALSE)
+
+			to_chat(src,"<span class='notice'>Security records overlay enabled.</span>")
 		if ("Medical")
-			sensor_mode = MED_HUD
-			src << "<span class='notice'>Life signs monitor overlay enabled.</span>"
+			if(plane_holder)
+				//Disable Security planes
+				plane_holder.set_vis(VIS_CH_ID,FALSE)
+				plane_holder.set_vis(VIS_CH_WANTED,FALSE)
+				plane_holder.set_vis(VIS_CH_IMPLOYAL,FALSE)
+				plane_holder.set_vis(VIS_CH_IMPTRACK,FALSE)
+				plane_holder.set_vis(VIS_CH_IMPCHEM,FALSE)
+
+				//Enable Medical planes
+				plane_holder.set_vis(VIS_CH_STATUS,TRUE)
+				plane_holder.set_vis(VIS_CH_HEALTH,TRUE)
+
+			to_chat(src,"<span class='notice'>Life signs monitor overlay enabled.</span>")
 		if ("Disable")
-			sensor_mode = 0
-			src << "Sensor augmentations disabled."
+			if(plane_holder)
+				//Disable Security planes
+				plane_holder.set_vis(VIS_CH_ID,FALSE)
+				plane_holder.set_vis(VIS_CH_WANTED,FALSE)
+				plane_holder.set_vis(VIS_CH_IMPLOYAL,FALSE)
+				plane_holder.set_vis(VIS_CH_IMPTRACK,FALSE)
+				plane_holder.set_vis(VIS_CH_IMPCHEM,FALSE)
+
+				//Disable Medical planes
+				plane_holder.set_vis(VIS_CH_STATUS,FALSE)
+				plane_holder.set_vis(VIS_CH_HEALTH,FALSE)
+			to_chat(src,"Sensor augmentations disabled.")
+
+	hudmode = sensor_type //This is checked in examine.dm on humans, so they can see medical/security records depending on mode
 
 /mob/living/silicon/verb/pose()
 	set name = "Set Pose"

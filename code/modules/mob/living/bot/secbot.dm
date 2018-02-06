@@ -1,46 +1,80 @@
+#define SECBOT_WAIT_TIME	5		//number of in-game seconds to wait for someone to surrender
+#define SECBOT_THREAT_ARREST 4		//threat level at which we decide to arrest someone
+#define SECBOT_THREAT_ATTACK 8		//threat level at which was assume immediate danger and attack right away
+
 /mob/living/bot/secbot
 	name = "Securitron"
 	desc = "A little security robot.  He looks less than thrilled."
 	icon_state = "secbot0"
 	maxHealth = 100
 	health = 100
-	req_one_access = list(access_robotics, access_security, access_forensics_lockers)
+	req_one_access = list(access_security, access_forensics_lockers)
 	botcard_access = list(access_security, access_sec_doors, access_forensics_lockers, access_morgue, access_maint_tunnels)
 	patrol_speed = 2
 	target_speed = 3
 
+	var/default_icon_state = "secbot"
 	var/idcheck = 0 // If true, arrests for having weapons without authorization.
 	var/check_records = 0 // If true, arrests people without a record.
 	var/check_arrest = 1 // If true, arrests people who are set to arrest.
 	var/arrest_type = 0 // If true, doesn't handcuff. You monster.
 	var/declare_arrests = 0 // If true, announces arrests over sechuds.
-	var/auto_patrol = 0 // If true, patrols on its own
 
 	var/is_ranged = 0
 	var/awaiting_surrender = 0
+	var/can_next_insult = 0			// Uses world.time
+	var/stun_strength = 60			// For humans.
+	var/xeno_stun_strength = 0		// For simple mobs.
+	var/xeno_harm_strength = 15 	// Ditto.
+	var/baton_glow = "#FF6A00"
 
-	var/list/threat_found_sounds = new('sound/voice/bcriminal.ogg', 'sound/voice/bjustice.ogg', 'sound/voice/bfreeze.ogg')
-	var/list/preparing_arrest_sounds = new('sound/voice/bgod.ogg', 'sound/voice/biamthelaw.ogg', 'sound/voice/bsecureday.ogg', 'sound/voice/bradio.ogg', 'sound/voice/binsult.ogg', 'sound/voice/bcreep.ogg')
-
+	var/list/threat_found_sounds = list('sound/voice/bcriminal.ogg', 'sound/voice/bjustice.ogg', 'sound/voice/bfreeze.ogg')
+	var/list/preparing_arrest_sounds = list('sound/voice/bgod.ogg', 'sound/voice/biamthelaw.ogg', 'sound/voice/bsecureday.ogg', 'sound/voice/bradio.ogg', 'sound/voice/bcreep.ogg')
+	var/list/fighting_sounds = list('sound/voice/biamthelaw.ogg', 'sound/voice/bradio.ogg', 'sound/voice/bjustice.ogg')
+//VOREStation Add - They don't like being pulled. This is going to fuck with slimesky, but meh.
+/mob/living/bot/secbot/Life()
+	..()
+	if(health > 0 && on && pulledby)
+		if(isliving(pulledby))
+			var/mob/living/L = pulledby
+			UnarmedAttack(L)
+			say("Do not interfere with active law enforcement routines!")
+			global_announcer.autosay("[src] was interfered with in <b>[get_area(src)]</b>, activating defense routines.", "[src]", "Security")
+//VOREStation Add End
 /mob/living/bot/secbot/beepsky
 	name = "Officer Beepsky"
 	desc = "It's Officer Beep O'sky! Powered by a potato and a shot of whiskey."
-	auto_patrol = 1
+	will_patrol = 1
+
+/mob/living/bot/secbot/slime
+	name = "Slime Securitron"
+	desc = "A little security robot, with a slime baton subsituted for the regular one."
+	default_icon_state = "slimesecbot"
+	stun_strength = 10 // Slimebatons aren't meant for humans.
+	xeno_stun_strength = 5
+	xeno_harm_strength = 9
+	baton_glow = "#33CCFF"
+	req_one_access = list(access_research, access_robotics)
+	botcard_access = list(access_research, access_robotics, access_xenobiology, access_xenoarch, access_tox, access_tox_storage, access_maint_tunnels)
+
+/mob/living/bot/secbot/slime/slimesky
+	name = "Doctor Slimesky"
+	desc = "An old friend of Officer Beep O'sky.  He prescribes beatings to rowdy slimes so that real doctors don't need to treat the xenobiologists."
 
 /mob/living/bot/secbot/update_icons()
 	if(on && busy)
-		icon_state = "secbot-c"
+		icon_state = "[default_icon_state]-c"
 	else
-		icon_state = "secbot[on]"
+		icon_state = "[default_icon_state][on]"
 
 	if(on)
-		set_light(2, 1, "#FF6A00")
+		set_light(2, 1, baton_glow)
 	else
 		set_light(0)
 
 /mob/living/bot/secbot/attack_hand(var/mob/user)
 	user.set_machine(src)
-	var/dat
+	var/list/dat = list()
 	dat += "<TT><B>Automatic Security Unit</B></TT><BR><BR>"
 	dat += "Status: <A href='?src=\ref[src];power=1'>[on ? "On" : "Off"]</A><BR>"
 	dat += "Behaviour controls are [locked ? "locked" : "unlocked"]<BR>"
@@ -51,10 +85,10 @@
 		dat += "Check Arrest Status: <A href='?src=\ref[src];operation=ignorearr'>[check_arrest ? "Yes" : "No"]</A><BR>"
 		dat += "Operating Mode: <A href='?src=\ref[src];operation=switchmode'>[arrest_type ? "Detain" : "Arrest"]</A><BR>"
 		dat += "Report Arrests: <A href='?src=\ref[src];operation=declarearrests'>[declare_arrests ? "Yes" : "No"]</A><BR>"
-		dat += "Auto Patrol: <A href='?src=\ref[src];operation=patrol'>[auto_patrol ? "On" : "Off"]</A>"
-	user << browse("<HEAD><TITLE>Securitron controls</TITLE></HEAD>[dat]", "window=autosec")
-	onclose(user, "autosec")
-	return
+		dat += "Auto Patrol: <A href='?src=\ref[src];operation=patrol'>[will_patrol ? "On" : "Off"]</A>"
+	var/datum/browser/popup = new(user, "autosec", "Securitron controls")
+	popup.set_content(jointext(dat,null))
+	popup.open()
 
 /mob/living/bot/secbot/Topic(href, href_list)
 	if(..())
@@ -80,7 +114,7 @@
 		if("switchmode")
 			arrest_type = !arrest_type
 		if("patrol")
-			auto_patrol = !auto_patrol
+			will_patrol = !will_patrol
 		if("declarearrests")
 			declare_arrests = !declare_arrests
 	attack_hand(usr)
@@ -99,10 +133,51 @@
 
 /mob/living/bot/secbot/attackby(var/obj/item/O, var/mob/user)
 	var/curhealth = health
-	..()
+	. = ..()
 	if(health < curhealth)
-		target = user
-		awaiting_surrender = 5
+		react_to_attack(user)
+
+/mob/living/bot/secbot/bullet_act(var/obj/item/projectile/P)
+	var/curhealth = health
+	var/mob/shooter = P.firer
+	. = ..()
+	//if we already have a target just ignore to avoid lots of checking
+	if(!target && health < curhealth && shooter && (shooter in view(world.view, src)))
+		react_to_attack(shooter)
+
+/mob/living/bot/secbot/attack_generic(var/mob/attacker)
+	if(attacker)
+		react_to_attack(attacker)
+	..()
+
+/mob/living/bot/secbot/proc/react_to_attack(mob/attacker)
+	if(!target)
+		playsound(src.loc, pick(threat_found_sounds), 50)
+		global_announcer.autosay("[src] was attacked by a hostile <b>[target_name(attacker)]</b> in <b>[get_area(src)]</b>.", "[src]", "Security")
+	target = attacker
+	awaiting_surrender = INFINITY	// Don't try and wait for surrender
+
+// Say "freeze!" and demand surrender
+/mob/living/bot/secbot/proc/demand_surrender(mob/target, var/threat)
+	var/suspect_name = target_name(target)
+	if(declare_arrests)
+		global_announcer.autosay("[src] is [arrest_type ? "detaining" : "arresting"] a level [threat] suspect <b>[suspect_name]</b> in <b>[get_area(src)]</b>.", "[src]", "Security")
+	say("Down on the floor, [suspect_name]! You have [SECBOT_WAIT_TIME] seconds to comply.")
+	playsound(src.loc, pick(preparing_arrest_sounds), 50)
+	// Register to be told when the target moves
+	moved_event.register(target, src, /mob/living/bot/secbot/proc/target_moved)
+
+// Callback invoked if the registered target moves
+/mob/living/bot/secbot/proc/target_moved(atom/movable/moving_instance, atom/old_loc, atom/new_loc)
+	if(get_dist(get_turf(src), get_turf(target)) >= 1)
+		awaiting_surrender = INFINITY	// Done waiting!
+		moved_event.unregister(moving_instance, src)
+
+/mob/living/bot/secbot/resetTarget()
+	..()
+	moved_event.unregister(target, src)
+	awaiting_surrender = -1
+	walk_to(src, 0)
 
 /mob/living/bot/secbot/startPatrol()
 	if(!locked) // Stop running away when we set you up
@@ -112,8 +187,7 @@
 /mob/living/bot/secbot/confirmTarget(var/atom/A)
 	if(!..())
 		return 0
-
-	return (check_threat(A) > 3)
+	return (check_threat(A) >= SECBOT_THREAT_ARREST)
 
 /mob/living/bot/secbot/lookForTargets()
 	for(var/mob/living/M in view(src))
@@ -125,25 +199,36 @@
 			awaiting_surrender = -1
 			say("Level [threat] infraction alert!")
 			custom_emote(1, "points at [M.name]!")
+			playsound(src.loc, pick(threat_found_sounds), 50)
 			return
 
-/mob/living/bot/secbot/calcTargetPath()
-	..()
-	if(awaiting_surrender != -1)
-		awaiting_surrender = 5 // This implies that a) we have already approached the target and b) it has moved after the warning
-
 /mob/living/bot/secbot/handleAdjacentTarget()
-	if(awaiting_surrender < 5 && ishuman(target) && !target:lying)
-		if(awaiting_surrender == -1)
-			say("Down on the floor, [target]! You have five seconds to comply.")
+	var/mob/living/carbon/human/H = target
+	var/threat = check_threat(target)
+	if(awaiting_surrender < SECBOT_WAIT_TIME && istype(H) && !H.lying && threat < SECBOT_THREAT_ATTACK)
+		if(awaiting_surrender == -1) // On first tick of awaiting...
+			demand_surrender(target, threat)
 		++awaiting_surrender
 	else
+		if(declare_arrests)
+			var/action = arrest_type ? "detaining" : "arresting"
+			if(istype(target, /mob/living/simple_animal))
+				action = "fighting"
+			global_announcer.autosay("[src] is [action] a level [threat] [action != "fighting" ? "suspect" : "threat"] <b>[target_name(target)]</b> in <b>[get_area(src)]</b>.", "[src]", "Security")
 		UnarmedAttack(target)
-	if(ishuman(target) && declare_arrests)
-		var/area/location = get_area(src)
-		broadcast_security_hud_message("[src] is [arrest_type ? "detaining" : "arresting"] a level [check_threat(target)] suspect <b>[target]</b> in <b>[location]</b>.", src)
 
-	//				say("Engaging patrol mode.")
+// So Beepsky talks while beating up simple mobs.
+/mob/living/bot/secbot/proc/insult(var/mob/living/L)
+	if(can_next_insult > world.time)
+		return
+	var/threat = check_threat(L)
+	if(threat >= 10)
+		playsound(src.loc, 'sound/voice/binsult.ogg', 75)
+		can_next_insult = world.time + 20 SECONDS
+	else
+		playsound(src.loc, pick(fighting_sounds), 75)
+		can_next_insult = world.time + 5 SECONDS
+
 
 /mob/living/bot/secbot/UnarmedAttack(var/mob/M, var/proximity)
 	if(!..())
@@ -162,7 +247,7 @@
 		if(!C.lying || C.handcuffed || arrest_type)
 			cuff = 0
 		if(!cuff)
-			C.stun_effect_act(0, 60, null)
+			C.stun_effect_act(0, stun_strength, null)
 			playsound(loc, 'sound/weapons/Egloves.ogg', 50, 1, -1)
 			do_attack_animation(C)
 			busy = 1
@@ -170,22 +255,21 @@
 			spawn(2)
 				busy = 0
 				update_icons()
-			visible_message("<span class='warning'>[C] was prodded by [src] with a stun baton!</span>")
+			visible_message("<span class='warning'>\The [C] was prodded by \the [src] with a stun baton!</span>")
+			insult(C)
 		else
 			playsound(loc, 'sound/weapons/handcuffs.ogg', 30, 1, -2)
-			visible_message("<span class='warning'>[src] is trying to put handcuffs on [C]!</span>")
+			visible_message("<span class='warning'>\The [src] is trying to put handcuffs on \the [C]!</span>")
 			busy = 1
 			if(do_mob(src, C, 60))
 				if(!C.handcuffed)
 					C.handcuffed = new /obj/item/weapon/handcuffs(C)
 					C.update_inv_handcuffed()
-				if(preparing_arrest_sounds.len)
-					playsound(loc, pick(preparing_arrest_sounds), 50, 0)
 			busy = 0
 	else if(istype(M, /mob/living/simple_animal))
 		var/mob/living/simple_animal/S = M
-		S.AdjustStunned(10)
-		S.adjustBruteLoss(15)
+		S.Weaken(xeno_stun_strength)
+		S.adjustBruteLoss(xeno_harm_strength)
 		do_attack_animation(M)
 		playsound(loc, "swing_hit", 50, 1, -1)
 		busy = 1
@@ -193,7 +277,17 @@
 		spawn(2)
 			busy = 0
 			update_icons()
-		visible_message("<span class='warning'>[M] was beaten by [src] with a stun baton!</span>")
+		visible_message("<span class='warning'>\The [M] was beaten by \the [src] with a stun baton!</span>")
+		insult(S)
+
+/mob/living/bot/secbot/slime/UnarmedAttack(var/mob/living/L, var/proximity)
+	..()
+
+	if(istype(L, /mob/living/simple_animal/slime))
+		var/mob/living/simple_animal/slime/S = L
+		S.adjust_discipline(2)
+
+
 
 /mob/living/bot/secbot/explode()
 	visible_message("<span class='warning'>[src] blows apart!</span>")
@@ -215,11 +309,17 @@
 	new /obj/effect/decal/cleanable/blood/oil(Tsec)
 	qdel(src)
 
+/mob/living/bot/secbot/proc/target_name(mob/living/T)
+	if(ishuman(T))
+		var/mob/living/carbon/human/H = T
+		return H.get_id_name("unidentified person")
+	return "unidentified lifeform"
+
 /mob/living/bot/secbot/proc/check_threat(var/mob/living/M)
 	if(!M || !istype(M) || M.stat == DEAD || src == M)
 		return 0
 
-	if(emagged)
+	if(emagged && !M.incapacitated()) //check incapacitated so emagged secbots don't keep attacking the same target forever
 		return 10
 
 	return M.assess_perp(access_scanner, 0, idcheck, check_records, check_arrest)
@@ -286,8 +386,12 @@
 	else if(istype(W, /obj/item/weapon/melee/baton) && build_step == 3)
 		user.drop_item()
 		user << "You complete the Securitron! Beep boop."
-		var/mob/living/bot/secbot/S = new /mob/living/bot/secbot(get_turf(src))
-		S.name = created_name
+		if(istype(W, /obj/item/weapon/melee/baton/slime))
+			var/mob/living/bot/secbot/slime/S = new /mob/living/bot/secbot/slime(get_turf(src))
+			S.name = created_name
+		else
+			var/mob/living/bot/secbot/S = new /mob/living/bot/secbot(get_turf(src))
+			S.name = created_name
 		qdel(W)
 		qdel(src)
 

@@ -64,11 +64,38 @@
 	required_reagents = list("mutagen" = 3, "lipozine" = 2)
 	result_amount = 5
 
+///////////////////////////////////////////////////////////////////////////////////
+/// Other Drugs
+/datum/chemical_reaction/adranol
+	name = "Adranol"
+	id = "adranol"
+	result = "adranol"
+	required_reagents = list("milk" = 2, "hydrogen" = 1, "potassium" = 1)
+	result_amount = 3
 
+/datum/chemical_reaction/vermicetol
+	name = "Vermicetol"
+	id = "vermicetol"
+	result = "vermicetol"
+	required_reagents = list("kelotane" = 1, "dermaline" = 1, "shockchem" = 1, "phoron" = 0.1)
+	catalysts = list("phoron" = 5)
+	result_amount = 3
 
-
-
-
+///////////////////////////////////////////////////////////////////////////////////
+/// Special drinks
+/datum/chemical_reaction/drinks/grubshake
+	name = "Grub protein drink"
+	id = "grubshake"
+	result = "grubshake"
+	required_reagents = list("shockchem" = 5, "water" = 25)
+	result_amount = 30
+	
+/datum/chemical_reaction/drinks/deathbell
+	name = "Deathbell"
+	id = "deathbell"
+	result = "deathbell"
+	required_reagents = list("antifreeze" = 1, "gargleblaster" = 1, "syndicatebomb" =1)
+	result_amount = 3
 
 ///////////////////////////////
 //SLIME CORES BELOW HERE///////
@@ -80,7 +107,7 @@
 	name = "Slime Bork"
 	id = "m_tele2"
 	result = null
-	required_reagents = list("phoron" = 10, "slimejelly" = 10, "nutriment" = 10)
+	required_reagents = list("phoron" = 10, "slimejelly" = 5, "nutriment" = 20)
 	result_amount = 1
 	on_reaction(var/datum/reagents/holder)
 
@@ -259,12 +286,10 @@
 	required_reagents = list("phoron" = 20, "nutriment" = 20, "sugar" = 20, "mutationtoxin" = 20) //Can't do slime jelly as it'll conflict with another, but mutation toxin will do.
 	result_amount = 1
 	on_reaction(var/datum/reagents/holder)
-		var/mob_path = /mob/living/simple_animal/hostile/vore
+		var/mob_path = /mob/living/simple_animal
 		var/blocked = list(
-			/mob/living/simple_animal/hostile/vore/mimic,
-			/mob/living/simple_animal/hostile/vore/mimic/copy,
-			/mob/living/simple_animal/hostile/vore/mimic/crate,
-			/mob/living/simple_animal/hostile/vore/alien/queen/large
+			/mob/living/simple_animal/hostile/mimic,
+			/mob/living/simple_animal/hostile/alien/queen
 			)//exclusion list for things you don't want the reaction to create.
 		var/list/voremobs = typesof(mob_path) - mob_path - blocked // list of possible hostile mobs
 

@@ -32,7 +32,7 @@
 	if(force_process)
 		bad_external_organs.Cut()
 		for(var/obj/item/organ/external/Ex in organs)
-			bad_external_organs |= Ex
+			bad_external_organs += Ex //VOREStation Edit - Silly and slow to |= this
 
 	//processing internal organs is pretty cheap, do that first.
 	for(var/obj/item/organ/I in internal_organs)
@@ -44,6 +44,7 @@
 	if(!force_process && !bad_external_organs.len)
 		return
 
+	number_wounds = 0 //VOREStation Add - You have to reduce this at some point...
 	for(var/obj/item/organ/external/E in bad_external_organs)
 		if(!E)
 			continue
@@ -56,7 +57,7 @@
 
 			if (!lying && !buckled && world.time - l_move_time < 15)
 			//Moving around with fractured ribs won't do you any good
-				if (prob(10) && !stat && can_feel_pain() && analgesic < 50 && E.is_broken() && E.internal_organs.len)
+				if (prob(10) && !stat && can_feel_pain() && chem_effects[CE_PAINKILLER] < 50 && E.is_broken() && E.internal_organs.len)
 					custom_pain("Pain jolts through your broken [E.encased ? E.encased : E.name], staggering you!", 50)
 					drop_item(loc)
 					Stun(2)
@@ -100,7 +101,7 @@
 		else if (E.is_dislocated())
 			stance_damage += 0.5
 
-		if(E) limb_pain = E.can_feel_pain()
+		if(E) limb_pain = E.organ_can_feel_pain()
 
 	// Canes and crutches help you stand (if the latter is ever added)
 	// One cane mitigates a broken leg+foot, or a missing foot.
@@ -159,7 +160,7 @@
 					drop_from_inventory(r_hand)
 
 			var/emote_scream = pick("screams in pain and ", "lets out a sharp cry and ", "cries out and ")
-			emote("me", 1, "[(E.can_feel_pain()) ? "" : emote_scream ]drops what they were holding in their [E.name]!")
+			emote("me", 1, "[(can_feel_pain()) ? "" : emote_scream ]drops what they were holding in their [E.name]!")
 
 		else if(E.is_malfunctioning())
 			switch(E.body_part)

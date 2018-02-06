@@ -59,7 +59,7 @@
 	icon_state = "shuttle"
 
 /area/shuttle/awaymission/home
-	name = "NSS Adephagia (AM)"
+	name = "NSB Adephagia (AM)"
 	icon_state = "shuttle2"
 
 /area/shuttle/awaymission/warp
@@ -134,60 +134,117 @@
 /area/bigship/teleporter
 	name = "Bigship Teleporter Room"
 
-//////// Houseboat Areas ////////
+//////// Small Cruiser Areas ////////
 /area/houseboat
-	name = "Houseboat"
+	name = "Small Cruiser"
 	requires_power = 0
 	flags = RAD_SHIELDED
 	base_turf = /turf/space
 	icon_state = "red2"
-	lightswitch = 0
+	lightswitch = TRUE
 
-/area/houseboat/bridge
-	name = "Houseboat - Bridge"
-	icon_state = "red"
-/area/houseboat/neck
-	name = "Houseboat - Neck"
-	icon_state = "blue"
-/area/houseboat/cap_room
-	name = "Houseboat - Captain's Room"
+/area/houseboat/holodeck_area
+	name = "Small Cruiser - Holodeck"
 	icon_state = "blue2"
-/area/houseboat/guest_room
-	name = "Houseboat - Guest Room"
-	icon_state = "blue"
-/area/houseboat/office
-	name = "Houseboat - Office"
-	icon_state = "red2"
-/area/houseboat/teleporter
-	name = "Houseboat - Teleporter"
-	icon_state = "blue"
-/area/houseboat/robotics
-	name = "Houseboat - Robotics"
-	icon_state = "red2"
-/area/houseboat/cargo
-	name = "Houseboat - Cargo"
+
+/area/houseboat/holodeck/off
+	name = "Small Cruiser Holo - Off"
 	icon_state = "blue2"
-/area/houseboat/medical
-	name = "Houseboat - Medical"
-	icon_state = "red"
-/area/houseboat/engineering
-	name = "Houseboat - Engineering"
-	icon_state = "red2"
-/area/houseboat/shower
-	name = "Houseboat - Shower"
+/area/houseboat/holodeck/beach
+	name = "Small Cruiser Holo - Beach"
 	icon_state = "blue2"
-/area/houseboat/toilet
-	name = "Houseboat - Toilet"
-	icon_state = "red2"
-/area/houseboat/docking
-	name = "Houseboat - Docking"
+/area/houseboat/holodeck/snow
+	name = "Small Cruiser Holo - Snow"
 	icon_state = "blue2"
-/area/houseboat/airlock
-	name = "Houseboat - Airlock"
-	icon_state = "red"
-/area/houseboat/common_area
-	name = "Houseboat - Common Area"
+/area/houseboat/holodeck/desert
+	name = "Small Cruiser Holo - Desert"
 	icon_state = "blue2"
-/area/houseboat/dining_area
-	name = "Houseboat - Dining Area"
-	icon_state = "red"
+/area/houseboat/holodeck/picnic
+	name = "Small Cruiser Holo - Picnic"
+	icon_state = "blue2"
+/area/houseboat/holodeck/thunderdome
+	name = "Small Cruiser Holo - Thunderdome"
+	icon_state = "blue2"
+/area/houseboat/holodeck/basketball
+	name = "Small Cruiser Holo - Basketball"
+	icon_state = "blue2"
+/area/houseboat/holodeck/gaming
+	name = "Small Cruiser Holo - Gaming Table"
+	icon_state = "blue2"
+/area/houseboat/holodeck/space
+	name = "Small Cruiser Holo - Space"
+	icon_state = "blue2"
+/area/houseboat/holodeck/bunking
+	name = "Small Cruiser Holo - Bunking"
+	icon_state = "blue2"
+
+/area/shuttle/cruiser/cruiser
+	name = "Small Cruiser Shuttle - Cruiser"
+	icon_state = "blue2"
+	base_turf = /turf/simulated/floor/tiled/techfloor
+/area/shuttle/cruiser/station
+	name = "Small Cruiser Shuttle - Station"
+	icon_state = "blue2"
+
+
+// Tether Map has this shuttle
+/area/shuttle/tether/surface
+	name = "Tether Shuttle Landed"
+	icon_state = "shuttle"
+	base_turf = /turf/simulated/floor/reinforced
+
+/area/shuttle/tether/station
+	name = "Tether Shuttle Dock"
+	icon_state = "shuttle2"
+
+/area/shuttle/tether/transit
+	name = "Tether Shuttle Transit"
+	icon_state = "shuttle2"
+
+// rnd (Research and Development)
+/area/rnd/research/testingrange
+	name = "\improper Weapons Testing Range"
+	icon_state = "firingrange"
+
+/area/rnd/outpost
+	name = "\improper Research Outpost Hallway"
+	icon_state = "research"
+
+/area/rnd/outpost/airlock
+	name = "\improper Research Outpost Airlock"
+	icon_state = "green"
+
+/area/rnd/outpost/eva
+	name = "Research Outpost EVA Storage"
+	icon_state = "eva"
+
+/area/rnd/outpost/chamber
+	name = "\improper Research Outpost Burn Chamber"
+	icon_state = "engine"
+
+/area/rnd/outpost/atmos
+	name = "Research Outpost Atmospherics"
+	icon_state = "atmos"
+
+/area/rnd/outpost/storage
+	name = "\improper Research Outpost Gas Storage"
+	icon_state = "toxstorage"
+
+/area/rnd/outpost/mixing
+	name = "\improper Research Outpost Gas Mixing"
+	icon_state = "toxmix"
+
+/area/rnd/outpost/heating
+	name = "\improper Research Outpost Gas Heating"
+	icon_state = "toxmix"
+
+/area/rnd/outpost/testing
+	name = "\improper Research Outpost Testing"
+	icon_state = "toxtest"
+
+/area/maintenance/substation/outpost
+	name = "Research Outpost Substation"
+
+/area/engineering/engine_gas
+	name = "\improper Engine Gas Storage"
+	icon_state = "engine_waste"

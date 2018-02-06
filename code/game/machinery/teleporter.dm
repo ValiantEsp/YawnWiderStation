@@ -1,5 +1,5 @@
 /obj/machinery/computer/teleporter
-	name = "Teleporter Control Console"
+	name = "teleporter control console"
 	desc = "Used to control a linked teleportation Hub and Station."
 	icon_keyboard = "teleport_key"
 	icon_screen = "teleport"
@@ -19,18 +19,24 @@
 
 /obj/machinery/computer/teleporter/initialize()
 	..()
-	var/obj/machinery/teleport/station/station = locate(/obj/machinery/teleport/station, get_step(src, dir))
+	var/obj/machinery/teleport/station/station
 	var/obj/machinery/teleport/hub/hub
-	if(station)
-		hub = locate(/obj/machinery/teleport/hub, get_step(station, dir))
+
+	// Search surrounding turfs for the station, and then search the station's surrounding turfs for the hub.
+	for(var/direction in cardinal)
+		station = locate(/obj/machinery/teleport/station, get_step(src, direction))
+		if(station)
+			for(direction in cardinal)
+				hub = locate(/obj/machinery/teleport/hub, get_step(station, direction))
+				if(hub)
+					break
+			break
 
 	if(istype(station))
 		station.com = hub
-		station.set_dir(dir)
 
 	if(istype(hub))
 		hub.com = src
-		hub.set_dir(dir)
 
 /obj/machinery/computer/teleporter/attackby(I as obj, mob/living/user as mob)
 	if(istype(I, /obj/item/weapon/card/data/))
@@ -50,8 +56,8 @@
 			L = locate("landmark*[C.data]") // use old stype
 
 		if(istype(L, /obj/effect/landmark/) && istype(L.loc, /turf))
-			usr << "You insert the coordinates into the machine."
-			usr << "A message flashes across the screen reminding the traveller that the nuclear authentication disk is to remain on the station at all times."
+			to_chat(usr, "You insert the coordinates into the machine.")
+			to_chat(usr, "A message flashes across the screen, reminding the user that the nuclear authentication disk is not transportable via insecure means.")
 			user.drop_item()
 			qdel(I)
 
@@ -63,7 +69,7 @@
 				for(var/obj/machinery/teleport/hub/H in range(1))
 					var/amount = rand(2,5)
 					for(var/i=0;i<amount;i++)
-						new /mob/living/simple_animal/hostile/vore/carp(get_turf(H)) // Vorestation edit
+						new /mob/living/simple_animal/hostile/carp(get_turf(H))
 				//
 			else
 				for(var/mob/O in hearers(src, null))

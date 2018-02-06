@@ -48,6 +48,17 @@
 		if(prob(25))
 			my_effect.trigger = pick(TRIGGER_WATER, TRIGGER_ACID, TRIGGER_VOLATILE, TRIGGER_TOXIN)
 
+/obj/machinery/artifact/proc/choose_effect()
+	var/effect_type = input(usr, "What type do you want?", "Effect Type") as null|anything in typesof(/datum/artifact_effect) - /datum/artifact_effect
+	if(effect_type)
+		my_effect = new effect_type(src)
+		if(alert(usr, "Do you want a secondary effect?", "Second Effect", "No", "Yes") == "Yes")
+			var/second_effect_type = input(usr, "What type do you want as well?", "Second Effect Type") as null|anything in typesof(/datum/artifact_effect) - list(/datum/artifact_effect, effect_type)
+			secondary_effect = new second_effect_type(src)
+		else
+			secondary_effect = null
+
+
 /obj/machinery/artifact/process()
 	var/turf/L = loc
 	if(!istype(L)) 	// We're inside a container or on null turf, either way stop processing effects
@@ -160,7 +171,7 @@
 
 /obj/machinery/artifact/attack_hand(var/mob/user as mob)
 	if (get_dist(user, src) > 1)
-		user << "\red You can't reach [src] from here."
+		user << "<font color='red'>You can't reach [src] from here.</font>"
 		return
 	if(ishuman(user) && user:gloves)
 		user << "<b>You touch [src]</b> with your gloved hands, [pick("but nothing of note happens","but nothing happens","but nothing interesting happens","but you notice nothing different","but nothing seems to have happened")]."
@@ -259,8 +270,7 @@
 	..()
 
 /obj/machinery/artifact/bullet_act(var/obj/item/projectile/P)
-	if(istype(P,/obj/item/projectile/bullet) ||\
-		istype(P,/obj/item/projectile/hivebotbullet))
+	if(istype(P,/obj/item/projectile/bullet))
 		if(my_effect.trigger == TRIGGER_FORCE)
 			my_effect.ToggleActivate()
 		if(secondary_effect && secondary_effect.trigger == TRIGGER_FORCE && prob(25))

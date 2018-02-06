@@ -1,6 +1,5 @@
 /obj/machinery/computer/shuttle_control
 	name = "shuttle control console"
-	icon = 'icons/obj/computer.dmi'
 	icon_keyboard = "atmos_key"
 	icon_screen = "shuttle"
 	circuit = null
@@ -14,7 +13,7 @@
 		return
 	//src.add_fingerprint(user)	//shouldn't need fingerprints just for looking at it.
 	if(!allowed(user))
-		user << "\red Access Denied."
+		user << "<font color='red'>Access Denied.</font>"
 		return 1
 
 	ui_interact(user)
@@ -41,7 +40,7 @@
 			else
 				shuttle_status = "Standing-by at offsite location."
 		if(WAIT_LAUNCH, FORCE_LAUNCH)
-			shuttle_status = "Shuttle has recieved command and will depart shortly."
+			shuttle_status = "Shuttle has received command and will depart shortly."
 		if(WAIT_ARRIVE)
 			shuttle_status = "Proceeding to destination."
 		if(WAIT_FINISH)

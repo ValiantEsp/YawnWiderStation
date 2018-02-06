@@ -38,7 +38,6 @@
 	* mob/RangedAttack(atom,params) - used only ranged, only used for tk and laser eyes but could be changed
 */
 /mob/proc/ClickOn(var/atom/A, var/params)
-
 	if(world.time <= next_click) // Hard check, before anything else, to avoid crashing
 		return
 
@@ -109,7 +108,7 @@
 				W.afterattack(A, src, 1, params) // 1 indicates adjacency
 		else
 			if(ismob(A)) // No instant mob attacking
-				setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+				setClickCooldown(get_attack_speed())
 			UnarmedAttack(A, 1)
 
 		trigger_aiming(TARGET_CAN_CLICK)
@@ -122,7 +121,7 @@
 	// A is a turf or is on a turf, or in something on a turf (pen in a box); but not something in something on a turf (pen in a box in a backpack)
 	sdepth = A.storage_depth_turf()
 	if(isturf(A) || isturf(A.loc) || (sdepth != -1 && sdepth <= 1))
-		if(A.Adjacent(src)) // see adjacent.dm
+		if(A.Adjacent(src) || (W && W.attack_can_reach(src, A, W.reach)) ) // see adjacent.dm
 			if(W)
 				// Return 1 in attackby() to prevent afterattack() effects (when safely moving items for example)
 				var/resolved = W.resolve_attackby(A,src)
@@ -130,7 +129,7 @@
 					W.afterattack(A, src, 1, params) // 1: clicking something Adjacent
 			else
 				if(ismob(A)) // No instant mob attacking
-					setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+					setClickCooldown(get_attack_speed())
 				UnarmedAttack(A, 1)
 			trigger_aiming(TARGET_CAN_CLICK)
 			return
@@ -341,6 +340,7 @@
 		var/mob/living/carbon/C = usr
 		C.swap_hand()
 	else
-		var/turf/T = screen_loc2turf("screen-loc", get_turf(usr))
-		T.Click(location, control, params)
+		var/turf/T = screen_loc2turf(screen_loc, get_turf(usr))
+		if(T)
+			T.Click(location, control, params)
 	. = 1

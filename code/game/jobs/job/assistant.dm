@@ -1,36 +1,50 @@
+//VOREStation Edit - Basically this whole file
+/datum/job/intern
+	title = "Intern"
+	flag = INTERN
+	department = "Civilian"
+	department_flag = ENGSEC // VOREStation Edit - Ran out of bits
+	faction = "Station"
+	total_positions = -1
+	spawn_positions = -1
+	supervisors = "the staff from the departmen you're interning in"
+	selection_color = "#555555"
+	economic_modifier = 2
+	access = list()			//See /datum/job/assistant/get_access()
+	minimal_access = list()	//See /datum/job/assistant/get_access()
+	outfit_type = /decl/hierarchy/outfit/job/assistant/intern
+	alt_titles = list("Apprentice Engineer","Medical Intern","Lab Assistant","Security Cadet","Jr. Cargo Tech") //VOREStation Edit
+//VOREStation Add
+/datum/job/intern/New()
+	..()
+	if(config)
+		total_positions = config.limit_interns
+		spawn_positions = config.limit_interns
+//VOREStation Add End
+
+// VOREStation Add
 /datum/job/assistant
-	title = "Assistant"
+	title = USELESS_JOB
 	flag = ASSISTANT
 	department = "Civilian"
 	department_flag = CIVILIAN
 	faction = "Station"
 	total_positions = -1
 	spawn_positions = -1
-	supervisors = "absolutely everyone"
+	supervisors = "nobody! You don't work here"
 	selection_color = "#515151"
 	economic_modifier = 1
-	access = list()			//See /datum/job/assistant/get_access()
-	minimal_access = list()	//See /datum/job/assistant/get_access()
-	alt_titles = list("Technical Assistant","Medical Intern","Research Assistant","Visitor", "Resident")
-
-/datum/job/assistant/equip(var/mob/living/carbon/human/H, var/alt_title)
-	if(!H)	return 0
-	switch(H.backbag)
-		if(2) H.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack(H), slot_back)
-		if(3) H.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/satchel/norm(H), slot_back)
-		if(4) H.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/satchel(H), slot_back)
-		if(5) H.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/messenger(H), slot_back)
-	if(has_alt_title(H, alt_title,"Visitor")) //I doubt someone visiting the station would want to wear an ugly grey uniform
-		H.equip_to_slot_or_del(new /obj/item/clothing/under/assistantformal(H), slot_w_uniform)
-	else if(has_alt_title(H, alt_title,"Resident"))
-		H.equip_to_slot_or_del(new /obj/item/clothing/under/color/white(H), slot_w_uniform)
-	else
-		H.equip_to_slot_or_del(new /obj/item/clothing/under/color/grey(H), slot_w_uniform)
-	H.equip_to_slot_or_del(new /obj/item/clothing/shoes/black(H), slot_shoes)
-	return 1
-
+	access = list()
+	minimal_access = list()
+	outfit_type = /decl/hierarchy/outfit/job/assistant
+/datum/job/assistant/New()
+	..()
+	if(config)
+		total_positions = config.limit_visitors
+		spawn_positions = config.limit_visitors
 /datum/job/assistant/get_access()
 	if(config.assistant_maint)
 		return list(access_maint_tunnels)
 	else
 		return list()
+//VOREStation Add End

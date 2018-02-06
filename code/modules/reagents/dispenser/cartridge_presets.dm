@@ -44,6 +44,7 @@
 	cognac		spawn_reagent = "cognac"
 	ale			spawn_reagent = "ale"
 	mead		spawn_reagent = "mead"
+	bitters		spawn_reagent = "bitters"
 
 	// Bar, soft
 	ice			spawn_reagent = "ice"
@@ -68,6 +69,8 @@
 	hot_coco	spawn_reagent = "hot_coco"
 	milk		spawn_reagent = "milk"
 	cream		spawn_reagent = "cream"
+	mint		spawn_reagent = "mint"
+	berry		spawn_reagent = "berryjuice"
 
 	// ERT
 	inaprov		spawn_reagent = "inaprovaline"

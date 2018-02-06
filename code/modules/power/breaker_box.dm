@@ -13,6 +13,7 @@
 	var/icon_state_off = "bbox_off"
 	density = 1
 	anchored = 1
+	circuit = /obj/item/weapon/circuitboard/breakerbox
 	var/on = 0
 	var/busy = 0
 	var/directions = list(1,2,4,8,5,6,9,10)
@@ -20,38 +21,45 @@
 	var/update_locked = 0
 
 /obj/machinery/power/breakerbox/Destroy()
-	..()
+	for(var/obj/structure/cable/C in src.loc)
+		qdel(C)
+	. = ..()
 	for(var/datum/nano_module/rcon/R in world)
 		R.FindDevices()
+
+/obj/machinery/power/breakerbox/initialize()
+	. = ..()
+	default_apply_parts()
 
 /obj/machinery/power/breakerbox/activated
 	icon_state = "bbox_on"
 
-	// Enabled on server startup. Used in substations to keep them in bypass mode.
+// Enabled on server startup. Used in substations to keep them in bypass mode.
 /obj/machinery/power/breakerbox/activated/initialize()
+	. = ..()
 	set_state(1)
 
 /obj/machinery/power/breakerbox/examine(mob/user)
 	user << "Large machine with heavy duty switching circuits used for advanced grid control"
 	if(on)
-		user << "\green It seems to be online."
+		user << "<font color='green'>It seems to be online.</font>"
 	else
-		user << "\red It seems to be offline"
+		user << "<font color='red'>It seems to be offline.</font>"
 
 /obj/machinery/power/breakerbox/attack_ai(mob/user)
 	if(update_locked)
-		user << "\red System locked. Please try again later."
+		user << "<font color='red'>System locked. Please try again later.</font>"
 		return
 
 	if(busy)
-		user << "\red System is busy. Please wait until current operation is finished before changing power settings."
+		user << "<font color='red'>System is busy. Please wait until current operation is finished before changing power settings.</font>"
 		return
 
 	busy = 1
-	user << "\green Updating power settings.."
+	user << "<font color='green'>Updating power settings...</font>"
 	if(do_after(user, 50))
 		set_state(!on)
-		user << "\green Update Completed. New setting:[on ? "on": "off"]"
+		user << "<font color='green'>Update Completed. New setting:[on ? "on": "off"]</font>"
 		update_locked = 1
 		spawn(600)
 			update_locked = 0
@@ -60,16 +68,16 @@
 
 /obj/machinery/power/breakerbox/attack_hand(mob/user)
 	if(update_locked)
-		user << "\red System locked. Please try again later."
+		user << "<font color='red'>System locked. Please try again later.</font>"
 		return
 
 	if(busy)
-		user << "\red System is busy. Please wait until current operation is finished before changing power settings."
+		user << "<font color='red'>System is busy. Please wait until current operation is finished before changing power settings.</font>"
 		return
 
 	busy = 1
 	for(var/mob/O in viewers(user))
-		O.show_message(text("\red [user] started reprogramming [src]!"), 1)
+		O.show_message(text("<font color='red'>[user] started reprogramming [src]!</font>"), 1)
 
 	if(do_after(user, 50))
 		set_state(!on)
@@ -87,10 +95,15 @@
 		if(newtag)
 			RCon_tag = newtag
 			user << "<span class='notice'>You changed the RCON tag to: [newtag]</span>"
-
-
-
-
+	if(on)
+		to_chat(user, "<font color='red'>Disable the breaker before performing maintenance.</font>")
+		return
+	if(default_deconstruction_screwdriver(user, W))
+		return
+	if(default_deconstruction_crowbar(user, W))
+		return
+	if(default_part_replacement(user, W))
+		return
 
 /obj/machinery/power/breakerbox/proc/set_state(var/state)
 	on = state

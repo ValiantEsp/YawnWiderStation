@@ -83,8 +83,10 @@
 	base_icon = "fireaxe"
 	name = "fire axe"
 	desc = "Truly, the weapon of a madman. Who would think to fight fire with an axe?"
+	description_info = "This weapon can cleave, striking nearby lesser, hostile enemies close to the primary target.  It must be held in both hands to do this."
 	unwielded_force_divisor = 0.25
 	force_divisor = 0.7 // 10/42 with hardness 60 (steel) and 0.25 unwielded divisor
+	dulled_divisor = 0.75	//Still metal on a stick
 	sharp = 1
 	edge = 1
 	w_class = ITEMSIZE_LARGE
@@ -122,16 +124,32 @@
 			var/obj/effect/plant/P = A
 			P.die_off()
 
+// This cannot go into afterattack since some mobs delete themselves upon dying.
+/obj/item/weapon/material/twohanded/fireaxe/pre_attack(var/mob/living/target, var/mob/living/user)
+	if(istype(target))
+		cleave(user, target)
+	..()
+
+/obj/item/weapon/material/twohanded/fireaxe/scythe
+	icon_state = "scythe0"
+	base_icon = "scythe"
+	name = "scythe"
+	desc = "A sharp and curved blade on a long fibremetal handle, this tool makes it easy to reap what you sow."
+	force_divisor = 0.65
+	origin_tech = list(TECH_MATERIAL = 2, TECH_COMBAT = 2)
+	attack_verb = list("chopped", "sliced", "cut", "reaped")
+
 //spears, bay edition
 /obj/item/weapon/material/twohanded/spear
 	icon_state = "spearglass0"
 	base_icon = "spearglass"
 	name = "spear"
 	desc = "A haphazardly-constructed yet still deadly weapon of ancient design."
+	description_info = "This weapon can strike from two tiles away, and over certain objects such as tables, or other people."
 	force = 10
 	w_class = ITEMSIZE_LARGE
 	slot_flags = SLOT_BACK
-	force_divisor = 0.75 			// 22 when wielded with hardness 15 (glass)
+	force_divisor = 0.5 			// 15 when wielded with hardness 15 (glass)
 	unwielded_force_divisor = 0.375
 	thrown_force_divisor = 1.5 		// 20 when thrown with weight 15 (glass)
 	throw_speed = 3
@@ -141,3 +159,6 @@
 	attack_verb = list("attacked", "poked", "jabbed", "torn", "gored")
 	default_material = "glass"
 	applies_material_colour = 0
+	fragile = 1	//It's a haphazard thing of glass, wire, and steel
+	reach = 2 // Spears are long.
+	attackspeed = 14

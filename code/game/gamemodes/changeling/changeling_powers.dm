@@ -4,6 +4,7 @@ var/global/list/possible_changeling_IDs = list("Alpha","Beta","Gamma","Delta","E
 	var/list/datum/absorbed_dna/absorbed_dna = list()
 	var/list/absorbed_languages = list() // Necessary because of set_species stuff
 	var/absorbedcount = 0
+	var/lingabsorbedcount = 1	//Starts at one, because that's us
 	var/chem_charges = 20
 	var/chem_recharge_rate = 0.5
 	var/chem_storage = 50
@@ -11,14 +12,18 @@ var/global/list/possible_changeling_IDs = list("Alpha","Beta","Gamma","Delta","E
 	var/changelingID = "Changeling"
 	var/geneticdamage = 0
 	var/isabsorbing = 0
-	var/geneticpoints = 5
-	var/max_geneticpoints = 5
+	var/geneticpoints = 7
+	var/max_geneticpoints = 7
+	var/readapts = 1
+	var/max_readapts = 2
 	var/list/purchased_powers = list()
 	var/mimicing = ""
 	var/cloaked = 0
 	var/armor_deployed = 0 //This is only used for changeling_generic_equip_all_slots() at the moment.
 	var/recursive_enhancement = 0 //Used to power up other abilities from the ling power with the same name.
 	var/list/purchased_powers_history = list() //Used for round-end report, includes respec uses too.
+	var/last_shriek = null // world.time when the ling last used a shriek.
+	var/next_escape = 0	// world.time when the ling can next use Escape Restraints
 
 /datum/changeling/New(var/gender=FEMALE)
 	..()
@@ -60,6 +65,7 @@ var/global/list/possible_changeling_IDs = list("Alpha","Beta","Gamma","Delta","E
 	if(!mind.changeling)	mind.changeling = new /datum/changeling(gender)
 
 	verbs += /datum/changeling/proc/EvolutionMenu
+	verbs += /mob/proc/changeling_respec
 	add_language("Changeling")
 
 	var/lesser_form = !ishuman(src)
@@ -153,6 +159,47 @@ var/global/list/possible_changeling_IDs = list("Alpha","Beta","Gamma","Delta","E
 	//STINGS//	//They get a pretty header because there's just so fucking many of them ;_;
 	//////////
 
+turf/proc/AdjacentTurfsRangedSting()
+	//Yes this is snowflakey, but I couldn't get it to work any other way.. -Luke
+	var/list/allowed = list(
+		/obj/structure/table,
+		/obj/structure/closet,
+		/obj/structure/frame,
+		/obj/structure/target_stake,
+		/obj/structure/cable,
+		/obj/structure/disposalpipe,
+		/obj/machinery,
+		/mob
+	)
+
+	var/L[] = new()
+	for(var/turf/simulated/t in oview(src,1))
+		var/add = 1
+		if(t.density)
+			add = 0
+		if(add && LinkBlocked(src,t))
+			add = 0
+		if(add && TurfBlockedNonWindow(t))
+			add = 0
+			for(var/obj/O in t)
+				if(!O.density)
+					add = 1
+					break
+				if(istype(O, /obj/machinery/door))
+					//not sure why this doesn't fire on LinkBlocked()
+					add = 0
+					break
+				for(var/type in allowed)
+					if (istype(O, type))
+						add = 1
+						break
+				if(!add)
+					break
+		if(add)
+			L.Add(t)
+	return L
+
+
 /mob/proc/sting_can_reach(mob/M as mob, sting_range = 1)
 	if(M.loc == src.loc)
 		return 1 //target and source are in the same thing
@@ -160,7 +207,7 @@ var/global/list/possible_changeling_IDs = list("Alpha","Beta","Gamma","Delta","E
 		src << "<span class='warning'>We cannot reach \the [M] with a sting!</span>"
 		return 0 //One is inside, the other is outside something.
 	// Maximum queued turfs set to 25; I don't *think* anything raises sting_range above 2, but if it does the 25 may need raising
-	if(!AStar(src.loc, M.loc, /turf/proc/AdjacentTurfs, /turf/proc/Distance, max_nodes=25, max_node_depth=sting_range)) //If we can't find a path, fail
+	if(!AStar(src.loc, M.loc, /turf/proc/AdjacentTurfsRangedSting, /turf/proc/Distance, max_nodes=25, max_node_depth=sting_range)) //If we can't find a path, fail
 		src << "<span class='warning'>We cannot find a path to sting \the [M] by!</span>"
 		return 0
 	return 1
@@ -175,7 +222,11 @@ var/global/list/possible_changeling_IDs = list("Alpha","Beta","Gamma","Delta","E
 		victims += C
 	var/mob/living/carbon/T = input(src, "Who will we sting?") as null|anything in victims
 
-	if(!T) return
+	if(!T)
+		return
+	if(T.isSynthetic())
+		src << "<span class='notice'>We are unable to pierce the outer shell of [T].</span>"
+		return
 	if(!(T in view(changeling.sting_range))) return
 	if(!sting_can_reach(T, changeling.sting_range)) return
 	if(!changeling_power(required_chems)) return

@@ -2,13 +2,46 @@
 // charge from 0 to 100%
 // fits in APC to provide backup power
 
+/obj/item/weapon/cell
+	name = "power cell"
+	desc = "A rechargable electrochemical power cell."
+	icon = 'icons/obj/power.dmi'
+	icon_state = "cell"
+	item_state = "cell"
+	origin_tech = list(TECH_POWER = 1)
+	force = 5.0
+	throwforce = 5.0
+	throw_speed = 3
+	throw_range = 5
+	w_class = ITEMSIZE_NORMAL
+	var/charge = 0	// note %age conveted to actual charge in New
+	var/maxcharge = 1000
+	var/rigged = 0		// true if rigged to explode
+	var/minor_fault = 0 //If not 100% reliable, it will build up faults.
+	var/self_recharge = FALSE // If true, the cell will recharge itself.
+	var/charge_amount = 25 // How much power to give, if self_recharge is true.  The number is in absolute cell charge, as it gets divided by CELLRATE later.
+	var/last_use = 0 // A tracker for use in self-charging
+	var/charge_delay = 0 // How long it takes for the cell to start recharging after last use
+	matter = list(DEFAULT_WALL_MATERIAL = 700, "glass" = 50)
+
 /obj/item/weapon/cell/New()
 	..()
 	charge = maxcharge
-
-/obj/item/weapon/cell/initialize()
-	..()
 	update_icon()
+	if(self_recharge)
+		processing_objects |= src
+
+/obj/item/weapon/cell/Destroy()
+	if(self_recharge)
+		processing_objects -= src
+	return ..()
+
+/obj/item/weapon/cell/process()
+	if(self_recharge)
+		if(world.time >= last_use + charge_delay)
+			give(charge_amount)
+	else
+		return PROCESS_KILL
 
 /obj/item/weapon/cell/drain_power(var/drain_check, var/surge, var/power = 0)
 
@@ -49,6 +82,8 @@
 		return 0
 	var/used = min(charge, amount)
 	charge -= used
+	last_use = world.time
+	update_icon()
 	return used
 
 // Checks if the specified amount can be provided. If it can, it removes the amount
@@ -68,24 +103,31 @@
 	if(maxcharge < amount)	return 0
 	var/amount_used = min(maxcharge-charge,amount)
 	charge += amount_used
+	update_icon()
+	if(loc)
+		loc.update_icon()
 	return amount_used
 
 
 /obj/item/weapon/cell/examine(mob/user)
-	if(get_dist(src, user) > 1)
-		return
+	var/msg = desc
 
-	if(maxcharge <= 2500)
-		user << "[desc]\nThe manufacturer's label states this cell has a power rating of [maxcharge], and that you should not swallow it.\nThe charge meter reads [round(src.percent() )]%."
-	else
-		user << "This power cell has an exciting chrome finish, as it is an uber-capacity cell type! It has a power rating of [maxcharge]!\nThe charge meter reads [round(src.percent() )]%."
+	if(get_dist(src, user) <= 1)
+		msg += " It has a power rating of [maxcharge].\nThe charge meter reads [round(src.percent() )]%."
 
+	to_chat(user, msg)
+/*
+		if(maxcharge <= 2500)
+			to_chat(user, "[desc]\nThe manufacturer's label states this cell has a power rating of [maxcharge], and that you should not swallow it.\nThe charge meter reads [round(src.percent() )]%.")
+		else
+			to_chat(user, "This power cell has an exciting chrome finish, as it is an uber-capacity cell type! It has a power rating of [maxcharge]!\nThe charge meter reads [round(src.percent() )]%.")
+*/
 /obj/item/weapon/cell/attackby(obj/item/W, mob/user)
 	..()
 	if(istype(W, /obj/item/weapon/reagent_containers/syringe))
 		var/obj/item/weapon/reagent_containers/syringe/S = W
 
-		user << "You inject the solution into the power cell."
+		to_chat(user, "You inject the solution into the power cell.")
 
 		if(S.reagents.has_reagent("phoron", 5))
 
@@ -95,7 +137,6 @@
 			message_admins("LOG: [user.name] ([user.ckey]) injected a power cell with phoron, rigging it to explode.")
 
 		S.reagents.clear_reagents()
-
 
 /obj/item/weapon/cell/proc/explode()
 	var/turf/T = get_turf(src.loc)
@@ -139,6 +180,8 @@
 	charge -= charge / severity
 	if (charge < 0)
 		charge = 0
+
+	update_icon()
 	..()
 
 /obj/item/weapon/cell/ex_act(severity)
@@ -189,3 +232,7 @@
 			return min(rand(10,20),rand(10,20))
 		else
 			return 0
+
+/obj/item/weapon/cell/suicide_act(mob/user)
+	viewers(user) << "<span class='danger'>\The [user] is licking the electrodes of \the [src]! It looks like \he's trying to commit suicide.</span>"
+	return (FIRELOSS)

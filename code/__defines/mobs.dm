@@ -26,14 +26,17 @@
 #define BORGXRAY  0x4
 #define BORGMATERIAL  8
 
-#define STANCE_IDLE      1
-#define STANCE_ALERT     2
-#define STANCE_ATTACK    3
-#define STANCE_ATTACKING 4
-#define STANCE_TIRED     5
+#define STANCE_IDLE      1	// Looking for targets if hostile.  Does idle wandering.
+#define STANCE_ALERT     2	// Bears
+#define STANCE_ATTACK    3	// Attempting to get into attack position
+#define STANCE_ATTACKING 4	// Doing attacks
+#define STANCE_TIRED     5	// Bears
+#define STANCE_FOLLOW    6	// Following somone
+#define STANCE_BUSY      7	// Do nothing on life ticks (Other code is running)
 
-#define LEFT  1
-#define RIGHT 2
+#define LEFT  0x1
+#define RIGHT 0x2
+#define UNDER 0x4
 
 // Pulse levels, very simplified.
 #define PULSE_NONE    0 // So !M.pulse checks would be possible.
@@ -99,14 +102,14 @@
 #define INV_SUIT_DEF_ICON 'icons/mob/suit.dmi'
 #define MAX_SUPPLIED_LAW_NUMBER 50
 
-// NT's alignment towards the character
-#define COMPANY_LOYAL 			"Loyal"
-#define COMPANY_SUPPORTATIVE	"Supportive"
-#define COMPANY_NEUTRAL 		"Neutral"
-#define COMPANY_SKEPTICAL		"Skeptical"
-#define COMPANY_OPPOSED			"Opposed"
+// Character's economic class
+#define CLASS_UPPER 		"Wealthy"
+#define CLASS_UPMID			"Well-off"
+#define CLASS_MIDDLE 		"Average"
+#define CLASS_LOWMID		"Underpaid"
+#define CLASS_LOWER			"Poor"
 
-#define COMPANY_ALIGNMENTS		list(COMPANY_LOYAL,COMPANY_SUPPORTATIVE,COMPANY_NEUTRAL,COMPANY_SKEPTICAL,COMPANY_OPPOSED)
+#define ECONOMIC_CLASS		list(CLASS_UPPER,CLASS_UPMID,CLASS_MIDDLE,CLASS_LOWMID,CLASS_LOWER)
 
 
 // Defines mob sizes, used by lockers and to determine what is considered a small sized mob, etc.
@@ -122,10 +125,12 @@
 #define TINT_HEAVY 2
 #define TINT_BLIND 3
 
+#define FLASH_PROTECTION_VULNERABLE -2
 #define FLASH_PROTECTION_REDUCED -1
 #define FLASH_PROTECTION_NONE 0
 #define FLASH_PROTECTION_MODERATE 1
 #define FLASH_PROTECTION_MAJOR 2
+
 #define ANIMAL_SPAWN_DELAY round(config.respawn_delay / 6)
 #define DRONE_SPAWN_DELAY  round(config.respawn_delay / 3)
 
@@ -139,17 +144,24 @@
 #define INCAPACITATION_STUNNED 8
 #define INCAPACITATION_FORCELYING 16 //needs a better name - represents being knocked down BUT still conscious.
 #define INCAPACITATION_KNOCKOUT 32
-
+#define INCAPACITATION_NONE 0
 
 #define INCAPACITATION_DEFAULT (INCAPACITATION_RESTRAINED|INCAPACITATION_BUCKLED_FULLY)
 #define INCAPACITATION_KNOCKDOWN (INCAPACITATION_KNOCKOUT|INCAPACITATION_FORCELYING)
 #define INCAPACITATION_DISABLED (INCAPACITATION_KNOCKDOWN|INCAPACITATION_STUNNED)
 #define INCAPACITATION_ALL (~INCAPACITATION_NONE)
 
+#define MODIFIER_STACK_FORBID	1	// Disallows stacking entirely.
+#define MODIFIER_STACK_EXTEND	2	// Disallows a second instance, but will extend the first instance if possible.
+#define MODIFIER_STACK_ALLOWED	3	// Multiple instances are allowed.
+
+#define MODIFIER_GENETIC	1	// Modifiers with this flag will be copied to mobs who get cloned.
+
 // Bodyparts and organs.
 #define O_MOUTH    "mouth"
 #define O_EYES     "eyes"
 #define O_HEART    "heart"
+#define O_CELL     "cell"
 #define O_LUNGS    "lungs"
 #define O_BRAIN    "brain"
 #define O_LIVER    "liver"
@@ -199,3 +211,48 @@
 #define TASTE_NORMAL 1 //anything below 15%
 #define TASTE_DULL 0.5 //anything below 30%
 #define TASTE_NUMB 0.1 //anything below 150%
+
+// If they're in an FBP, what braintype.
+#define FBP_NONE	""
+#define FBP_CYBORG	"Cyborg"
+#define FBP_POSI	"Positronic"
+#define FBP_DRONE	"Drone"
+
+// Used to seperate simple animals by ""intelligence"".
+#define SA_PLANT	1
+#define SA_ANIMAL	2
+#define SA_ROBOTIC	3
+#define SA_HUMANOID	4
+
+// For slime commanding.  Higher numbers allow for more actions.
+#define SLIME_COMMAND_OBEY		1 // When disciplined.
+#define SLIME_COMMAND_FACTION	2 // When in the same 'faction'.
+#define SLIME_COMMAND_FRIEND	3 // When befriended with a slime friendship agent.
+
+//Vision flags, for dealing with plane visibility
+#define VIS_FULLBRIGHT		1
+#define VIS_LIGHTING		2
+#define VIS_GHOSTS			3
+#define VIS_AI_EYE			4
+
+#define VIS_CH_STATUS		5
+#define VIS_CH_HEALTH		6
+#define VIS_CH_LIFE			7
+#define VIS_CH_ID			8
+#define VIS_CH_WANTED		9
+#define VIS_CH_IMPLOYAL		10
+#define VIS_CH_IMPTRACK		11
+#define VIS_CH_IMPCHEM		12
+#define VIS_CH_SPECIAL		13
+#define VIS_CH_STATUS_OOC	14
+
+#define VIS_D_COLORBLIND	15
+#define VIS_D_COLORBLINDI	16
+
+#define VIS_ADMIN1			17
+#define VIS_ADMIN2			18
+#define VIS_ADMIN3			19
+
+#define VIS_MESONS			20
+
+#define VIS_COUNT			20 //Must be highest number from above.

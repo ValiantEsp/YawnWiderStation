@@ -2,7 +2,7 @@
 #define TRACKING_NO_COVERAGE 1
 #define TRACKING_TERMINATE 2
 
-/mob/living/silicon/ai/var/max_locations = 10
+/mob/living/silicon/ai/var/max_locations = 30
 /mob/living/silicon/ai/var/stored_locations[0]
 
 /proc/InvalidPlayerTurf(turf/T as turf)
@@ -231,6 +231,8 @@ mob/living/proc/near_camera()
 	if(invisibility >= INVISIBILITY_LEVEL_ONE) //cloaked
 		return TRACKING_TERMINATE
 	if(digitalcamo)
+		return TRACKING_TERMINATE
+	if(alpha < 127) // For lings and possible future alpha-based cloaks.
 		return TRACKING_TERMINATE
 	if(istype(loc,/obj/effect/dummy))
 		return TRACKING_TERMINATE

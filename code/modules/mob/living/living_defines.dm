@@ -2,7 +2,7 @@
 	see_invisible = SEE_INVISIBLE_LIVING
 
 	//Health and life related vars
-	var/maxHealth = 100 //Maximum health that should be possible.
+	var/maxHealth = 100 //Maximum health that should be possible.  Avoid adjusting this if you can, and instead use modifiers datums.
 	var/health = 100 	//A mob's health
 
 	var/hud_updateflag = 0
@@ -47,3 +47,8 @@
 
 	var/evasion = 0 // Makes attacks harder to land.  Each number equals 15% more likely to miss.  Negative numbers increase hit chance.
 	var/force_max_speed = 0 // If 1, the mob runs extremely fast and cannot be slowed.
+  
+	var/image/dsoverlay = null //Overlay used for darksight eye adjustments
+
+	var/glow_toggle = 0					// If they're glowing!
+	var/glow_color = "#FFFFFF"			// The color they're glowing!

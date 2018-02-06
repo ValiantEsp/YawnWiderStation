@@ -1,6 +1,6 @@
 /atom/movable
 	layer = 3
-	appearance_flags = TILE_BOUND
+	appearance_flags = TILE_BOUND|PIXEL_SCALE
 	var/last_move = null
 	var/anchored = 0
 	// var/elevation = 2    - not used anywhere
@@ -15,23 +15,18 @@
 	var/moved_recently = 0
 	var/mob/pulledby = null
 	var/item_state = null // Used to specify the item state for the on-mob overlays.
-
+	var/icon_scale = 1 // Used to scale icons up or down in update_transform().
+	var/old_x = 0
+	var/old_y = 0
 	var/auto_init = 1
 
 /atom/movable/New()
 	..()
 	if(auto_init && ticker && ticker.current_state == GAME_STATE_PLAYING)
-		initialize()
-
-/atom/movable/Del()
-	if(isnull(gcDestroyed) && loc)
-		testing("GC: -- [type] was deleted via del() rather than qdel() --")
-		crash_with("GC: -- [type] was deleted via del() rather than qdel() --") // stick a stack trace in the runtime logs
-//	else if(isnull(gcDestroyed))
-//		testing("GC: [type] was deleted via GC without qdel()") //Not really a huge issue but from now on, please qdel()
-//	else
-//		testing("GC: [type] was deleted via GC with qdel()")
-	..()
+		if(SScreation && SScreation.map_loading) // If a map is being loaded, newly created objects need to wait for it to finish.
+			SScreation.atoms_needing_initialize += src
+		else
+			initialize()
 
 /atom/movable/Destroy()
 	. = ..()
@@ -40,14 +35,20 @@
 		reagents = null
 	for(var/atom/movable/AM in contents)
 		qdel(AM)
+	var/turf/un_opaque
+	if(opacity && isturf(loc))
+		un_opaque = loc
+
 	loc = null
+	if(un_opaque)
+		un_opaque.recalc_atom_opacity()
 	if (pulledby)
 		if (pulledby.pulling == src)
 			pulledby.pulling = null
 		pulledby = null
 
 /atom/movable/proc/initialize()
-	if(!isnull(gcDestroyed))
+	if(QDELETED(src))
 		crash_with("GC: -- [type] had initialize() called after qdel() --")
 
 /atom/movable/Bump(var/atom/A, yes)
@@ -92,12 +93,16 @@
 					AM.Crossed(src)
 			if(is_new_area && is_destination_turf)
 				destination.loc.Entered(src, origin)
+
+	Moved(origin)
 	return 1
 
 //called when src is thrown into hit_atom
 /atom/movable/proc/throw_impact(atom/hit_atom, var/speed)
 	if(istype(hit_atom,/mob/living))
 		var/mob/living/M = hit_atom
+		if(M.buckled == src)
+			return // Don't hit the thing we're buckled to.
 		M.hitby(src,speed)
 
 	else if(isobj(hit_atom))
@@ -109,12 +114,7 @@
 	else if(isturf(hit_atom))
 		src.throwing = 0
 		var/turf/T = hit_atom
-		if(T.density)
-			spawn(2)
-				step(src, turn(src.last_move, 180))
-			if(istype(src,/mob/living))
-				var/mob/living/M = src
-				M.turf_collision(T, speed)
+		T.hitby(src,speed)
 
 //decided whether a movable atom being thrown can pass through the turf it is in.
 /atom/movable/proc/hit_check(var/speed)
@@ -125,8 +125,17 @@
 				if(A:lying) continue
 				src.throw_impact(A,speed)
 			if(isobj(A))
-				if(A.density && !A.throwpass)	// **TODO: Better behaviour for windows which are dense, but shouldn't always stop movement
-					src.throw_impact(A,speed)
+				if(!A.density || A.throwpass)
+					continue
+				// Special handling of windows, which are dense but block only from some directions
+				if(istype(A, /obj/structure/window))
+					var/obj/structure/window/W = A
+					if (!W.is_full_window() && !(turn(src.last_move, 180) & A.dir))
+						continue
+				// Same thing for (closed) windoors, which have the same problem
+				else if(istype(A, /obj/machinery/door/window) && !(turn(src.last_move, 180) & A.dir))
+					continue
+				src.throw_impact(A,speed)
 
 /atom/movable/proc/throw_at(atom/target, range, speed, thrower)
 	if(!target || !src)	return 0
@@ -291,3 +300,12 @@
 		return null
 	return text2num(pickweight(candidates))
 
+/atom/movable/proc/update_transform()
+	var/matrix/M = matrix()
+	M.Scale(icon_scale)
+	src.transform = M
+
+// Use this to set the object's scale.
+/atom/movable/proc/adjust_scale(new_scale)
+	icon_scale = new_scale
+	update_transform()

@@ -19,7 +19,7 @@ This saves us from having to call add_fingerprint() any time something is put in
 			else
 				update_inv_r_hand(0)
 		else
-			H << "\red You are unable to equip that."
+			H << "<font color='red'>You are unable to equip that.</font>"
 
 /mob/living/carbon/human/proc/equip_in_one_of_slots(obj/item/W, list/slots, del_on_fail = 1)
 	for (var/slot in slots)
@@ -231,7 +231,7 @@ This saves us from having to call add_fingerprint() any time something is put in
 				var/obj/item/clothing/ears/offear/O = new(W)
 				O.loc = src
 				src.r_ear = O
-				O.layer = 20
+				O.hud_layerise()
 			W.equipped(src, slot)
 			update_inv_ears(redraw_mob)
 		if(slot_r_ear)
@@ -240,7 +240,7 @@ This saves us from having to call add_fingerprint() any time something is put in
 				var/obj/item/clothing/ears/offear/O = new(W)
 				O.loc = src
 				src.l_ear = O
-				O.layer = 20
+				O.hud_layerise()
 			W.equipped(src, slot)
 			update_inv_ears(redraw_mob)
 		if(slot_glasses)
@@ -293,7 +293,7 @@ This saves us from having to call add_fingerprint() any time something is put in
 			var/obj/item/clothing/under/uniform = src.w_uniform
 			uniform.attackby(W,src)
 		else
-			src << "\red You are trying to eqip this item to an unsupported inventory slot. How the heck did you manage that? Stop it..."
+			src << "<font color='red'>You are trying to eqip this item to an unsupported inventory slot. How the heck did you manage that? Stop it...</font>"
 			return
 
 	if((W == src.l_hand) && (slot != slot_l_hand))
@@ -303,7 +303,7 @@ This saves us from having to call add_fingerprint() any time something is put in
 		src.r_hand = null
 		update_inv_r_hand()
 
-	W.layer = 20
+	W.hud_layerise()
 
 	if(W.action_button_name)
 		update_action_buttons()
@@ -352,3 +352,10 @@ This saves us from having to call add_fingerprint() any time something is put in
 		if(slot_l_ear)      return l_ear
 		if(slot_r_ear)      return r_ear
 	return ..()
+
+
+/mob/living/carbon/human/is_holding_item_of_type(typepath)
+	for(var/obj/item/I in list(l_hand, r_hand))
+		if(istype(I, typepath))
+			return I
+	return FALSE

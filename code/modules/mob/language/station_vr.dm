@@ -11,7 +11,7 @@
 */
 
 /datum/language/birdsong
-	name = "Birdsong"
+	name = LANGUAGE_BIRDSONG
 	desc = "A language primarily spoken by Narvians"
 	speech_verb = "chirps"
 	colour = "birdsongc"
@@ -19,7 +19,7 @@
 	syllables = list ("cheep", "peep", "tweet")
 
 /datum/language/sergal
-	name = "Sagaru"
+	name = LANGUAGE_SAGARU
 	desc = "The dominant language of the Sergal homeworld, Vilous. It consists of aggressive low-pitched hissing and throaty growling."
 	speech_verb = "snarls"
 	colour = "sergal"
@@ -27,14 +27,13 @@
 	syllables = list ("grr", "gah", "woof", "arf", "arra", "rah", "wor", "sarg")
 
 /datum/language/vulpkanin
-	name = "Canilunzt"
+	name = LANGUAGE_CANILUNZT
 	desc = "The guttural language spoken and utilized by the inhabitants of Vazzend system, composed of growls, barks, yaps, and heavy utilization of ears and tail movements. Vulpkanin speak this language with ease."
 	speech_verb = "rrrfts"
 	ask_verb = "rurs"
 	exclaim_verb = "barks"
 	colour = "vulpkanin"
 	key = "8" //lol, no idea - Poojawa
-	flags = RESTRICTED
 	syllables = list("rur","ya","cen","rawr","bar","kuk","tek","qat","uk","wu","vuh","tah","tch","schz","auch", \
 	"ist","ein","entch","zwichs","tut","mir","wo","bis","es","vor","nic","gro","lll","enem","zandt","tzch","noch", \
 	"hel","ischt","far","wa","baram","iereng","tech","lach","sam","mak","lich","gen","or","ag","eck","gec","stag","onn", \
@@ -48,7 +47,6 @@
     exclaim_verb = "incants"
     colour = "cult" //No clue what to put here - Table
     key = "-" //dunno if this is a valid key. - Table
-    flags = RESTRICTED
     syllables = list("viepn","e","bag","docu","kar","xlaqf","raa","qwos","nen","ty","von","kytaf","xin","ty","ka","baak","hlafaifpyk","znu","agrith","na'ar","uah","plhu","six","fhler","bjel","scee","lleri",
     "dttm","aggr","uujl","hjjifr","wwuthaav",)
 
@@ -60,12 +58,11 @@
     exclaim_verb = "loudly sings"
     colour = "birdsongc" //No clue what to put here - Table
     key = "*" //dunno if this is a valid key. - Table
-    flags = RESTRICTED
     syllables = list("salve","sum","loqui","operatur","iusta","et","permittit","facere","effercio","pluribus","enim","hoc",
     "mihi","wan","six","salve","tartu")
 
 /datum/language/squirrel
-	name = "Ecureuilian"
+	name = LANGUAGE_ECUREUILIAN
 	desc = "The native tongue of the inhabitants of Gaia. Squirrelkin and other beastkins of Gaia can use their ears and tails in addition to speech to communitcate."
 	speech_verb = "squeaks"
 	whisper_verb = "whispers"
@@ -75,9 +72,28 @@
 	syllables = list("sque","sqah","boo","beh","nweh","boopa","nah","wah","een","sweh")
 
 /datum/language/demon
-	flags = 0
+	name = LANGUAGE_DAEMON
+	desc = "The language spoken by the demons of Infernum, it's composed of deep chanting. It's rarely spoken off of Infernum due to the volume one has to exert."
+	speech_verb = "chants"
+	ask_verb = "croons"
+	exclaim_verb = "incants"
+	colour = "daemon" //So fancy
+	key = "n"
+	syllables = list("viepn","e","bag","docu","kar","xlaqf","raa","qwos","nen","ty","von","kytaf","xin","ty","ka","baak","hlafaifpyk","znu","agrith","na'ar","uah","plhu","six","fhler","bjel","scee","lleri",
+	"dttm","aggr","uujl","hjjifr","wwuthaav",)
+
 /datum/language/angel
-	flags = 0
+	name = LANGUAGE_ENOCHIAN
+	desc = "The graceful language spoken by angels, composed of quiet hymns. Formally, Angels sing it."
+	speech_verb = "sings"
+	ask_verb = "hums"
+	exclaim_verb = "loudly sings"
+	colour = "enochian" //So fancy
+	key = "a"
+	syllables = list("salve","sum","loqui","operatur","iusta","et","permittit","facere","effercio","pluribus","enim","hoc",
+	"mihi","wan","six","salve","tartu")
+
+
 /datum/language/unathi
 	flags = 0
 /datum/language/tajaran

@@ -40,15 +40,15 @@
 	id = "Hub"
 	network = "tcommsat"
 	autolinkers = list("hub", "relay", "c_relay", "s_relay", "m_relay", "r_relay", "science", "medical",
-	"supply", "service", "common", "command", "engineering", "security", "unused",
-	"receiverA", "broadcasterA")
+	"supply", "service", "common", "command", "engineering", "security", "unused", "hb_relay",
+	"receiverA", "broadcasterA") //VOREStation Edit - Added "hb_relay"
 
 /obj/machinery/telecomms/hub/preset_cent
 	id = "CentCom Hub"
 	network = "tcommsat"
 	produces_heat = 0
-	autolinkers = list("hub_cent", "c_relay", "s_relay", "m_relay", "r_relay",
-	 "centcomm", "receiverCent", "broadcasterCent")
+	autolinkers = list("hub_cent", "c_relay", "s_relay", "m_relay", "r_relay", "hb_relay",
+	 "centcom", "receiverCent", "broadcasterCent") //VOREStation Edit - Added "hb_relay"
 
 //Receivers
 
@@ -110,7 +110,7 @@
 	network = "tcommsat"
 	freq_listening = list(ERT_FREQ, DTH_FREQ)
 	produces_heat = 0
-	autolinkers = list("processorCent", "centcomm")
+	autolinkers = list("processorCent", "centcom")
 
 //Processors
 
@@ -203,7 +203,7 @@
 	id = "CentCom Server"
 	freq_listening = list(ERT_FREQ, DTH_FREQ)
 	produces_heat = 0
-	autolinkers = list("centcomm")
+	autolinkers = list("centcom")
 
 
 //Broadcasters

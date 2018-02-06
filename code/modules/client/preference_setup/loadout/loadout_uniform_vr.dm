@@ -2,6 +2,11 @@
 	display_name = "nudity permit"
 	path = /obj/item/clothing/under/permit
 
+//Polaris overrides
+/datum/gear/uniform/pt/sifguard
+	display_name = "pt uniform, planetside sec"
+	path = /obj/item/clothing/under/pt/sifguard
+
 //KHI Uniforms
 /datum/gear/uniform/job_khi/cmd
 	display_name = "khi uniform, cmd"
@@ -98,6 +103,11 @@
 /datum/gear/suit/job_trek/ds9_coat
 	display_name = "DS9 Overcoat (use uniform)"
 	path = /obj/item/clothing/suit/storage/trek/ds9
+	allowed_roles = list("Head of Security","Colony Director","Head of Personnel","Chief Engineer","Research Director",
+						"Chief Medical Officer","Medical Doctor","Chemist","Paramedic","Geneticist",
+						"Scientist","Roboticist","Xenobiologist","Atmospheric Technician",
+						"Station Engineer","Warden","Detective","Security Officer")
+
 
 /datum/gear/uniform/job_trek/cmd/ds9
 	display_name = "DS9 uniform, cmd"
@@ -135,7 +145,7 @@ Swimsuits
 */
 
 /datum/gear/uniform/swimsuits
-	display_name = "Swimsuits selection"
+	display_name = "swimsuits selection"
 	path = /obj/item/weapon/storage/box/fluff/swimsuit
 
 /datum/gear/uniform/swimsuits/New()
@@ -145,3 +155,12 @@ Swimsuits
 		var/obj/item/weapon/storage/box/fluff/swimsuit/swimsuit_type = swimsuit
 		swimsuits[initial(swimsuit_type.name)] = swimsuit_type
 	gear_tweaks += new/datum/gear_tweak/path(sortAssoc(swimsuits))
+
+/datum/gear/uniform/suit/gnshorts
+	display_name = "GN shorts"
+	path = /obj/item/clothing/under/fluff/gnshorts
+
+//Latex maid dress
+/datum/gear/uniform/latexmaid
+	display_name = "latex maid dress"
+	path = /obj/item/clothing/under/fluff/latexmaid

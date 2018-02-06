@@ -28,6 +28,38 @@
 	update_icon()
 	return
 
+/obj/item/weapon/melee/baton/MouseDrop(obj/over_object as obj)
+	if(!canremove)
+		return
+
+	if (ishuman(usr) || issmall(usr)) //so monkeys can take off their backpacks -- Urist
+
+		if (istype(usr.loc,/obj/mecha)) // stops inventory actions in a mech. why?
+			return
+
+		if (!( istype(over_object, /obj/screen) ))
+			return ..()
+
+		//makes sure that the thing is equipped, so that we can't drag it into our hand from miles away.
+		//there's got to be a better way of doing this.
+		if (!(src.loc == usr) || (src.loc && src.loc.loc == usr))
+			return
+
+		if (( usr.restrained() ) || ( usr.stat ))
+			return
+
+		if ((src.loc == usr) && !(istype(over_object, /obj/screen)) && !usr.unEquip(src))
+			return
+
+		switch(over_object.name)
+			if("r_hand")
+				usr.u_equip(src)
+				usr.put_in_r_hand(src)
+			if("l_hand")
+				usr.u_equip(src)
+				usr.put_in_l_hand(src)
+		src.add_fingerprint(usr)
+
 /obj/item/weapon/melee/baton/loaded/New() //this one starts with a cell pre-installed.
 	..()
 	bcell = new/obj/item/weapon/cell/device/weapon(src)
@@ -58,7 +90,7 @@
 		icon_state = "[initial(name)]"
 
 	if(icon_state == "[initial(name)]_active")
-		set_light(1.5, 1, lightcolor)
+		set_light(2, 1, lightcolor)
 	else
 		set_light(0)
 
@@ -206,3 +238,46 @@
 				user << "<span class='notice'>[src] already has a cell.</span>"
 		else
 			user << "<span class='notice'>This cell is not fitted for [src].</span>"
+
+/obj/item/weapon/melee/baton/get_description_interaction()
+	var/list/results = list()
+
+	if(bcell)
+		results += "[desc_panel_image("offhand")]to remove the weapon cell."
+	else
+		results += "[desc_panel_image("weapon cell")]to add a new weapon cell."
+
+	results += ..()
+
+	return results
+
+// Rare version of a baton that causes lesser lifeforms to really hate the user and attack them.
+/obj/item/weapon/melee/baton/shocker
+	name = "shocker"
+	desc = "A device that appears to arc electricity into a target to incapacitate or otherwise hurt them, similar to a stun baton.  It looks inefficent."
+	description_info = "Hitting a lesser lifeform with this while it is on will compel them to attack you above other nearby targets.  Otherwise \
+	it works like a regular stun baton, just less effectively."
+	icon_state = "shocker"
+	force = 10
+	throwforce = 5
+	agonyforce = 25 // Less efficent than a regular baton.
+	attack_verb = list("poked")
+
+/obj/item/weapon/melee/baton/shocker/apply_hit_effect(mob/living/target, mob/living/user, var/hit_zone)
+	..(target, user, hit_zone)
+	if(istype(target, /mob/living/simple_animal) && status)
+		var/mob/living/simple_animal/SA = target
+		SA.taunt(user)
+
+// Borg version, for the lost module.
+/obj/item/weapon/melee/baton/shocker/robot
+
+/obj/item/weapon/melee/baton/shocker/robot/attack_self(mob/user)
+	//try to find our power cell
+	var/mob/living/silicon/robot/R = loc
+	if (istype(R))
+		bcell = R.cell
+	return ..()
+
+/obj/item/weapon/melee/baton/shocker/robot/attackby(obj/item/weapon/W, mob/user)
+	return

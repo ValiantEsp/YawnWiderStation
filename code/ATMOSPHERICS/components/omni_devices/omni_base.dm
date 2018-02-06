@@ -3,7 +3,7 @@
 //--------------------------------------------
 /obj/machinery/atmospherics/omni
 	name = "omni device"
-	icon = 'icons/atmos/omni_devices.dmi'
+	icon = 'icons/atmos/omni_devices_vr.dmi' //VOREStation Edit - New Icon
 	icon_state = "base"
 	use_power = 1
 	initialize_directions = 0
@@ -82,23 +82,28 @@
 	if(!istype(W, /obj/item/weapon/wrench))
 		return ..()
 
-	var/int_pressure = 0
-	for(var/datum/omni_port/P in ports)
-		int_pressure += P.air.return_pressure()
-	var/datum/gas_mixture/env_air = loc.return_air()
-	if ((int_pressure - env_air.return_pressure()) > 2*ONE_ATMOSPHERE)
-		user << "<span class='warning'>You cannot unwrench \the [src], it is too exerted due to internal pressure.</span>"
+	if(!can_unwrench())
+		to_chat(user, "<span class='warning'>You cannot unwrench \the [src], it is too exerted due to internal pressure.</span>")
 		add_fingerprint(user)
 		return 1
-	user << "<span class='notice'>You begin to unfasten \the [src]...</span>"
-	playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
-	if(do_after(user, 40))
+	to_chat(user, "<span class='notice'>You begin to unfasten \the [src]...</span>")
+	playsound(src, W.usesound, 50, 1)
+	if(do_after(user, 40 * W.toolspeed))
 		user.visible_message( \
 			"<span class='notice'>\The [user] unfastens \the [src].</span>", \
 			"<span class='notice'>You have unfastened \the [src].</span>", \
 			"You hear a ratchet.")
 		new /obj/item/pipe(loc, make_from=src)
 		qdel(src)
+
+/obj/machinery/atmospherics/omni/can_unwrench()
+	var/int_pressure = 0
+	for(var/datum/omni_port/P in ports)
+		int_pressure += P.air.return_pressure()
+	var/datum/gas_mixture/env_air = loc.return_air()
+	if((int_pressure - env_air.return_pressure()) > 2*ONE_ATMOSPHERE)
+		return 0
+	return 1
 
 /obj/machinery/atmospherics/omni/attack_hand(user as mob)
 	if(..())
@@ -115,7 +120,7 @@
 	var/core_icon = null
 	if(istype(src, /obj/machinery/atmospherics/omni/mixer))
 		core_icon = "mixer"
-	else if(istype(src, /obj/machinery/atmospherics/omni/filter))
+	else if(istype(src, /obj/machinery/atmospherics/omni/atmos_filter))
 		core_icon = "filter"
 	else
 		return
@@ -239,10 +244,10 @@
 			P.node.disconnect(src)
 			qdel(P.network)
 			P.node = null
+	ports = null
+	. = ..()
 
-	..()
-
-/obj/machinery/atmospherics/omni/initialize()
+/obj/machinery/atmospherics/omni/atmos_init()
 	for(var/datum/omni_port/P in ports)
 		if(P.node || P.mode == 0)
 			continue

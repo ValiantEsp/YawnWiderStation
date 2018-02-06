@@ -80,7 +80,9 @@
 		if (NORTHEAST)  return "northeast"
 		if (SOUTHEAST)  return "southeast"
 		if (NORTHWEST)  return "northwest"
-		if (SOUTHWEST) return "southwest"
+		if (SOUTHWEST)  return "southwest"
+		if (UP)  return "up"
+		if (DOWN)  return "down"
 
 // Turns text into proper directions
 /proc/text2dir(direction)
@@ -146,7 +148,7 @@
 	if (rights & R_SOUNDS)      . += "[seperator]+SOUND"
 	if (rights & R_SPAWN)       . += "[seperator]+SPAWN"
 	if (rights & R_MOD)         . += "[seperator]+MODERATOR"
-	if (rights & R_MENTOR)      . += "[seperator]+MENTOR"
+	if (rights & R_EVENT)       . += "[seperator]+EVENT"
 	return .
 
 // Converts a hexadecimal color (e.g. #FF0050) to a list of numbers for red, green, and blue (e.g. list(255,0,80) ).

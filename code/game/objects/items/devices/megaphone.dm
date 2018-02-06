@@ -2,14 +2,13 @@
 	name = "megaphone"
 	desc = "A device used to project your voice. Loudly."
 	icon_state = "megaphone"
-	item_state = "radio"
 	w_class = ITEMSIZE_SMALL
 	flags = CONDUCT
 
 	var/spamcheck = 0
 	var/emagged = 0
 	var/insults = 0
-	var/list/insultmsg = list("FUCK EVERYONE!", "I'M A TATER!", "ALL SECURITY TO SHOOT ME ON SIGHT!", "I HAVE A BOMB!", "CAPTAIN IS A COMDOM!", "FOR THE SYNDICATE!")
+	var/list/insultmsg = list("FUCK EVERYONE!", "I'M A TERRORIST!", "ALL SECURITY TO SHOOT ME ON SIGHT!", "I HAVE A BOMB!", "CAPTAIN IS A COMDOM!", "GLORY TO ALMACH!")
 
 /obj/item/device/megaphone/attack_self(mob/living/user as mob)
 	if (user.client)

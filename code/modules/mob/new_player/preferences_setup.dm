@@ -30,7 +30,7 @@
 
 
 	backbag = rand(1,5)
-	pdachoice = rand(1,3)
+	pdachoice = rand(1,4)
 	age = rand(current_species.min_age, current_species.max_age)
 	b_type = RANDOM_BLOOD_TYPE
 	if(H)
@@ -196,12 +196,13 @@
 /datum/preferences/proc/dress_preview_mob(var/mob/living/carbon/human/mannequin)
 	var/update_icon = FALSE
 	copy_to(mannequin, TRUE)
+	sleep(1) //VOREStation Add - Not sure why this is required. Some race condition about robo manufacturers with tails.
 
 	var/datum/job/previewJob
 	if(equip_preview_mob)
 		// Determine what job is marked as 'High' priority, and dress them up as such.
 		if(job_civilian_low & ASSISTANT)
-			previewJob = job_master.GetJob("Assistant")
+			previewJob = job_master.GetJob(USELESS_JOB) //VOREStation Edit - Visitor not Assistant
 		else
 			for(var/datum/job/job in job_master.occupations)
 				var/job_flag
@@ -224,12 +225,14 @@
 			var/datum/gear/G = gear_datums[thing]
 			if(G)
 				var/permitted = 0
-				if(G.allowed_roles)
+				if(!G.allowed_roles)
+					permitted = 1
+				else if(!previewJob)
+					permitted = 0
+				else
 					for(var/job_name in G.allowed_roles)
 						if(previewJob.title == job_name)
 							permitted = 1
-				else
-					permitted = 1
 
 				if(G.whitelisted && (G.whitelisted != mannequin.species.name))
 					permitted = 0
@@ -249,14 +252,14 @@
 		update_icon = TRUE
 
 	if(update_icon)
-		mannequin.update_icons()
+		mannequin.update_icons_all()
 
 /datum/preferences/proc/update_preview_icon()
 	var/mob/living/carbon/human/dummy/mannequin/mannequin = get_mannequin(client_ckey)
 	mannequin.delete_inventory(TRUE)
 	dress_preview_mob(mannequin)
 
-	preview_icon = icon('icons/effects/effects.dmi', "nothing")
+	preview_icon = icon('icons/effects/128x48.dmi', bgstate)
 	preview_icon.Scale(48+32, 16+32)
 
 	mannequin.dir = NORTH

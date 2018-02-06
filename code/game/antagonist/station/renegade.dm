@@ -37,7 +37,7 @@ var/datum/antagonist/renegade/renegades
 		/obj/item/weapon/gun/projectile/automatic/mini_uzi,
 		/obj/item/weapon/gun/projectile/automatic/c20r,
 		/obj/item/weapon/gun/projectile/automatic/sts35,
-		/obj/item/weapon/gun/projectile/automatic/carbine,
+		/obj/item/weapon/gun/projectile/automatic/bullpup,
 		/obj/item/weapon/gun/projectile/automatic/wt550,
 		/obj/item/weapon/gun/projectile/automatic/z8,
 		/obj/item/weapon/gun/projectile/automatic/tommygun,
@@ -45,18 +45,22 @@ var/datum/antagonist/renegade/renegades
 		/obj/item/weapon/gun/projectile/sec/wood,
 		/obj/item/weapon/gun/projectile/silenced,
 		/obj/item/weapon/gun/projectile/pistol,
+		/obj/item/weapon/gun/projectile/p92x,
 		/obj/item/weapon/gun/projectile/revolver,
 		/obj/item/weapon/gun/projectile/derringer,
 		/obj/item/weapon/gun/projectile/shotgun/pump,
-		/obj/item/weapon/gun/projectile/shotgun/pump/rifle/mosin,
+		/obj/item/weapon/gun/projectile/shotgun/pump/rifle,
 		/obj/item/weapon/gun/projectile/shotgun/pump/combat,
 		/obj/item/weapon/gun/projectile/shotgun/doublebarrel,
 		/obj/item/weapon/gun/projectile/revolver/judge,
+		/obj/item/weapon/gun/projectile/revolver/lemat,
 		list(/obj/item/weapon/gun/projectile/shotgun/doublebarrel/pellet, /obj/item/weapon/gun/projectile/shotgun/doublebarrel/sawn),
 		list(/obj/item/weapon/gun/projectile/deagle, /obj/item/weapon/gun/projectile/deagle/gold, /obj/item/weapon/gun/projectile/deagle/camo),
 		list(/obj/item/weapon/gun/projectile/revolver/detective, /obj/item/weapon/gun/projectile/revolver/deckard),
 		list(/obj/item/weapon/gun/projectile/luger,/obj/item/weapon/gun/projectile/luger/brown)
 		)
+
+	can_use_aooc = FALSE // They aren't 'true' antags.
 
 /datum/antagonist/renegade/New()
 	..()

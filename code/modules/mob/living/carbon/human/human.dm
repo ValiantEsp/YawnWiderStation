@@ -2,13 +2,20 @@
 	name = "unknown"
 	real_name = "unknown"
 	voice_name = "unknown"
-	icon = 'icons/mob/human.dmi'
-	icon_state = "body_m_s"
+	icon = 'icons/effects/effects.dmi' //We have an ultra-complex update icons that overlays everything, don't load some stupid random male human
+	icon_state = "nothing"
 
 	var/list/hud_list[TOTAL_HUDS]
 	var/embedded_flag	  //To check if we've need to roll for damage on movement while an item is imbedded in us.
 	var/obj/item/weapon/rig/wearing_rig // This is very not good, but it's much much better than calling get_rig() every update_canmove() call.
 	var/last_push_time	//For human_attackhand.dm, keeps track of the last use of disarm
+
+	var/spitting = 0 //Spitting and spitting related things. Any human based ranged attacks, be it innate or added abilities.
+	var/spit_projectile = null //Projectile type.
+	var/spit_name = null //String
+	var/last_spit = 0 //Timestamp.
+
+	var/can_defib = 1	//Horrible damage (like beheadings) will prevent defibbing organics.
 
 /mob/living/carbon/human/New(var/new_loc, var/new_species = null)
 
@@ -30,21 +37,7 @@
 
 	nutrition = rand(200,400)
 
-	hud_list[HEALTH_HUD]      = new /image/hud_overlay('icons/mob/hud_med.dmi', src, "100")
-	hud_list[STATUS_HUD]      = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudhealthy")
-	//VOREStation Add - Custom HUDs
-	hud_list[HEALTH_VR_HUD]   = new /image/hud_overlay('icons/mob/hud_med_vr.dmi', src, "100")
-	hud_list[STATUS_R_HUD]    = new /image/hud_overlay('icons/mob/hud_vr.dmi', src, "hudhealthy")
-	hud_list[BACKUP_HUD]      = new /image/hud_overlay('icons/mob/hud_vr.dmi', src, "hudblank")
-	//VOREStation Add End
-	hud_list[LIFE_HUD]	      = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudhealthy")
-	hud_list[ID_HUD]          = new /image/hud_overlay(using_map.id_hud_icons, src, "hudunknown")
-	hud_list[WANTED_HUD]      = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[IMPLOYAL_HUD]    = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[IMPCHEM_HUD]     = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[IMPTRACK_HUD]    = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[SPECIALROLE_HUD] = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[STATUS_HUD_OOC]  = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudhealthy")
+	make_hud_overlays()
 
 	human_mob_list |= src
 	..()
@@ -63,6 +56,14 @@
 	human_mob_list -= src
 	for(var/organ in organs)
 		qdel(organ)
+
+	LAZYCLEARLIST(list_layers)
+	list_layers = null //Be free!
+	LAZYCLEARLIST(list_body)
+	list_body = null
+	LAZYCLEARLIST(list_huds)
+	list_huds = null
+	if(nif) qdel_null(nif)	//VOREStation Add
 	return ..()
 
 /mob/living/carbon/human/Stat()
@@ -83,6 +84,11 @@
 				stat("Tank Pressure", internal.air_contents.return_pressure())
 				stat("Distribution Pressure", internal.distribute_pressure)
 
+		var/obj/item/organ/internal/xenos/plasmavessel/P = internal_organs_by_name[O_PLASMA] //Xenomorphs. Mech.
+		if(P)
+			stat(null, "Phoron Stored: [P.stored_plasma]/[P.max_plasma]")
+
+
 		if(back && istype(back,/obj/item/weapon/rig))
 			var/obj/item/weapon/rig/suit = back
 			var/cell_status = "ERROR"
@@ -93,6 +99,7 @@
 			if(mind.changeling)
 				stat("Chemical Storage", mind.changeling.chem_charges)
 				stat("Genetic Damage Time", mind.changeling.geneticdamage)
+				stat("Re-Adaptations", "[mind.changeling.readapts]/[mind.changeling.max_readapts]")
 
 /mob/living/carbon/human/ex_act(severity)
 	if(!blinded)
@@ -251,6 +258,7 @@
 
 // called when something steps onto a human
 // this handles mulebots and vehicles
+// and now mobs on fire
 /mob/living/carbon/human/Crossed(var/atom/movable/AM)
 	if(istype(AM, /mob/living/bot/mulebot))
 		var/mob/living/bot/mulebot/MB = AM
@@ -260,12 +268,14 @@
 		var/obj/vehicle/V = AM
 		V.RunOver(src)
 
+	spread_fire(AM)
+
 // Get rank from ID, ID inside PDA, PDA, ID in wallet, etc.
 /mob/living/carbon/human/proc/get_authentification_rank(var/if_no_id = "No id", var/if_no_job = "No job")
 	var/obj/item/device/pda/pda = wear_id
 	if (istype(pda))
 		if (pda.id)
-			return pda.id.rank
+			return pda.id.rank ? pda.id.rank : if_no_job
 		else
 			return pda.ownrank
 	else
@@ -315,7 +325,7 @@
 		return get_id_name("Unknown")		//Likewise for hats
 	var/face_name = get_face_name()
 	var/id_name = get_id_name("")
-	if(id_name && (id_name != face_name))
+	if((face_name == "Unknown") && id_name && (id_name != face_name))
 		return "[face_name] (as [id_name])"
 	return face_name
 
@@ -424,7 +434,7 @@
 												U.handle_regular_hud_updates()
 
 			if(!modified)
-				usr << "\red Unable to locate a data core entry for this person."
+				usr << "<font color='red'>Unable to locate a data core entry for this person.</font>"
 
 	if (href_list["secrecord"])
 		if(hasHUD(usr,"security"))
@@ -454,7 +464,7 @@
 								read = 1
 
 			if(!read)
-				usr << "\red Unable to locate a data core entry for this person."
+				usr << "<font color='red'>Unable to locate a data core entry for this person.</font>"
 
 	if (href_list["secrecordComment"])
 		if(hasHUD(usr,"security"))
@@ -484,7 +494,7 @@
 								usr << "<a href='?src=\ref[src];secrecordadd=`'>\[Add comment\]</a>"
 
 			if(!read)
-				usr << "\red Unable to locate a data core entry for this person."
+				usr << "<font color='red'>Unable to locate a data core entry for this person.</font>"
 
 	if (href_list["secrecordadd"])
 		if(hasHUD(usr,"security"))
@@ -552,7 +562,7 @@
 											U.handle_regular_hud_updates()
 
 			if(!modified)
-				usr << "\red Unable to locate a data core entry for this person."
+				usr << "<font color='red'>Unable to locate a data core entry for this person.</font>"
 
 	if (href_list["medrecord"])
 		if(hasHUD(usr,"medical"))
@@ -583,7 +593,7 @@
 								read = 1
 
 			if(!read)
-				usr << "\red Unable to locate a data core entry for this person."
+				usr << "<font color='red'>Unable to locate a data core entry for this person.</font>"
 
 	if (href_list["medrecordComment"])
 		if(hasHUD(usr,"medical"))
@@ -613,7 +623,7 @@
 								usr << "<a href='?src=\ref[src];medrecordadd=`'>\[Add comment\]</a>"
 
 			if(!read)
-				usr << "\red Unable to locate a data core entry for this person."
+				usr << "<font color='red'>Unable to locate a data core entry for this person.</font>"
 
 	if (href_list["medrecordadd"])
 		if(hasHUD(usr,"medical"))
@@ -678,50 +688,37 @@
 ///Returns a number between -1 to 2
 /mob/living/carbon/human/eyecheck()
 
-	var/obj/item/organ/I = internal_organs_by_name[O_EYES]
-	if(!I || I.status & (ORGAN_CUT_AWAY|ORGAN_DESTROYED))
-		return 2
+	var/obj/item/organ/internal/eyes/I
 
-	var/number = 0
-	if(istype(src.head, /obj/item/clothing/head/welding))
-		if(!src.head:up)
-			number += 2
-	if(istype(back, /obj/item/weapon/rig))
-		var/obj/item/weapon/rig/O = back
-		if(O.helmet && O.helmet == head && (O.helmet.body_parts_covered & EYES))
-			number += 2
-	if(istype(src.head, /obj/item/clothing/head/helmet/space))
-		number += 2
-	if(istype(src.head, /obj/item/clothing/head/helmet/space/emergency))
-		number -= 2
-	if(istype(src.glasses, /obj/item/clothing/glasses/thermal))
-		var/obj/item/clothing/glasses/thermal/T = src.glasses
-		if(T.active)
-			number -= 1
-	if(istype(src.glasses, /obj/item/clothing/glasses/night))
-		var/obj/item/clothing/glasses/night/N = src.glasses
-		if(N.active)
-			number -= 1
-	if(istype(src.glasses, /obj/item/clothing/glasses/sunglasses))
-		if(istype(src.glasses, /obj/item/clothing/glasses/sunglasses/sechud/aviator))
-			var/obj/item/clothing/glasses/sunglasses/sechud/aviator/S = src.glasses
-			if(!S.active)
-				number += 1
-		else if(istype(src.glasses, /obj/item/clothing/glasses/sunglasses/medhud/aviator))
-			number += 0
-		else
-			number += 1
-	if(istype(src.glasses, /obj/item/clothing/glasses/welding))
-		var/obj/item/clothing/glasses/welding/W = src.glasses
-		if(!W.up)
-			number += 2
-	//VOREStation Add - Omnihud Handling
-	if(istype(src.glasses, /obj/item/clothing/glasses/omnihud))
-		var/obj/item/clothing/glasses/omnihud/omn = src.glasses
-		number += omn.flash_prot
-		omn.flashed()
-	//VOREStation Add End
+	if(internal_organs_by_name[O_EYES]) // Eyes are fucked, not a 'weak point'.
+		I = internal_organs_by_name[O_EYES]
+		if(I.is_broken())
+			return FLASH_PROTECTION_MAJOR
+	else // They can't be flashed if they don't have eyes.
+		return FLASH_PROTECTION_MAJOR
+
+	var/number = get_equipment_flash_protection()
+	number = I.get_total_protection(number)
+	I.additional_flash_effects(number)
 	return number
+
+#define add_clothing_protection(A)	\
+	var/obj/item/clothing/C = A; \
+	flash_protection += C.flash_protection; \
+
+/mob/living/carbon/human/proc/get_equipment_flash_protection()
+	var/flash_protection = 0
+
+	if(istype(src.head, /obj/item/clothing/head))
+		add_clothing_protection(head)
+	if(istype(src.glasses, /obj/item/clothing/glasses))
+		add_clothing_protection(glasses)
+	if(istype(src.wear_mask, /obj/item/clothing/mask))
+		add_clothing_protection(wear_mask)
+
+	return flash_protection
+
+#undef add_clothing_protection
 
 //Used by various things that knock people out by applying blunt trauma to the head.
 //Checks that the species has a "head" (brain containing organ) and that hit_zone refers to it.
@@ -776,7 +773,7 @@
 
 /mob/living/carbon/human/proc/play_xylophone()
 	if(!src.xylophone)
-		visible_message("\red \The [src] begins playing \his ribcage like a xylophone. It's quite spooky.","\blue You begin to play a spooky refrain on your ribcage.","\red You hear a spooky xylophone melody.")
+		visible_message("<font color='red'>\The [src] begins playing \his ribcage like a xylophone. It's quite spooky.</font>","<font color='blue'>You begin to play a spooky refrain on your ribcage.</font>","<font color='red'>You hear a spooky xylophone melody.</font>")
 		var/song = pick('sound/effects/xylophone1.ogg','sound/effects/xylophone2.ogg','sound/effects/xylophone3.ogg')
 		playsound(loc, song, 50, 1, -1)
 		xylophone = 1
@@ -867,7 +864,7 @@
 	regenerate_icons()
 	check_dna()
 
-	visible_message("\blue \The [src] morphs and changes [get_visible_gender() == MALE ? "his" : get_visible_gender() == FEMALE ? "her" : "their"] appearance!", "\blue You change your appearance!", "\red Oh, god!  What the hell was that?  It sounded like flesh getting squished and bone ground into a different shape!")
+	visible_message("<font color='blue'>\The [src] morphs and changes [get_visible_gender() == MALE ? "his" : get_visible_gender() == FEMALE ? "her" : "their"] appearance!</font>", "<font color='blue'>You change your appearance!</font>", "<font color='red'>Oh, god!  What the hell was that?  It sounded like flesh getting squished and bone ground into a different shape!</font>")
 
 /mob/living/carbon/human/proc/remotesay()
 	set name = "Project mind"
@@ -890,10 +887,10 @@
 
 	var/say = sanitize(input("What do you wish to say"))
 	if(mRemotetalk in target.mutations)
-		target.show_message("\blue You hear [src.real_name]'s voice: [say]")
+		target.show_message("<font color='blue'> You hear [src.real_name]'s voice: [say]</font>")
 	else
-		target.show_message("\blue You hear a voice that seems to echo around the room: [say]")
-	usr.show_message("\blue You project your mind into [target.real_name]: [say]")
+		target.show_message("<font color='blue'> You hear a voice that seems to echo around the room: [say]</font>")
+	usr.show_message("<font color='blue'> You project your mind into [target.real_name]: [say]</font>")
 	log_say("[key_name(usr)] sent a telepathic message to [key_name(target)]: [say]")
 	for(var/mob/observer/dead/G in world)
 		G.show_message("<i>Telepathic message from <b>[src]</b> to <b>[target]</b>: [say]</i>")
@@ -962,6 +959,14 @@
 					if(H.brainmob.mind)
 						H.brainmob.mind.transfer_to(src)
 						qdel(H)
+
+	// Vorestation Addition - reapply markings/appearance from prefs for player mobs
+	if(client) //just to be sure
+		client.prefs.copy_to(src)
+		if(dna)
+			dna.ResetUIFrom(src)
+			sync_organ_dna()
+	// end vorestation addition
 
 	for (var/ID in virus2)
 		var/datum/disease2/disease/V = virus2[ID]
@@ -1035,7 +1040,8 @@
 	gunshot_residue = null
 	if(clean_feet && !shoes && istype(feet_blood_DNA, /list) && feet_blood_DNA.len)
 		feet_blood_color = null
-		qdel(feet_blood_DNA)
+		feet_blood_DNA.Cut()
+		feet_blood_DNA = null
 		update_inv_shoes(1)
 		return 1
 
@@ -1071,7 +1077,7 @@
 						"<span class='warning'>A spike of pain jolts your [organ.name] as you bump [O] inside.</span>", \
 						"<span class='warning'>Your movement jostles [O] in your [organ.name] painfully.</span>", \
 						"<span class='warning'>Your movement jostles [O] in your [organ.name] painfully.</span>")
-					src << msg
+					custom_pain(msg, 40)
 
 				organ.take_damage(rand(1,3), 0, 0)
 				if(!(organ.robotic >= ORGAN_ROBOT) && (should_have_organ(O_HEART))) //There is no blood in protheses.
@@ -1142,7 +1148,7 @@
 	if(species.default_language)
 		add_language(species.default_language)
 
-	if(species.base_color && default_colour)
+	if(species.base_color) //VOREStation Edit - Always give them a basse color
 		//Apply colour.
 		r_skin = hex2num(copytext(species.base_color,2,4))
 		g_skin = hex2num(copytext(species.base_color,4,6))
@@ -1175,6 +1181,7 @@
 			vessel.remove_reagent("blood", vessel.total_volume - species.blood_volume)
 			vessel.maximum_volume = species.blood_volume
 		fixblood()
+		species.update_attack_types() //VOREStation Edit - Required for any trait that updates unarmed_types in setup.
 
 	// Rebuild the HUD. If they aren't logged in then login() should reinstantiate it for them.
 	if(client && client.screen)
@@ -1184,6 +1191,8 @@
 		hud_used = new /datum/hud(src)
 
 	if(species)
+		//if(mind) //VOREStation Removal
+			//apply_traits() //VOREStation Removal
 		return 1
 	else
 		return 0
@@ -1243,7 +1252,7 @@
 		W.message = message
 		W.add_fingerprint(src)
 
-/mob/living/carbon/human/can_inject(var/mob/user, var/error_msg, var/target_zone)
+/mob/living/carbon/human/can_inject(var/mob/user, var/error_msg, var/target_zone, var/ignore_thickness = FALSE)
 	. = 1
 
 	if(!target_zone)
@@ -1263,10 +1272,10 @@
 	else
 		switch(target_zone)
 			if(BP_HEAD)
-				if(head && head.item_flags & THICKMATERIAL)
+				if(head && (head.item_flags & THICKMATERIAL) && !ignore_thickness)
 					. = 0
 			else
-				if(wear_suit && wear_suit.item_flags & THICKMATERIAL)
+				if(wear_suit && (wear_suit.item_flags & THICKMATERIAL) && !ignore_thickness)
 					. = 0
 	if(!. && error_msg && user)
 		if(!fail_msg)
@@ -1412,6 +1421,8 @@
 /mob/living/carbon/human/Check_Shoegrip()
 	if(shoes && (shoes.item_flags & NOSLIP) && istype(shoes, /obj/item/clothing/shoes/magboots))  //magboots + dense_object = no floating
 		return 1
+	if(flying) //VOREStation Edit. Checks to see if they have wings and are flying.
+		return 1 //VOREStation Edit.
 	return 0
 
 //Puts the item into our active hand if possible. returns 1 on success.
@@ -1473,6 +1484,7 @@
 
 	if(stat) return
 	var/datum/category_group/underwear/UWC = input(usr, "Choose underwear:", "Show/hide underwear") as null|anything in global_underwear.categories
+	if(!UWC) return
 	var/datum/category_item/underwear/UWI = all_underwear[UWC.name]
 	if(!UWI || UWI.name == "None")
 		src << "<span class='notice'>You do not have [UWC.gender==PLURAL ? "[UWC.display_name]" : "\a [UWC.display_name]"].</span>"
@@ -1507,12 +1519,31 @@
 /mob/living/carbon/human/can_feel_pain(var/obj/item/organ/check_organ)
 	if(isSynthetic())
 		return 0
+	for(var/datum/modifier/M in modifiers)
+		if(M.pain_immunity == TRUE)
+			return 0
 	if(check_organ)
 		if(!istype(check_organ))
 			return 0
-		return check_organ.can_feel_pain()
+		return check_organ.organ_can_feel_pain()
 	return !(species.flags & NO_PAIN)
+
+/mob/living/carbon/human/is_sentient()
+	if(get_FBP_type() == FBP_DRONE)
+		return FALSE
+	return ..()
 
 /mob/living/carbon/human/is_muzzled()
 	return (wear_mask && (istype(wear_mask, /obj/item/clothing/mask/muzzle) || istype(src.wear_mask, /obj/item/weapon/grenade)))
 
+/mob/living/carbon/human/get_fire_icon_state()
+	return species.fire_icon_state
+
+// Called by job_controller.  Makes drones start with a permit, might be useful for other people later too.
+/mob/living/carbon/human/equip_post_job()	//Drone Permit moved to equip_survival_gear()
+	var/braintype = get_FBP_type()
+	if(braintype == FBP_DRONE)
+		var/turf/T = get_turf(src)
+		var/obj/item/clothing/accessory/permit/drone/permit = new(T)
+		permit.set_name(real_name)
+		equip_to_appropriate_slot(permit) // If for some reason it can't find room, it'll still be on the floor.

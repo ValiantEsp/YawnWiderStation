@@ -1,15 +1,21 @@
 //Dat AI vore yo
-#define HOLO_ORIGINAL_COLOR null //This seems to work for some reason? And look better?
+#define HOLO_ORIGINAL_COLOR null //Original hologram color: "#7db4e1"
 #define HOLO_HARDLIGHT_COLOR "#d97de0"
-#define HOLO_ORIGINAL_ALPHA 128
-#define HOLO_HARDLIGHT_ALPHA 210
+#define HOLO_ORIGINAL_ALPHA 120
+#define HOLO_HARDLIGHT_ALPHA 200
 
 /obj/effect/overlay/aiholo
 	var/mob/living/bellied //Only belly one person at a time. No huge vore-organs setup for AIs.
+	var/mob/living/silicon/ai/master //This will receive the AI controlling the Hologram. For referencing purposes.
 	pass_flags = PASSTABLE | PASSGLASS | PASSGRILLE
 	alpha = HOLO_ORIGINAL_ALPHA //Half alpha here rather than in the icon so we can toggle it easily.
 	color = HOLO_ORIGINAL_COLOR //This is the blue from icons.dm that it was before.
 	desc = "A hologram representing an AI persona."
+
+/obj/effect/overlay/aiholo/Destroy()
+	drop_prey()
+	walk(src, 0) // Because we might have called walk_to, we must stop the walk loop or BYOND keeps an internal reference to us forever.
+	return ..()
 
 /obj/effect/overlay/aiholo/proc/get_prey(var/mob/living/prey)
 	if(bellied) return
@@ -34,16 +40,12 @@
 
 	desc = "[initial(desc)]"
 	pass_flags = initial(pass_flags)
-	color = initial(color)
-	alpha = initial(alpha)
-
-/obj/effect/overlay/aiholo/Destroy()
-	drop_prey()
-	..()
+	color = HOLO_ORIGINAL_COLOR
+	alpha = HOLO_ORIGINAL_ALPHA
 
 /mob/living/silicon/ai/verb/holo_nom()
 	set name = "Hardlight Nom"
-	set category = "Vore"
+	set category = "AI Commands"
 	set desc = "Wrap up a person in hardlight holograms."
 
 	// Wrong state
@@ -91,3 +93,16 @@
 	if(user.client)
 		src.examine(user)
 	return
+
+//This can go here with all the references.
+/obj/effect/overlay/aiholo/examine(mob/user)
+	. = ..(user)
+
+	var/msg = "\n"
+	
+	//If you need an ooc_notes copy paste, this is NOT the one to use.
+	var/ooc_notes = master.ooc_notes
+	if(ooc_notes)
+		msg += "<span class = 'deptradio'>OOC Notes:</span> <a href='?src=\ref[master];ooc_notes=1'>\[View\]</a>\n"
+
+	user << msg

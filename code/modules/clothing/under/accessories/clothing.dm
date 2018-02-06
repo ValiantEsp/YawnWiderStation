@@ -3,27 +3,27 @@
 	desc = "Slick black suit vest."
 	icon_state = "det_vest"
 
-/obj/item/clothing/accessory/tan_jacket
+/obj/item/clothing/accessory/jacket/
 	name = "tan suit jacket"
 	desc = "Cozy suit jacket."
 	icon_state = "tan_jacket"
 
-/obj/item/clothing/accessory/charcoal_jacket
+/obj/item/clothing/accessory/jacket/charcoal
 	name = "charcoal suit jacket"
 	desc = "Strict suit jacket."
 	icon_state = "charcoal_jacket"
 
-/obj/item/clothing/accessory/navy_jacket
+/obj/item/clothing/accessory/jacket/navy
 	name = "navy suit jacket"
 	desc = "Official suit jacket."
 	icon_state = "navy_jacket"
 
-/obj/item/clothing/accessory/burgundy_jacket
+/obj/item/clothing/accessory/jacket/burgundy
 	name = "burgundy suit jacket"
 	desc = "Expensive suit jacket."
 	icon_state = "burgundy_jacket"
 
-/obj/item/clothing/accessory/checkered_jacket
+/obj/item/clothing/accessory/jacket/checkered
 	name = "checkered suit jacket"
 	desc = "Lucky suit jacket."
 	icon_state = "checkered_jacket"
@@ -115,10 +115,67 @@
 	icon_state = "cargoponcho"
 	item_state = "cargoponcho"
 
+/*
+ * Cloak
+ */
+/obj/item/clothing/accessory/poncho/roles/cloak
+	name = "brown cloak"
+	desc = "An elaborate brown cloak."
+	icon_state = "qmcloak"
+	item_state = "qmcloak"
+	body_parts_covered = null
+
+/obj/item/clothing/accessory/poncho/roles/cloak/ce
+	name = "chief engineer's cloak"
+	desc = "An elaborate cloak worn by the chief engineer."
+	icon_state = "cecloak"
+	item_state = "cecloak"
+
+/obj/item/clothing/accessory/poncho/roles/cloak/cmo
+	name = "chief medical officer's cloak"
+	desc = "An elaborate cloak meant to be worn by the chief medical officer."
+	icon_state = "cmocloak"
+	item_state = "cmocloak"
+
+/obj/item/clothing/accessory/poncho/roles/cloak/hop
+	name = "head of personnel's cloak"
+	desc = "An elaborate cloak meant to be worn by the head of personnel."
+	icon_state = "hopcloak"
+	item_state = "hopcloak"
+
+/obj/item/clothing/accessory/poncho/roles/cloak/rd
+	name = "research director's cloak"
+	desc = "An elaborate cloak meant to be worn by the research director."
+	icon_state = "rdcloak"
+	item_state = "rdcloak"
+
+/obj/item/clothing/accessory/poncho/roles/cloak/qm
+	name = "quartermaster's cloak"
+	desc = "An elaborate cloak meant to be worn by the quartermaster."
+	icon_state = "qmcloak"
+	item_state = "qmcloak"
+
+/obj/item/clothing/accessory/poncho/roles/cloak/hos
+	name = "head of security's cloak"
+	desc = "An elaborate cloak meant to be worn by the head of security."
+	icon_state = "hoscloak"
+	item_state = "hoscloak"
+
+/obj/item/clothing/accessory/poncho/roles/cloak/captain
+	name = "colony director's cloak"
+	desc = "An elaborate cloak meant to be worn by the colony director."
+	icon_state = "capcloak"
+	item_state = "capcloak"
+
 /obj/item/clothing/accessory/hawaii
 	name = "flower-pattern shirt"
 	desc = "You probably need some welder googles to look at this."
 	icon_state = "hawaii"
+	armor = list(melee = 0, bullet = 0, laser = 0,energy = 0, bomb = 0, bio = 0, rad = 0)
+	slot_flags = SLOT_OCLOTHING | SLOT_TIE
+	body_parts_covered = UPPER_TORSO|LOWER_TORSO
+	siemens_coefficient = 0.9
+	w_class = ITEMSIZE_NORMAL
 
 /obj/item/clothing/accessory/hawaii/red
 	icon_state = "hawaii2"
@@ -173,3 +230,55 @@
 /obj/item/clothing/accessory/wcoat/swvest/red
 	name = "red sweatervest"
 	icon_state = "sweatervest_red"
+
+//Sweaters.
+
+/obj/item/clothing/accessory/sweater
+	name = "sweater"
+	desc = "A warm knit sweater."
+	icon_override = 'icons/mob/ties.dmi'
+	icon_state = "sweater"
+	slot_flags = SLOT_OCLOTHING | SLOT_TIE
+	body_parts_covered = UPPER_TORSO|LOWER_TORSO|ARMS
+	siemens_coefficient = 0.9
+	w_class = ITEMSIZE_NORMAL
+
+/obj/item/clothing/accessory/sweater/pink
+	name = "pink sweater"
+	desc = "A warm knit sweater. This one's pink in color."
+	icon_state = "sweater_pink"
+
+/obj/item/clothing/accessory/sweater/mint
+	name = "mint sweater"
+	desc = "A warm knit sweater. This one has a minty tint to it."
+	icon_state = "sweater_mint"
+
+/obj/item/clothing/accessory/sweater/blue
+	name = "blue sweater"
+	desc = "A warm knit sweater. This one's colored in a lighter blue."
+	icon_state = "sweater_blue"
+
+/obj/item/clothing/accessory/sweater/heart
+	name = "heart sweater"
+	desc = "A warm knit sweater. This one's colored in a lighter blue, and has a big pink heart right in the center!"
+	icon_state = "sweater_blueheart"
+
+/obj/item/clothing/accessory/sweater/nt
+	name = "dark blue sweater"
+	desc = "A warm knit sweater. This one's a darker blue."
+	icon_state = "sweater_nt"
+
+/obj/item/clothing/accessory/sweater/keyhole
+	name = "keyhole sweater"
+	desc = "A lavender sweater with an open chest."
+	icon_state = "keyholesweater"
+
+/obj/item/clothing/accessory/sweater/blackneck
+	name = "black turtleneck"
+	desc = "A tight turtleneck, entirely black in coloration."
+	icon_state = "turtleneck_black"
+
+/obj/item/clothing/accessory/sweater/winterneck
+	name = "Christmas turtleneck"
+	desc = "A really cheesy holiday sweater, it actually kinda itches."
+	icon_state = "turtleneck_winterred"

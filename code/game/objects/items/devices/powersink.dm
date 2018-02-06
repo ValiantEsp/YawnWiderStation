@@ -4,7 +4,6 @@
 	name = "power sink"
 	desc = "A nulling power sink which drains energy from electrical systems."
 	icon_state = "powersink0"
-	item_state = "electronic"
 	w_class = ITEMSIZE_LARGE
 	flags = CONDUCT
 	throwforce = 5
@@ -27,7 +26,7 @@
 
 /obj/item/device/powersink/Destroy()
 	processing_objects.Remove(src)
-	processing_power_items.Remove(src)
+	STOP_PROCESSING_POWER_OBJECT(src)
 	..()
 
 /obj/item/device/powersink/attackby(var/obj/item/I, var/mob/user)
@@ -43,6 +42,7 @@
 					anchored = 1
 					mode = 1
 					src.visible_message("<span class='notice'>[user] attaches [src] to the cable!</span>")
+					playsound(src, I.usesound, 50, 1)
 					return
 			else
 				user << "Device must be placed over an exposed cable to attach to it."
@@ -50,11 +50,12 @@
 		else
 			if (mode == 2)
 				processing_objects.Remove(src) // Now the power sink actually stops draining the station's power if you unhook it. --NeoFite
-				processing_power_items.Remove(src)
+				STOP_PROCESSING_POWER_OBJECT(src)
 			anchored = 0
 			mode = 0
 			src.visible_message("<span class='notice'>[user] detaches [src] from the cable!</span>")
 			set_light(0)
+			playsound(src, I.usesound, 50, 1)
 			icon_state = "powersink0"
 
 			return
@@ -73,14 +74,14 @@
 			mode = 2
 			icon_state = "powersink1"
 			processing_objects.Add(src)
-			processing_power_items.Add(src)
+			START_PROCESSING_POWER_OBJECT(src)
 		if(2)  //This switch option wasn't originally included. It exists now. --NeoFite
 			src.visible_message("<span class='notice'>[user] deactivates [src]!</span>")
 			mode = 1
 			set_light(0)
 			icon_state = "powersink0"
 			processing_objects.Remove(src)
-			processing_power_items.Remove(src)
+			STOP_PROCESSING_POWER_OBJECT(src)
 
 /obj/item/device/powersink/pwr_drain()
 	if(!attached)

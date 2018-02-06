@@ -1,8 +1,3 @@
-#define FULLSCREEN_LAYER 18
-#define DAMAGE_LAYER FULLSCREEN_LAYER + 0.1
-#define BLIND_LAYER DAMAGE_LAYER + 0.1
-#define CRIT_LAYER BLIND_LAYER + 0.1
-
 /mob
 	var/list/screens = list()
 
@@ -20,7 +15,7 @@
             return null
 
     if(!screen)
-        screen = PoolOrNew(type)
+        screen = new type()
 
     screen.icon_state = "[initial(screen.icon_state)][severity]"
     screen.severity = severity
@@ -68,6 +63,7 @@
 	icon_state = "default"
 	screen_loc = "CENTER-7,CENTER-7"
 	layer = FULLSCREEN_LAYER
+	plane = PLANE_FULLSCREEN
 	mouse_opacity = 0
 	var/severity = 0
 

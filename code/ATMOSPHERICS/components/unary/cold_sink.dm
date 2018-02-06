@@ -4,7 +4,7 @@
 /obj/machinery/atmospherics/unary/freezer
 	name = "gas cooling system"
 	desc = "Cools gas when connected to pipe network"
-	icon = 'icons/obj/Cryogenic2.dmi'
+	icon = 'icons/obj/Cryogenic2_vr.dmi'
 	icon_state = "freezer_0"
 	density = 1
 	anchored = 1
@@ -23,7 +23,6 @@
 
 /obj/machinery/atmospherics/unary/freezer/New()
 	..()
-	initialize_directions = dir
 	component_parts = list()
 	component_parts += new /obj/item/weapon/stock_parts/matter_bin(src)
 	component_parts += new /obj/item/weapon/stock_parts/capacitor(src)
@@ -32,7 +31,7 @@
 	component_parts += new /obj/item/stack/cable_coil(src, 2)
 	RefreshParts()
 
-/obj/machinery/atmospherics/unary/freezer/initialize()
+/obj/machinery/atmospherics/unary/freezer/atmos_init()
 	if(node)
 		return
 
@@ -162,7 +161,7 @@
 		if(istype(P, /obj/item/weapon/stock_parts/matter_bin))
 			bin_rating += P.rating
 
-	power_rating = initial(power_rating) * cap_rating / 2			//more powerful
+	max_power_rating = initial(max_power_rating) * cap_rating / 2			//more powerful
 	heatsink_temperature = initial(heatsink_temperature) / ((manip_rating + bin_rating) / 2)	//more efficient
 	air_contents.volume = max(initial(internal_volume) - 200, 0) + 200 * bin_rating
 	set_power_level(power_setting)

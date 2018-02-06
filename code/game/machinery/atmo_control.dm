@@ -56,7 +56,7 @@
 				signal.data["nitrogen"] = 0
 				signal.data["carbon_dioxide"] = 0
 		signal.data["sigtype"]="status"
-		radio_connection.post_signal(src, signal, filter = RADIO_ATMOSIA)
+		radio_connection.post_signal(src, signal, radio_filter = RADIO_ATMOSIA)
 
 /obj/machinery/air_sensor/proc/set_frequency(new_frequency)
 	radio_controller.remove_object(src, frequency)
@@ -72,7 +72,6 @@ obj/machinery/air_sensor/Destroy()
 	..()
 
 /obj/machinery/computer/general_air_control
-	icon = 'icons/obj/computer.dmi'
 	icon_keyboard = "atmos_key"
 	icon_screen = "tank"
 	name = "Computer"
@@ -240,7 +239,7 @@ obj/machinery/computer/general_air_control/Destroy()
 		. = 1
 
 	signal.data["sigtype"]="command"
-	radio_connection.post_signal(src, signal, filter = RADIO_ATMOSIA)
+	radio_connection.post_signal(src, signal, radio_filter = RADIO_ATMOSIA)
 
 /obj/machinery/computer/general_air_control/supermatter_core
 	icon = 'icons/obj/computer.dmi'
@@ -350,7 +349,7 @@ obj/machinery/computer/general_air_control/Destroy()
 		. = 1
 
 	signal.data["sigtype"]="command"
-	radio_connection.post_signal(src, signal, filter = RADIO_ATMOSIA)
+	radio_connection.post_signal(src, signal, radio_filter = RADIO_ATMOSIA)
 
 /obj/machinery/computer/general_air_control/fuel_injection
 	icon = 'icons/obj/computer.dmi'
@@ -387,7 +386,7 @@ obj/machinery/computer/general_air_control/Destroy()
 			"sigtype"="command"
 		)
 
-		radio_connection.post_signal(src, signal, filter = RADIO_ATMOSIA)
+		radio_connection.post_signal(src, signal, radio_filter = RADIO_ATMOSIA)
 
 	..()
 
@@ -447,7 +446,7 @@ obj/machinery/computer/general_air_control/Destroy()
 			"status" = 1,
 			"sigtype"="command"
 		)
-		radio_connection.post_signal(src, signal, filter = RADIO_ATMOSIA)
+		radio_connection.post_signal(src, signal, radio_filter = RADIO_ATMOSIA)
 
 	if(href_list["toggle_automation"])
 		automation = !automation
@@ -466,7 +465,7 @@ obj/machinery/computer/general_air_control/Destroy()
 			"sigtype"="command"
 		)
 
-		radio_connection.post_signal(src, signal, filter = RADIO_ATMOSIA)
+		radio_connection.post_signal(src, signal, radio_filter = RADIO_ATMOSIA)
 
 	if(href_list["injection"])
 		if(!radio_connection)
@@ -481,4 +480,4 @@ obj/machinery/computer/general_air_control/Destroy()
 			"sigtype"="command"
 		)
 
-		radio_connection.post_signal(src, signal, filter = RADIO_ATMOSIA)
+		radio_connection.post_signal(src, signal, radio_filter = RADIO_ATMOSIA)

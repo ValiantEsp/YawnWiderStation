@@ -66,10 +66,31 @@
 	containername = "Surgery crate"
 	access = access_medical
 
+/datum/supply_packs/med/deathalarm
+	name = "Death Alarm crate"
+	contains = list(
+			/obj/item/weapon/storage/box/cdeathalarm_kit,
+			/obj/item/weapon/storage/box/cdeathalarm_kit
+			)
+	cost = 40
+	containertype = "/obj/structure/closet/crate/secure"
+	containername = "Death Alarm crate"
+	access = access_medical
+
+/datum/supply_packs/med/clotting
+	name = "Clotting Medicine crate"
+	contains = list(
+			/obj/item/weapon/storage/firstaid/clotting
+			)
+	cost = 100
+	containertype = "/obj/structure/closet/crate/secure"
+	containername = "Clotting Medicine crate"
+	access = access_medical
+
 /datum/supply_packs/med/sterile
 	name = "Sterile equipment crate"
 	contains = list(
-			/obj/item/clothing/under/rank/medical/green = 2,
+			/obj/item/clothing/under/rank/medical/scrubs/green = 2,
 			/obj/item/clothing/head/surgery/green = 2,
 			/obj/item/weapon/storage/box/masks,
 			/obj/item/weapon/storage/box/gloves,
@@ -98,7 +119,7 @@
 			/obj/item/weapon/storage/belt/medical,
 			/obj/item/device/radio/headset/heads/cmo,
 			/obj/item/clothing/under/rank/chief_medical_officer,
-			/obj/item/weapon/reagent_containers/hypospray,
+			/obj/item/weapon/reagent_containers/hypospray/vial,
 			/obj/item/clothing/accessory/stethoscope,
 			/obj/item/clothing/glasses/hud/health,
 			/obj/item/clothing/suit/storage/toggle/labcoat/cmo,
@@ -106,7 +127,7 @@
 			/obj/item/clothing/mask/surgical,
 			/obj/item/clothing/shoes/white,
 			/obj/item/weapon/cartridge/cmo,
-			/obj/item/clothing/gloves/latex,
+			/obj/item/clothing/gloves/sterile/latex,
 			/obj/item/device/healthanalyzer,
 			/obj/item/device/flashlight/pen,
 			/obj/item/weapon/reagent_containers/syringe
@@ -129,7 +150,7 @@
 			/obj/item/weapon/storage/firstaid/adv,
 			/obj/item/clothing/shoes/white,
 			/obj/item/weapon/cartridge/medical,
-			/obj/item/clothing/gloves/latex,
+			/obj/item/clothing/gloves/sterile/latex,
 			/obj/item/device/healthanalyzer,
 			/obj/item/device/flashlight/pen,
 			/obj/item/weapon/reagent_containers/syringe
@@ -151,7 +172,7 @@
 			/obj/item/clothing/mask/surgical,
 			/obj/item/clothing/shoes/white,
 			/obj/item/weapon/cartridge/chemistry,
-			/obj/item/clothing/gloves/latex,
+			/obj/item/clothing/gloves/sterile/latex,
 			/obj/item/weapon/reagent_containers/dropper,
 			/obj/item/device/healthanalyzer,
 			/obj/item/weapon/storage/box/pillbottles,
@@ -167,8 +188,8 @@
 	contains = list(
 			/obj/item/weapon/storage/belt/medical/emt,
 			/obj/item/device/radio/headset/headset_med,
-			/obj/item/clothing/under/rank/medical/black,
-			/obj/item/clothing/accessory/armband/medgreen,
+			/obj/item/clothing/under/rank/medical/scrubs/black,
+			/obj/item/clothing/accessory/armband/medblue,
 			/obj/item/clothing/glasses/hud/health,
 			/obj/item/clothing/suit/storage/toggle/labcoat/emt,
 			/obj/item/clothing/under/rank/medical/paramedic,
@@ -178,7 +199,7 @@
 			/obj/item/clothing/accessory/stethoscope,
 			/obj/item/weapon/storage/firstaid/adv,
 			/obj/item/clothing/shoes/boots/jackboots,
-			/obj/item/clothing/gloves/latex,
+			/obj/item/clothing/gloves/sterile/latex,
 			/obj/item/device/healthanalyzer,
 			/obj/item/weapon/cartridge/medical,
 			/obj/item/device/flashlight/pen,
@@ -213,10 +234,10 @@
 	name = "Medical scrubs"
 	contains = list(
 			/obj/item/clothing/shoes/white = 3,,
-			/obj/item/clothing/under/rank/medical/blue = 3,
-			/obj/item/clothing/under/rank/medical/green = 3,
-			/obj/item/clothing/under/rank/medical/purple = 3,
-			/obj/item/clothing/under/rank/medical/black = 3,
+			/obj/item/clothing/under/rank/medical/scrubs = 3,
+			/obj/item/clothing/under/rank/medical/scrubs/green = 3,
+			/obj/item/clothing/under/rank/medical/scrubs/purple = 3,
+			/obj/item/clothing/under/rank/medical/scrubs/black = 3,
 			/obj/item/clothing/head/surgery = 3,
 			/obj/item/clothing/head/surgery/purple = 3,
 			/obj/item/clothing/head/surgery/blue = 3,
@@ -310,7 +331,7 @@
 
 /datum/supply_packs/med/defib
 	name = "Defibrilator crate"
-	contains = list(/obj/item/device/defib_kit = 4)
+	contains = list(/obj/item/device/defib_kit = 2)
 	cost = 30
 	containertype = /obj/structure/closet/crate/medical
 	containername = "Defibrilator crate"

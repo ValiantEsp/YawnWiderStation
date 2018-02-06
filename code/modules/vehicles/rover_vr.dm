@@ -30,7 +30,7 @@
 
 	dunebuggy
 		name = "Research Dune Buggy"
-		desc = "A Dune Buggy developed for asteroid exploration and transportation"
+		desc = "A Dune Buggy developed for asteroid exploration and transportation. It has a sticker that says to wear EVA suits if used in space."
 		icon = 'icons/vore/rover_vr.dmi'
 		icon_state = "dunebug"
 
@@ -180,8 +180,8 @@
 
 	if(is_train_head() && istype(load, /mob/living/carbon/human))
 		var/mob/living/carbon/human/D = load
-		D << "\red \b You ran over [H]!"
-		visible_message("<B>\red \The [src] ran over [H]!</B>")
+		to_chat(D, "<span class='danger'>You ran over \the [H]!</span>")
+		visible_message("<span class='danger'>\The [src] ran over \the [H]!</span>")
 		attack_log += text("\[[time_stamp()]\] <font color='red'>ran over [H.name] ([H.ckey]), driven by [D.name] ([D.ckey])</font>")
 		msg_admin_attack("[D.name] ([D.ckey]) ran over [H.name] ([H.ckey]). (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[src.x];Y=[src.y];Z=[src.z]'>JMP</a>)")
 	else

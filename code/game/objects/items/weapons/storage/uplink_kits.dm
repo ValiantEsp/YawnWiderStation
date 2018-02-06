@@ -27,7 +27,7 @@
 
 			if("guns")
 				new /obj/item/weapon/gun/projectile/revolver(src)
-				new /obj/item/ammo_magazine/a357(src)
+				new /obj/item/ammo_magazine/s357(src)
 				new /obj/item/weapon/card/emag(src)
 				new /obj/item/weapon/plastique(src)
 				new /obj/item/weapon/plastique(src)
@@ -159,17 +159,17 @@
 
 /obj/item/weapon/storage/box/syndie_kit/spy/New()
 	..()
-	new /obj/item/device/spy_bug(src)
-	new /obj/item/device/spy_bug(src)
-	new /obj/item/device/spy_bug(src)
-	new /obj/item/device/spy_bug(src)
-	new /obj/item/device/spy_bug(src)
-	new /obj/item/device/spy_bug(src)
-	new /obj/item/device/spy_monitor(src)
+	new /obj/item/device/camerabug/spy(src)
+	new /obj/item/device/camerabug/spy(src)
+	new /obj/item/device/camerabug/spy(src)
+	new /obj/item/device/camerabug/spy(src)
+	new /obj/item/device/camerabug/spy(src)
+	new /obj/item/device/camerabug/spy(src)
+	new /obj/item/device/bug_monitor/spy(src)
 
 /obj/item/weapon/storage/box/syndie_kit/g9mm
 	name = "\improper Smooth operator"
-	desc = "9mm with silencer kit."
+	desc = "Compact 9mm with silencer kit."
 
 /obj/item/weapon/storage/box/syndie_kit/g9mm/New()
 	..()
@@ -281,4 +281,36 @@
 /obj/item/weapon/storage/box/syndie_kit/demolitions_super_heavy/New()
 	..()
 	new /obj/item/weapon/syndie/c4explosive/heavy/super_heavy(src)
+	new /obj/item/weapon/screwdriver(src)
+
+
+/obj/item/weapon/storage/secure/briefcase/rifle
+	name = "secure briefcase"
+
+/obj/item/weapon/storage/secure/briefcase/rifle/New()
+	..()
+	new /obj/item/sniper_rifle_part/barrel(src)
+	new /obj/item/sniper_rifle_part/stock(src)
+	new /obj/item/sniper_rifle_part/trigger_group(src)
+
+	for(var/i = 1 to 4)
+		new /obj/item/ammo_casing/a145(src)
+
+/obj/item/weapon/storage/secure/briefcase/fuelrod
+	name = "heavy briefcase"
+	desc = "A heavy, locked briefcase."
+	description_fluff = "The container, upon opening, looks to have a few oddly shaped indentations in its packing."
+	description_antag = "This case will likely contain a charged fuel rod gun, and a few fuel rods to go with it. It can only hold the fuel rod gun, fuel rods, batteries, a screwdriver, and stock machine parts."
+	force = 12 //Anti-rad lined i.e. Lead, probably gonna hurt a bit if you get bashed with it.
+	can_hold = list(/obj/item/weapon/gun/magnetic/fuelrod, /obj/item/weapon/fuel_assembly, /obj/item/weapon/cell, /obj/item/weapon/stock_parts, /obj/item/weapon/screwdriver)
+
+
+/obj/item/weapon/storage/secure/briefcase/fuelrod/New()
+	..()
+	new /obj/item/weapon/gun/magnetic/fuelrod(src)
+	new /obj/item/weapon/fuel_assembly/deuterium(src)
+	new /obj/item/weapon/fuel_assembly/deuterium(src)
+	new /obj/item/weapon/fuel_assembly/tritium(src)
+	new /obj/item/weapon/fuel_assembly/tritium(src)
+	new /obj/item/weapon/fuel_assembly/phoron(src)
 	new /obj/item/weapon/screwdriver(src)

@@ -73,14 +73,14 @@
 /obj/machinery/door/Destroy()
 	density = 0
 	update_nearby_tiles()
-	..()
-	return
+	. = ..()
 
 /obj/machinery/door/process()
 	if(close_door_at && world.time >= close_door_at)
 		if(autoclose)
 			close_door_at = next_close_time()
-			close()
+			spawn(0)
+				close()
 		else
 			close_door_at = 0
 
@@ -164,7 +164,7 @@
 			switch (Proj.damage_type)
 				if(BRUTE)
 					new /obj/item/stack/material/steel(src.loc, 2)
-					PoolOrNew(/obj/item/stack/rods, list(src.loc, 3))
+					new /obj/item/stack/rods(src.loc, 3)
 				if(BURN)
 					new /obj/effect/decal/cleanable/ash(src.loc) // Turn it to ashes!
 			qdel(src)
@@ -244,8 +244,8 @@
 		var/obj/item/weapon/weldingtool/welder = I
 		if(welder.remove_fuel(0,user))
 			user << "<span class='notice'>You start to fix dents and weld \the [repairing] into place.</span>"
-			playsound(src, 'sound/items/Welder.ogg', 100, 1)
-			if(do_after(user, 5 * repairing.amount) && welder && welder.isOn())
+			playsound(src, welder.usesound, 50, 1)
+			if(do_after(user, (5 * repairing.amount) * welder.toolspeed) && welder && welder.isOn())
 				user << "<span class='notice'>You finish repairing the damage to \the [src].</span>"
 				health = between(health, health + repairing.amount*DOOR_REPAIR_AMOUNT, maxhealth)
 				update_icon()
@@ -255,7 +255,7 @@
 
 	if(repairing && istype(I, /obj/item/weapon/crowbar))
 		user << "<span class='notice'>You remove \the [repairing].</span>"
-		playsound(src.loc, 'sound/items/Crowbar.ogg', 100, 1)
+		playsound(src, I.usesound, 100, 1)
 		repairing.loc = user.loc
 		repairing = null
 		return
@@ -263,7 +263,7 @@
 	//psa to whoever coded this, there are plenty of objects that need to call attack() on doors without bludgeoning them.
 	if(src.density && istype(I, /obj/item/weapon) && user.a_intent == I_HURT && !istype(I, /obj/item/weapon/card))
 		var/obj/item/weapon/W = I
-		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+		user.setClickCooldown(user.get_attack_speed(W))
 		if(W.damtype == BRUTE || W.damtype == BURN)
 			user.do_attack_animation(src)
 			if(W.force < min_force)
@@ -314,6 +314,8 @@
 
 /obj/machinery/door/examine(mob/user)
 	. = ..()
+	if(src.health <= 0)
+		user << "\The [src] is broken!"
 	if(src.health < src.maxhealth / 4)
 		user << "\The [src] looks like it's about to break!"
 	else if(src.health < src.maxhealth / 2)
@@ -356,12 +358,20 @@
 				take_damage(150)
 	return
 
+/obj/machinery/door/blob_act()
+	if(density) // If it's closed.
+		if(stat & BROKEN)
+			spawn(0)
+				open(1)
+		else
+			take_damage(100)
 
 /obj/machinery/door/update_icon()
 	if(density)
 		icon_state = "door1"
 	else
 		icon_state = "door0"
+	radiation_repository.resistance_cache.Remove(get_turf(src))
 	return
 
 
@@ -435,7 +445,8 @@
 	var/obj/fire/fire = locate() in loc
 	if(fire)
 		qdel(fire)
-	return
+
+	return 1
 
 /obj/machinery/door/proc/requiresID()
 	return 1

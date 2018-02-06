@@ -12,10 +12,10 @@ var/datum/antagonist/raider/raiders
 	flags = ANTAG_OVERRIDE_JOB | ANTAG_CLEAR_EQUIPMENT | ANTAG_CHOOSE_NAME | ANTAG_VOTABLE | ANTAG_SET_APPEARANCE | ANTAG_HAS_LEADER
 	antaghud_indicator = "hudmutineer"
 
-	hard_cap = 6
-	hard_cap_round = 10
+	hard_cap = 4
+	hard_cap_round = 8
 	initial_spawn_req = 3
-	initial_spawn_target = 4
+	initial_spawn_target = 3
 
 	id_type = /obj/item/weapon/card/id/syndicate
 
@@ -80,17 +80,18 @@ var/datum/antagonist/raider/raiders
 		/obj/item/weapon/gun/projectile/automatic/c20r,
 		/obj/item/weapon/gun/projectile/automatic/wt550,
 		/obj/item/weapon/gun/projectile/automatic/sts35,
-		/obj/item/weapon/gun/projectile/automatic/carbine,
+		/obj/item/weapon/gun/projectile/automatic/bullpup,
 		/obj/item/weapon/gun/projectile/automatic/tommygun,
 		/obj/item/weapon/gun/projectile/silenced,
 		/obj/item/weapon/gun/projectile/shotgun/pump,
 		/obj/item/weapon/gun/projectile/shotgun/pump/combat,
-		/obj/item/weapon/gun/projectile/shotgun/pump/rifle/mosin,
+		/obj/item/weapon/gun/projectile/shotgun/pump/rifle,
 		/obj/item/weapon/gun/projectile/shotgun/doublebarrel,
 		/obj/item/weapon/gun/projectile/shotgun/doublebarrel/pellet,
 		/obj/item/weapon/gun/projectile/shotgun/doublebarrel/sawn,
 		/obj/item/weapon/gun/projectile/colt/detective,
 		/obj/item/weapon/gun/projectile/pistol,
+		/obj/item/weapon/gun/projectile/p92x,
 		/obj/item/weapon/gun/projectile/revolver,
 		/obj/item/weapon/gun/projectile/pirate,
 		/obj/item/weapon/gun/projectile/revolver/judge,
@@ -232,7 +233,7 @@ var/datum/antagonist/raider/raiders
 	W.handle_item_insertion(id)
 	player.equip_to_slot_or_del(W, slot_wear_id)
 	spawn_money(rand(50,150)*10,W)
-	create_radio(SYND_FREQ, player)
+	create_radio(RAID_FREQ, player)
 
 	return 1
 

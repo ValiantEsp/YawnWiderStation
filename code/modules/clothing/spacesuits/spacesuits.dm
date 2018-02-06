@@ -15,6 +15,9 @@
 	min_cold_protection_temperature = SPACE_HELMET_MIN_COLD_PROTECTION_TEMPERATURE
 	siemens_coefficient = 0.9
 	species_restricted = list("exclude","Diona")
+	preserve_item = 1
+	phoronproof = 1
+	flash_protection = FLASH_PROTECTION_MAJOR
 
 	var/obj/machinery/camera/camera
 	var/list/camera_networks
@@ -31,7 +34,7 @@
 		camera = new /obj/machinery/camera(src)
 		camera.replace_networks(camera_networks)
 		camera.c_tag = user.name
-		user << "\blue User scanned as [camera.c_tag]. Camera activated."
+		user << "<font color='blue'>User scanned as [camera.c_tag]. Camera activated.</font>"
 		user.update_action_buttons()
 		return 1
 
@@ -59,12 +62,10 @@
 	min_cold_protection_temperature = SPACE_SUIT_MIN_COLD_PROTECTION_TEMPERATURE
 	siemens_coefficient = 0.9
 	species_restricted = list("exclude","Diona")
+	preserve_item = 1
+	phoronproof = 1
 
 	var/list/supporting_limbs //If not-null, automatically splints breaks. Checked when removing the suit.
-
-/obj/item/clothing/suit/space/New()
-	..()
-	desc += " \"[using_map.station_short]\" is written in large block letters on the back."
 
 /obj/item/clothing/suit/space/equipped(mob/M)
 	check_limb_support(M)

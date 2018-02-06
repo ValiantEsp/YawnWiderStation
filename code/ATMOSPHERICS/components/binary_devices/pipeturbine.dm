@@ -36,7 +36,7 @@
 				initialize_directions = NORTH|SOUTH
 
 	Destroy()
-		loc = null
+		. = ..()
 
 		if(node1)
 			node1.disconnect(src)
@@ -47,8 +47,6 @@
 
 		node1 = null
 		node2 = null
-
-		..()
 
 	process()
 		..()
@@ -88,7 +86,8 @@
 	attackby(obj/item/weapon/W as obj, mob/user as mob)
 		if(istype(W, /obj/item/weapon/wrench))
 			anchored = !anchored
-			user << "<span class='notice'>You [anchored ? "secure" : "unsecure"] the bolts holding \the [src] to the floor.</span>"
+			playsound(src, W.usesound, 50, 1)
+			to_chat(user, "<span class='notice'>You [anchored ? "secure" : "unsecure"] the bolts holding \the [src] to the floor.</span>")
 
 			if(anchored)
 				if(dir & (NORTH|SOUTH))
@@ -96,13 +95,13 @@
 				else if(dir & (EAST|WEST))
 					initialize_directions = NORTH|SOUTH
 
-				initialize()
+				atmos_init()
 				build_network()
 				if (node1)
-					node1.initialize()
+					node1.atmos_init()
 					node1.build_network()
 				if (node2)
-					node2.initialize()
+					node2.atmos_init()
 					node2.build_network()
 			else
 				if(node1)
@@ -154,7 +153,7 @@
 
 		return null
 
-	initialize()
+	atmos_init()
 		if(node1 && node2) return
 
 		var/node2_connect = turn(dir, -90)
@@ -259,8 +258,9 @@
 	attackby(obj/item/weapon/W as obj, mob/user as mob)
 		if(istype(W, /obj/item/weapon/wrench))
 			anchored = !anchored
+			playsound(src, W.usesound, 50, 1)
 			turbine = null
-			user << "<span class='notice'>You [anchored ? "secure" : "unsecure"] the bolts holding \the [src] to the floor.</span>"
+			to_chat(user, "<span class='notice'>You [anchored ? "secure" : "unsecure"] the bolts holding \the [src] to the floor.</span>")
 			updateConnection()
 		else
 			..()

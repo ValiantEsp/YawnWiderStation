@@ -59,7 +59,7 @@
 /obj/machinery/power/apc
 	name = "area power controller"
 	desc = "A control terminal for the area electrical systems."
-
+	icon = 'icons/obj/power_vr.dmi' //VOREStation Edit - New Icon
 	icon_state = "apc0"
 	anchored = 1
 	use_power = 0
@@ -444,9 +444,9 @@
 			if (terminal)
 				to_chat(user,"<span class='warning'>Disconnect the wires first.</span>")
 				return
-			playsound(src.loc, 'sound/items/Crowbar.ogg', 50, 1)
+			playsound(src, W.usesound, 50, 1)
 			to_chat(user,"You begin to remove the power control board...") //lpeters - fixed grammar issues //Ner - grrrrrr
-			if(do_after(user, 50))
+			if(do_after(user, 50 * W.toolspeed))
 				if (has_electronics==1)
 					has_electronics = 0
 					if ((stat & BROKEN))
@@ -498,12 +498,12 @@
 				if (has_electronics==1 && terminal)
 					has_electronics = 2
 					stat &= ~MAINT
-					playsound(src.loc, 'sound/items/Screwdriver.ogg', 50, 1)
+					playsound(src.loc, W.usesound, 50, 1)
 					to_chat(user,"You screw the circuit electronics into place.")
 				else if (has_electronics==2)
 					has_electronics = 1
 					stat |= MAINT
-					playsound(src.loc, 'sound/items/Screwdriver.ogg', 50, 1)
+					playsound(src.loc, W.usesound, 50, 1)
 					to_chat(user,"You unfasten the electronics.")
 				else /* has_electronics==0 */
 					to_chat(user,"<span class='warning'>There is nothing to secure.</span>")
@@ -512,6 +512,7 @@
 		else
 			wiresexposed = !wiresexposed
 			to_chat(user,"The wires have been [wiresexposed ? "exposed" : "unexposed"].")
+			playsound(src, W.usesound, 50, 1)
 			update_icon()
 
 	else if (istype(W, /obj/item/weapon/card/id)||istype(W, /obj/item/device/pda))			// trying to unlock the interface with an ID card
@@ -567,7 +568,7 @@
 		user.visible_message("<span class='warning'>[user.name] starts dismantling the [src]'s power terminal.</span>", \
 							"You begin to cut the cables...")
 		playsound(src.loc, 'sound/items/Deconstruct.ogg', 50, 1)
-		if(do_after(user, 50))
+		if(do_after(user, 50 * W.toolspeed))
 			if(terminal && opened && has_electronics!=2)
 				if (prob(50) && electrocute_mob(usr, terminal.powernet, terminal))
 					var/datum/effect/effect/system/spark_spread/s = new /datum/effect/effect/system/spark_spread
@@ -599,8 +600,8 @@
 		user.visible_message("<span class='warning'>[user.name] begins cutting apart [src] with the [WT.name].</span>", \
 							"You start welding the APC frame...", \
 							"You hear welding.")
-		playsound(src.loc, 'sound/items/Welder.ogg', 25, 1)
-		if(do_after(user, 50))
+		playsound(src, WT.usesound, 25, 1)
+		if(do_after(user, 50 * WT.toolspeed))
 			if(!src || !WT.remove_fuel(3, user)) return
 			if (emagged || (stat & BROKEN) || opened==2)
 				new /obj/item/stack/material/steel(loc)
@@ -680,14 +681,17 @@
 		else
 			flick("apc-spark", src)
 			if (do_after(user,6))
-				if(prob(50))
-					emagged = 1
-					locked = 0
-					to_chat(user,"<span class='notice'>You emag the APC interface.</span>")
-					update_icon()
-				else
-					to_chat(user,"<span class='warning'>The APC interface refused to unlock.</span>")
+				emagged = 1
+				locked = 0
+				to_chat(user,"<span class='notice'>You emag the APC interface.</span>")
+				update_icon()
 				return 1
+
+/obj/machinery/power/apc/blob_act()
+	if(!wires.IsAllCut())
+		wiresexposed = TRUE
+		wires.CutAll()
+		update_icon()
 
 /obj/machinery/power/apc/attack_hand(mob/user)
 //	if (!can_use(user)) This already gets called in interact() and in topic()
@@ -701,7 +705,7 @@
 		var/mob/living/carbon/human/H = user
 
 		if(H.species.can_shred(H))
-			user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+			user.setClickCooldown(user.get_attack_speed())
 			user.visible_message("<span call='warning'>[user.name] slashes at the [src.name]!</span>", "<span class='notice'>You slash at the [src.name]!</span>")
 			playsound(src.loc, 'sound/weapons/slash.ogg', 100, 1)
 
@@ -1193,22 +1197,27 @@ obj/machinery/power/apc/proc/autoset(var/cur_state, var/on)
 /obj/machinery/power/apc/ex_act(severity)
 
 	switch(severity)
-		if(1.0)
+		if(1)
 			//set_broken() //now qdel() do what we need
 			if (cell)
-				cell.ex_act(1.0) // more lags woohoo
+				cell.ex_act(1) // more lags woohoo
 			qdel(src)
 			return
-		if(2.0)
+		if(2)
+			if (prob(75))
+				set_broken()
+				if (cell && prob(50))
+					cell.ex_act(2)
+		if(3)
 			if (prob(50))
 				set_broken()
 				if (cell && prob(50))
-					cell.ex_act(2.0)
-		if(3.0)
+					cell.ex_act(3)
+		if(4)
 			if (prob(25))
 				set_broken()
-				if (cell && prob(25))
-					cell.ex_act(3.0)
+				if (cell && prob(50))
+					cell.ex_act(3)
 	return
 
 /obj/machinery/power/apc/disconnect_terminal()

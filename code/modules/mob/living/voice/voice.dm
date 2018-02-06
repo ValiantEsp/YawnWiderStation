@@ -51,7 +51,7 @@
 // Description: Removes reference to the communicator, so it can qdel() successfully.
 /mob/living/voice/Destroy()
 	comm = null
-	..()
+	return ..()
 
 // Proc: ghostize()
 // Parameters: None
@@ -111,7 +111,9 @@
 	//Speech bubbles.
 	if(comm)
 		var/speech_bubble_test = say_test(message)
-		var/image/speech_bubble = image('icons/mob/talk_vr.dmi',comm,"h[speech_bubble_test]") //VOREStation Edit - Right side talk icons
+		//var/image/speech_bubble = image('icons/mob/talk_vr.dmi',comm,"h[speech_bubble_test]") //VOREStation Edit - Commented out in case of needed reenable.
+		var/speech_type = speech_bubble_appearance()
+		var/image/speech_bubble = image('icons/mob/talk_vr.dmi',comm,"[speech_type][speech_bubble_test]") //VOREStation Edit - talk_vr.dmi instead of talk.dmi for right-side icons
 		spawn(30)
 			qdel(speech_bubble)
 
@@ -120,6 +122,23 @@
 		src << speech_bubble
 
 	..(message, speaking, verb, alt_name, whispering) //mob/living/say() can do the actual talking.
+
+// Proc: speech_bubble_appearance()
+// Parameters: 0
+// Description: Gets the correct icon_state information for chat bubbles to work.
+/mob/living/voice/speech_bubble_appearance()
+	return "comm"
+
+/mob/living/voice/say_understands(var/other,var/datum/language/speaking = null)
+	//These only pertain to common. Languages are handled by mob/say_understands()
+	if (!speaking)
+		if (istype(other, /mob/living/carbon))
+			return 1
+		if (istype(other, /mob/living/silicon))
+			return 1
+		if (istype(other, /mob/living/carbon/brain))
+			return 1
+	return ..()
 
 /mob/living/voice/custom_emote(var/m_type=1,var/message = null,var/range=world.view)
 	if(!comm) return

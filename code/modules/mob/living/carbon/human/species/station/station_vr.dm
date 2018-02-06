@@ -7,13 +7,13 @@
 	icobase_tail = 1
 	unarmed_types = list(/datum/unarmed_attack/stomp, /datum/unarmed_attack/kick, /datum/unarmed_attack/claws, /datum/unarmed_attack/bite/sharp)
 	darksight = 8
-	slowdown = -1
+	slowdown = -0.5
 	//brute_mod = 1.15
 	//burn_mod =  1.15
 	//gluttonous = 1
-	num_alternate_languages = 2
-	secondary_langs = list("Sagaru")
-	name_language = "Sagaru"
+	num_alternate_languages = 3
+	secondary_langs = list(LANGUAGE_SAGARU)
+	name_language = LANGUAGE_SAGARU
 	color_mult = 1
 
 	min_age = 18
@@ -32,9 +32,10 @@
 
 	spawn_flags = SPECIES_CAN_JOIN
 	appearance_flags = HAS_HAIR_COLOR | HAS_LIPS | HAS_UNDERWEAR | HAS_SKIN_COLOR | HAS_EYE_COLOR
+	inherent_verbs = list(/mob/living/carbon/human/proc/shred_limb)
 
 	flesh_color = "#AFA59E"
-	base_color = "#333333"
+	base_color = "#777777"
 
 	reagent_tag = IS_SERGAL
 
@@ -42,6 +43,20 @@
 		"Your fur prickles in the heat.",
 		"You feel uncomfortably warm.",
 		"Your overheated skin itches."
+		)
+
+	has_limbs = list(
+		BP_TORSO =  list("path" = /obj/item/organ/external/chest),
+		BP_GROIN =  list("path" = /obj/item/organ/external/groin),
+		BP_HEAD =   list("path" = /obj/item/organ/external/head/vr/sergal),
+		BP_L_ARM =  list("path" = /obj/item/organ/external/arm),
+		BP_R_ARM =  list("path" = /obj/item/organ/external/arm/right),
+		BP_L_LEG =  list("path" = /obj/item/organ/external/leg),
+		BP_R_LEG =  list("path" = /obj/item/organ/external/leg/right),
+		BP_L_HAND = list("path" = /obj/item/organ/external/hand),
+		BP_R_HAND = list("path" = /obj/item/organ/external/hand/right),
+		BP_L_FOOT = list("path" = /obj/item/organ/external/foot),
+		BP_R_FOOT = list("path" = /obj/item/organ/external/foot/right)
 		)
 
 /datum/species/akula
@@ -57,10 +72,11 @@
 	//brute_mod = 1.15
 	//burn_mod =  1.15
 	//gluttonous = 1
-	num_alternate_languages = 2
+	num_alternate_languages = 3
 	secondary_langs = list(LANGUAGE_SKRELLIAN)
 	name_language = LANGUAGE_SKRELLIAN
 	color_mult = 1
+	inherent_verbs = list(/mob/living/carbon/human/proc/shred_limb)
 
 	min_age = 18
 	max_age = 110
@@ -79,9 +95,13 @@
 	appearance_flags = HAS_HAIR_COLOR | HAS_LIPS | HAS_UNDERWEAR | HAS_SKIN_COLOR | HAS_EYE_COLOR
 
 	flesh_color = "#AFA59E"
-	base_color = "#333333"
+	base_color = "#777777"
+	blood_color = "#1D2CBF"
 
 	reagent_tag = IS_AKULA
+
+/datum/species/akula/can_breathe_water()
+	return TRUE // Surprise, SHERKS.
 
 /datum/species/nevrean
 	name = "Nevrean"
@@ -96,10 +116,11 @@
 	//brute_mod = 1.15
 	//burn_mod =  1.15
 	//gluttonous = 1
-	num_alternate_languages = 2
-	secondary_langs = list("Birdsong")
-	name_language = "Birdsong"
+	num_alternate_languages = 3
+	secondary_langs = list(LANGUAGE_BIRDSONG)
+	name_language = LANGUAGE_BIRDSONG
 	color_mult = 1
+	inherent_verbs = list(/mob/living/carbon/human/proc/shred_limb,/mob/living/proc/flying_toggle,/mob/living/proc/start_wings_hovering)
 
 	min_age = 18
 	max_age = 110
@@ -129,14 +150,14 @@
 /datum/species/hi_zoxxen
 	name = "Highlander Zorren"
 	name_plural = "Zorren"
-	icobase = 'icons/mob/human_races/r_fox.dmi'
+	icobase = 'icons/mob/human_races/r_fox_vr.dmi'
 	deform = 'icons/mob/human_races/r_def_fox.dmi'
 	tail = "tail"
 	icobase_tail = 1
 	unarmed_types = list(/datum/unarmed_attack/stomp, /datum/unarmed_attack/kick, /datum/unarmed_attack/claws, /datum/unarmed_attack/bite/sharp)
-	num_alternate_languages = 2
-	secondary_langs = list("Siik'tajr")
-	name_language = "Siik'tajr"
+	num_alternate_languages = 3
+	secondary_langs = list(LANGUAGE_SIIK)
+	name_language = LANGUAGE_SIIK
 
 	min_age = 18
 	max_age = 110
@@ -148,14 +169,6 @@
 	mountainous areas, they have a differing societal structure than the Flatland Zorren having a more feudal social structure, like the Flatland Zorren, \
 	the Highland Zorren have also only recently been hired by the Trans-Stellar Corporations, but thanks to the different social structure they seem to \
 	have adjusted better to their new lives. Though similar fox-like beings have been seen they are different than the Zorren."
-/* VOREStation Removal
-	cold_level_1 = 200 //Default 260
-	cold_level_2 = 140 //Default 200
-	cold_level_3 = 80 //Default 120
-	heat_level_1 = 330 //Default 360
-	heat_level_2 = 380 //Default 400
-	heat_level_3 = 800 //Default 1000
-*/
 	//primitive_form = "" //We don't have fox-monkey sprites.
 
 	spawn_flags = SPECIES_CAN_JOIN
@@ -169,18 +182,19 @@
 		"You feel uncomfortably warm.",
 		"Your overheated skin itches."
 		)
+	inherent_verbs = list(/mob/living/carbon/human/proc/shred_limb)
 
 /datum/species/fl_zorren
 	name = "Flatland Zorren"
 	name_plural = "Zorren"
-	icobase = 'icons/mob/human_races/r_fennec.dmi'
+	icobase = 'icons/mob/human_races/r_fennec_vr.dmi'
 	deform = 'icons/mob/human_races/r_def_fennec.dmi'
 	tail = "tail"
 	icobase_tail = 1
 	unarmed_types = list(/datum/unarmed_attack/stomp, /datum/unarmed_attack/kick, /datum/unarmed_attack/claws, /datum/unarmed_attack/bite/sharp)
-	num_alternate_languages = 2
-	secondary_langs = list("Siik'tajr")
-	name_language = "Siik'tajr"
+	num_alternate_languages = 3
+	secondary_langs = list(LANGUAGE_SIIK)
+	name_language = LANGUAGE_SIIK
 
 	min_age = 18
 	max_age = 110
@@ -192,14 +206,6 @@
 	mountainous areas, they have a differing societal structure than the Flatland Zorren having a more feudal social structure, like the Flatland Zorren, \
 	the Highland Zorren have also only recently been hired by the Trans-Stellar Corporations, but thanks to the different social structure they \
 	seem to have adjusted better to their new lives. Though similar fox-like beings have been seen they are different than the Zorren."
-/* VOREStation Removal
-	cold_level_1 = 280 //Default 260 - Lower is better
-	cold_level_2 = 220 //Default 200
-	cold_level_3 = 130 //Default 120
-	heat_level_1 = 430 //Default 360 - Higher is better
-	heat_level_2 = 500 //Default 400
-	heat_level_3 = 1100 //Default 1000
-*/
 	//primitive_form = "" //We don't have fennec-monkey sprites.
 	spawn_flags = SPECIES_CAN_JOIN
 	appearance_flags = HAS_HAIR_COLOR | HAS_LIPS | HAS_UNDERWEAR | HAS_SKIN_COLOR | HAS_EYE_COLOR
@@ -207,6 +213,7 @@
 	flesh_color = "#AFA59E"
 	base_color = "#333333"
 	color_mult = 1
+	inherent_verbs = list(/mob/living/carbon/human/proc/shred_limb)
 
 	heat_discomfort_strings = list(
 		"Your fur prickles in the heat.",
@@ -222,16 +229,17 @@
 	deform = 'icons/mob/human_races/r_vulpkanin.dmi'
 //	path = /mob/living/carbon/human/vulpkanin
 //	default_language = "Sol Common"
-	secondary_langs = list("Canilunzt")
-	name_language = "Canilunzt"
+	secondary_langs = list(LANGUAGE_CANILUNZT)
+	name_language = LANGUAGE_CANILUNZT
 	primitive_form = "Wolpin"
 	tail = "vulptail"
 	tail_animation = 'icons/mob/species/vulpkanin/tail.dmi' // probably need more than just one of each, but w/e
 	unarmed_types = list(/datum/unarmed_attack/stomp, /datum/unarmed_attack/kick, /datum/unarmed_attack/claws, /datum/unarmed_attack/bite/sharp)
 	darksight = 5 //worse than cats, but better than lizards. -- Poojawa
 //	gluttonous = 1
-	num_alternate_languages = 2
+	num_alternate_languages = 3
 	color_mult = 1
+	inherent_verbs = list(/mob/living/carbon/human/proc/shred_limb)
 
 	blurb = "Vulpkanin are a species of sharp-witted canine-pideds residing on the planet Altam just barely within the \
 	dual-star Vazzend system. Their politically de-centralized society and independent natures have led them to become a species and \
@@ -260,7 +268,7 @@
 	unarmed_types = list(/datum/unarmed_attack/stomp, /datum/unarmed_attack/kick, /datum/unarmed_attack/claws, /datum/unarmed_attack/bite/sharp)
 	darksight = 4 //Better hunters in the dark.
 	hunger_factor = 0.1 //In exchange, they get hungry a tad faster.
-	num_alternate_languages = 2
+	num_alternate_languages = 3
 
 	min_age = 18
 	max_age = 110
@@ -280,27 +288,37 @@
 	flesh_color = "#201730"
 	base_color = "#201730"
 
-	//reagent_tag = IS_SERGAL //No specific reagent tag.
-
 	heat_discomfort_strings = list(
 		"Your chitin feels extremely warm.",
 		"You feel uncomfortably warm.",
 		"Your chitin feels hot."
 		)
+	inherent_verbs = list(/mob/living/carbon/human/proc/shred_limb)
 
 /datum/species/unathi
 	spawn_flags = SPECIES_CAN_JOIN //Species_can_join is the only spawn flag all the races get, so that none of them will be whitelist only if whitelist is enabled.
+	icobase = 'icons/mob/human_races/r_lizard_vr.dmi'
+	deform = 'icons/mob/human_races/r_def_lizard_vr.dmi'
+	tail_animation = 'icons/mob/species/unathi/tail_vr.dmi'
+	color_mult = 1
 	min_age = 18
+	inherent_verbs = list(/mob/living/carbon/human/proc/shred_limb)
 
 /datum/species/tajaran
 	spawn_flags = SPECIES_CAN_JOIN
 	icobase = 'icons/mob/human_races/r_tajaran_vr.dmi'
 	deform = 'icons/mob/human_races/r_def_tajaran_vr.dmi'
+	tail_animation = 'icons/mob/species/tajaran/tail_vr.dmi'
+	color_mult = 1
 	min_age = 18
 	gluttonous = 0 //Moving this here so I don't have to fix this conflict every time polaris glances at station.dm
+	inherent_verbs = list(/mob/living/carbon/human/proc/shred_limb)
 
 /datum/species/skrell
 	spawn_flags = SPECIES_CAN_JOIN
+	icobase = 'icons/mob/human_races/r_skrell_vr.dmi'
+	deform = 'icons/mob/human_races/r_def_skrell_vr.dmi'
+	color_mult = 1
 	min_age = 18
 
 /datum/species/diona
@@ -308,15 +326,24 @@
 	min_age = 18
 
 /datum/species/teshari
+	mob_size = MOB_MEDIUM
 	spawn_flags = SPECIES_CAN_JOIN
+	icobase = 'icons/mob/human_races/r_seromi_vr.dmi'
+	deform = 'icons/mob/human_races/r_seromi_vr.dmi'
+	color_mult = 1
 	min_age = 18
+	push_flags = ~HEAVY //Allows them to use micro step code.
+	swap_flags = ~HEAVY
+
+	inherent_verbs = list(
+		/mob/living/carbon/human/proc/sonar_ping,
+		/mob/living/proc/hide,
+		/mob/living/carbon/human/proc/shred_limb,
+		/mob/living/proc/toggle_pass_table
+		)
 
 /datum/species/shapeshifter/promethean
 	spawn_flags = SPECIES_CAN_JOIN
-
-/datum/species/teshari
-	mob_size = MOB_MEDIUM
-	min_age = 18
 
 /datum/species/human
 	color_mult = 1
@@ -330,8 +357,47 @@
 	gluttonous = 0
 	spawn_flags = SPECIES_CAN_JOIN | SPECIES_IS_WHITELISTED
 	min_age = 18
+	icobase = 'icons/mob/human_races/r_vox_old.dmi'
+	deform = 'icons/mob/human_races/r_def_vox_old.dmi'
+	inherent_verbs = list(/mob/living/carbon/human/proc/shred_limb)
 
-/datum/species
-	holder_type = /obj/item/weapon/holder/micro //This allows you to pick up crew
+datum/species/harpy
+	name = "Rapala"
+	name_plural = "Rapalans"
+	icobase = 'icons/mob/human_races/r_harpy_vr.dmi'
+	deform = 'icons/mob/human_races/r_def_harpy_vr.dmi'
+	tail = "tail"
+	icobase_tail = 1
+	unarmed_types = list(/datum/unarmed_attack/stomp, /datum/unarmed_attack/kick, /datum/unarmed_attack/punch, /datum/unarmed_attack/bite)
+	num_alternate_languages = 3
+	secondary_langs = list(LANGUAGE_BIRDSONG)
+	name_language = null
+	color_mult = 1
+	inherent_verbs = list(/mob/living/proc/flying_toggle,/mob/living/proc/start_wings_hovering)
+
 	min_age = 18
+	max_age = 80
 
+	blurb = "An Avian species, coming from a distant planet, the Rapalas are the very proud race.\
+	Sol researchers have commented on them having a very close resemblance to the mythical race called 'Harpies',\
+	who are known for having massive winged arms and talons as feet. They've been clocked at speeds of over 35 miler per hour chasing the planet's many fish-like fauna.\
+	The Rapalan's home-world 'Verita' is a strangely habitable gas giant, while no physical earth exists, there are fertile floating islands orbiting around the planet from past asteroid activity."
+
+	//primitive_form = "Saru"
+
+	spawn_flags = SPECIES_CAN_JOIN
+	appearance_flags = HAS_HAIR_COLOR | HAS_LIPS | HAS_UNDERWEAR | HAS_SKIN_COLOR | HAS_EYE_COLOR
+
+	//flesh_color = "#AFA59E"
+	//base_color = "#777777"
+	//tail_hair = "feathers"
+	//reagent_tag = IS_SERGAL
+
+	heat_discomfort_strings = list(
+		"Your feathers prickle in the heat.",
+		"You feel uncomfortably warm.",
+		"Your overheated skin itches."
+		)
+
+/datum/species/human/vatgrown
+	spawn_flags = SPECIES_IS_RESTRICTED

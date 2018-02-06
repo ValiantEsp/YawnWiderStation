@@ -27,6 +27,15 @@ var/list/planetary_walls = list()
 	planetary_walls.Remove(src)
 	..()
 
+/turf/unsimulated/wall/planetary/proc/set_temperature(var/new_temperature)
+	if(new_temperature == temperature)
+		return
+	temperature = new_temperature
+	// Force ZAS to reconsider our connections because our temperature has changed
+	if(connections)
+		connections.erase_all()
+	air_master.mark_for_update(src)
+
 // Normal station/earth air.
 /turf/unsimulated/wall/planetary/normal
 	oxygen = MOLES_O2STANDARD
@@ -46,6 +55,10 @@ var/list/planetary_walls = list()
 	nitrogen	= 114.50978 * 0.819
 	temperature	= 243.15 // Roughly -30C / -22F
 
+//High Alt Sif
+/turf/unsimulated/wall/planetary/sif/alt
+	temperature	= 225.15
+
 // Fairly close to Mars in terms of temperature and pressure.
 /turf/unsimulated/wall/planetary/magni
 	carbon_dioxide = 0.90998361
@@ -55,3 +68,4 @@ var/list/planetary_walls = list()
 	oxygen = MOLES_O2STANDARD
 	nitrogen = MOLES_N2STANDARD
 	temperature = 310.92 // About 37.7C / 100F
+

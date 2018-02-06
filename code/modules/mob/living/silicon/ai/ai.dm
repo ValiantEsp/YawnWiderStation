@@ -17,10 +17,6 @@ var/list/ai_verbs_default = list(
 	/mob/living/silicon/ai/proc/show_laws_verb,
 	/mob/living/silicon/ai/proc/toggle_acceleration,
 	/mob/living/silicon/ai/proc/toggle_hologram_movement,
-	/mob/living/silicon/ai/proc/toggle_hidden_verbs,
-)
-
-var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.com/1172/,
 	/mob/living/silicon/ai/proc/ai_announcement,
 	/mob/living/silicon/ai/proc/ai_call_shuttle,
 	/mob/living/silicon/ai/proc/ai_camera_track,
@@ -90,6 +86,8 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 	var/custom_sprite 	= 0 					// Whether the selected icon is custom
 	var/carded
 
+	can_be_antagged = TRUE
+
 /mob/living/silicon/ai/proc/add_ai_verbs()
 	src.verbs |= ai_verbs_default
 	src.verbs |= silicon_subsystems
@@ -149,15 +147,16 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 	//Languages
 	add_language("Robot Talk", 1)
 	add_language(LANGUAGE_GALCOM, 1)
-	add_language(LANGUAGE_SOL_COMMON, 0)
-	add_language(LANGUAGE_UNATHI, 0)
-	add_language(LANGUAGE_SIIK, 0)
-	add_language(LANGUAGE_SKRELLIAN, 0)
+	add_language(LANGUAGE_SOL_COMMON, 1)
+	add_language(LANGUAGE_UNATHI, 1)
+	add_language(LANGUAGE_SIIK, 1)
+	add_language(LANGUAGE_SKRELLIAN, 1)
 	add_language(LANGUAGE_TRADEBAND, 1)
-	add_language(LANGUAGE_GUTTER, 0)
+	add_language(LANGUAGE_GUTTER, 1)
 	add_language(LANGUAGE_EAL, 1)
-	add_language(LANGUAGE_SCHECHI, 0)
-	add_language(LANGUAGE_SIGN, 0)
+	add_language(LANGUAGE_SCHECHI, 1)
+	add_language(LANGUAGE_SIGN, 1)
+	add_language(LANGUAGE_ROOTLOCAL, 1)
 
 	if(!safety)//Only used by AIize() to successfully spawn an AI.
 		if (!B)//If there is no player/brain inside.
@@ -172,16 +171,6 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 
 	spawn(5)
 		new /obj/machinery/ai_powersupply(src)
-
-	hud_list[HEALTH_HUD]      = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[STATUS_HUD]      = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[LIFE_HUD] 		  = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[ID_HUD]          = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[WANTED_HUD]      = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[IMPLOYAL_HUD]    = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[IMPCHEM_HUD]     = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[IMPTRACK_HUD]    = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
-	hud_list[SPECIALROLE_HUD] = new /image/hud_overlay('icons/mob/hud.dmi', src, "hudblank")
 
 	ai_list += src
 	..()
@@ -205,6 +194,12 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 
 	src << radio_text
 
+	// Vorestation Edit: Meta Info for AI's. Mostly used for Holograms
+	if (client)
+		var/meta_info = client.prefs.metadata
+		if (meta_info)
+			ooc_notes = meta_info
+
 	if (malf && !(mind in malf.current_antagonists))
 		show_laws()
 		src << "<b>These laws may be changed by other players, or by you being the traitor.</b>"
@@ -215,20 +210,15 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 /mob/living/silicon/ai/Destroy()
 	ai_list -= src
 
-	qdel(eyeobj)
-	eyeobj = null
-
-	qdel(psupply)
-	psupply = null
-
-	qdel(aiMulti)
-	aiMulti = null
-
-	qdel(aiRadio)
-	aiRadio = null
-
-	qdel(aiCamera)
-	aiCamera = null
+	qdel_null(announcement)
+	qdel_null(eyeobj)
+	qdel_null(psupply)
+	qdel_null(aiPDA)
+	qdel_null(aiCommunicator)
+	qdel_null(aiMulti)
+	qdel_null(aiRadio)
+	qdel_null(aiCamera)
+	hack = null
 
 	return ..()
 
@@ -421,10 +411,12 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 	..()
 
 /mob/living/silicon/ai/Topic(href, href_list)
+	if(..()) //VOREstation edit: So the AI can actually can actually get its OOC prefs read
+		return
 	if(usr != src)
 		return
-	if(..())
-		return
+	/*if(..()) // <------ MOVED FROM HERE 
+		return*/
 	if (href_list["mach_close"])
 		if (href_list["mach_close"] == "aialerts")
 			viewalerts = 0
@@ -450,7 +442,7 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 		if(target && (!istype(target, /mob/living/carbon/human) || html_decode(href_list["trackname"]) == target:get_face_name()))
 			ai_actual_track(target)
 		else
-			src << "\red System error. Cannot locate [html_decode(href_list["trackname"])]."
+			src << "<font color='red'>System error. Cannot locate [html_decode(href_list["trackname"])].</font>"
 		return
 
 	return
@@ -522,7 +514,7 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 		if(network in C.network)
 			eyeobj.setLoc(get_turf(C))
 			break
-	src << "\blue Switched to [network] camera network."
+	src << "<font color='blue'>Switched to [network] camera network.</font>"
 //End of code by Mord_Sith
 
 /mob/living/silicon/ai/proc/ai_statuschange()
@@ -545,82 +537,108 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 		return
 
 	var/input
-	if(alert("Would you like to select a hologram based on a crew member or switch to unique avatar?",,"Crew Member","Unique")=="Crew Member")
+	var/choice = alert("Would you like to select a hologram based on a (visible) crew member, switch to unique avatar, or load your character from your character slot?",,"Crew Member","Unique","My Character")
 
-		var/personnel_list[] = list()
+	switch(choice)
+		if("Crew Member") //A seeable crew member (or a dog)
+			var/list/targets = trackable_mobs()
+			if(targets.len)
+				input = input("Select a crew member:") as null|anything in targets //The definition of "crew member" is a little loose...
+				//This is torture, I know. If someone knows a better way...
+				if(!input) return
+				var/new_holo = getHologramIcon(getCompoundIcon(targets[input]))
+				qdel(holo_icon)
+				holo_icon = new_holo
 
-		for(var/datum/data/record/t in data_core.locked)//Look in data core locked.
-			personnel_list["[t.fields["name"]]: [t.fields["rank"]]"] = t.fields["image"]//Pull names, rank, and image.
+			else
+				alert("No suitable records found. Aborting.")
 
-		if(personnel_list.len)
-			input = input("Select a crew member:") as null|anything in personnel_list
-			var/icon/character_icon = personnel_list[input]
-			if(character_icon)
-				qdel(holo_icon)//Clear old icon so we're not storing it in memory.
-				holo_icon = getHologramIcon(icon(character_icon))
-		else
-			alert("No suitable records found. Aborting.")
+		if("My Character") //Loaded character slot
+			if(!client || !client.prefs) return
+			var/mob/living/carbon/human/dummy/dummy = new ()
+			//This doesn't include custom_items because that's ... hard.
+			client.prefs.dress_preview_mob(dummy)
+			sleep(1 SECOND) //Strange bug in preview code? Without this, certain things won't show up. Yay race conditions?
+			dummy.regenerate_icons()
 
-	else
-		var/icon_list[] = list(
-		"default",
-		"floating face",
-		"carp",
-		"ian",
-		"runtime",
-		"poly",
-		"pun pun",
-		"male human",
-		"female human",
-		"male unathi",
-		"female unathi",
-		"male tajara",
-		"female tajara",
-		"male tesharii",
-		"female tesharii",
-		"male skrell",
-		"female skrell"
-		)
-		input = input("Please select a hologram:") as null|anything in icon_list
-		if(input)
+			var/new_holo = getHologramIcon(getCompoundIcon(dummy))
 			qdel(holo_icon)
-			switch(input)
-				if("default")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holo1"))
-				if("floating face")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holo2"))
-				if("carp")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holo4"))
-				if("ian")
-					holo_icon = getHologramIcon(icon('icons/mob/animal.dmi',"corgi"))
-				if("runtime")
-					holo_icon = getHologramIcon(icon('icons/mob/animal.dmi',"cat"))
-				if("poly")
-					holo_icon = getHologramIcon(icon('icons/mob/animal.dmi',"parrot_fly"))
-				if("pun pun")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"punpun"))
-				if("male human")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holohumm"))
-				if("female human")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holohumf"))
-				if("male unathi")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holounam"))
-				if("female unathi")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holounaf"))
-				if("male tajara")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holotajm"))
-				if("female tajara")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holotajf"))
-				if("male tesharii")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holotesm"))
-				if("female tesharii")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holotesf"))
-				if("male skrell")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holoskrm"))
-				if("female skrell")
-					holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holoskrf"))
+			qdel(dummy)
+			holo_icon = new_holo
 
-	return
+		else //A premade from the dmi
+			var/icon_list[] = list(
+				"default",
+				"floating face",
+				"singularity",
+				"drone",
+				"carp",
+				"spider",
+				"bear",
+				"slime",
+				"ian",
+				"runtime",
+				"poly",
+				"pun pun",
+				"male human",
+				"female human",
+				"male unathi",
+				"female unathi",
+				"male tajara",
+				"female tajara",
+				"male tesharii",
+				"female tesharii",
+				"male skrell",
+				"female skrell"
+			)
+			input = input("Please select a hologram:") as null|anything in icon_list
+			if(input)
+				qdel(holo_icon)
+				switch(input)
+					if("default")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holo1"))
+					if("floating face")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holo2"))
+					if("singularity")
+						holo_icon = getHologramIcon(icon('icons/obj/singularity.dmi',"singularity_s1"))
+					if("drone")
+						holo_icon = getHologramIcon(icon('icons/mob/animal.dmi',"drone0"))
+					if("carp")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holo4"))
+					if("spider")
+						holo_icon = getHologramIcon(icon('icons/mob/animal.dmi',"nurse"))
+					if("bear")
+						holo_icon = getHologramIcon(icon('icons/mob/animal.dmi',"brownbear"))
+					if("slime")
+						holo_icon = getHologramIcon(icon('icons/mob/slimes.dmi',"cerulean adult slime"))
+					if("ian")
+						holo_icon = getHologramIcon(icon('icons/mob/animal.dmi',"corgi"))
+					if("runtime")
+						holo_icon = getHologramIcon(icon('icons/mob/animal.dmi',"cat"))
+					if("poly")
+						holo_icon = getHologramIcon(icon('icons/mob/animal.dmi',"parrot_fly"))
+					if("pun pun")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"punpun"))
+					if("male human")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holohumm"))
+					if("female human")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holohumf"))
+					if("male unathi")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holounam"))
+					if("female unathi")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holounaf"))
+					if("male tajara")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holotajm"))
+					if("female tajara")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holotajf"))
+					if("male tesharii")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holotesm"))
+					if("female tesharii")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holotesf"))
+					if("male skrell")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holoskrm"))
+					if("female skrell")
+						holo_icon = getHologramIcon(icon('icons/mob/AI.dmi',"holoskrf"))
 
 //Toggles the luminosity and applies it by re-entereing the camera.
 /mob/living/silicon/ai/proc/toggle_camera_light()
@@ -674,19 +692,21 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 
 	else if(istype(W, /obj/item/weapon/wrench))
 		if(anchored)
-			user.visible_message("\blue \The [user] starts to unbolt \the [src] from the plating...")
-			if(!do_after(user,40))
-				user.visible_message("\blue \The [user] decides not to unbolt \the [src].")
+			playsound(src, W.usesound, 50, 1)
+			user.visible_message("<font color='blue'>\The [user] starts to unbolt \the [src] from the plating...</font>")
+			if(!do_after(user,40 * W.toolspeed))
+				user.visible_message("<font color='blue'>\The [user] decides not to unbolt \the [src].</font>")
 				return
-			user.visible_message("\blue \The [user] finishes unfastening \the [src]!")
+			user.visible_message("<font color='blue'>\The [user] finishes unfastening \the [src]!</font>")
 			anchored = 0
 			return
 		else
-			user.visible_message("\blue \The [user] starts to bolt \the [src] to the plating...")
-			if(!do_after(user,40))
-				user.visible_message("\blue \The [user] decides not to bolt \the [src].")
+			playsound(src, W.usesound, 50, 1)
+			user.visible_message("<font color='blue'>\The [user] starts to bolt \the [src] to the plating...</font>")
+			if(!do_after(user,40 * W.toolspeed))
+				user.visible_message("<font color='blue'>\The [user] decides not to bolt \the [src].</font>")
 				return
-			user.visible_message("\blue \The [user] finishes fastening down \the [src]!")
+			user.visible_message("<font color='blue'>\The [user] finishes fastening down \the [src]!</font>")
 			anchored = 1
 			return
 	else
@@ -716,6 +736,11 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 	set desc = "Toggles hologram movement based on moving with your virtual eye."
 
 	hologram_follow = !hologram_follow
+	//VOREStation Add - Required to stop movement because we use walk_to(wards) in hologram.dm
+	if(holo)
+		var/obj/effect/overlay/aiholo/hologram = holo.masters[src]
+		walk(hologram, 0)
+	//VOREStation Add End
 	usr << "Your hologram will [hologram_follow ? "follow" : "no longer follow"] you now."
 
 
@@ -769,16 +794,10 @@ var/list/ai_verbs_hidden = list( // For why this exists, refer to https://xkcd.c
 	if(rig)
 		rig.force_rest(src)
 
-/mob/living/silicon/ai/proc/toggle_hidden_verbs()
-	set name = "Toggle Hidden Verbs"
-	set category = "AI Settings"
-
-	if(/mob/living/silicon/ai/proc/ai_announcement in verbs)
-		src << "Extra verbs toggled off."
-		verbs -= ai_verbs_hidden
-	else
-		src << "Extra verbs toggled on."
-		verbs |= ai_verbs_hidden
+/mob/living/silicon/ai/is_sentient()
+	// AI cores don't store what brain was used to build them so we're just gonna assume they can think to some degree.
+	// If that is ever fixed please update this proc.
+	return TRUE
 
 #undef AI_CHECK_WIRELESS
 #undef AI_CHECK_RADIO

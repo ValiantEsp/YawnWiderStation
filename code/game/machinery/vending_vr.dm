@@ -6,8 +6,8 @@
 /obj/machinery/vending/security/New()
 	products += list(/obj/item/weapon/gun/energy/taser = 8,/obj/item/weapon/gun/energy/stunrevolver = 4,
 					/obj/item/weapon/reagent_containers/spray/pepper = 6,/obj/item/taperoll/police = 6,
-					/obj/item/weapon/gun/projectile/sec/flash = 4, /obj/item/ammo_magazine/c45m/flash = 8,
-					/obj/item/clothing/glasses/omnihud/sec = 4)
+					/obj/item/weapon/gun/projectile/sec/flash = 4, /obj/item/ammo_magazine/m45/flash = 8,
+					/obj/item/clothing/glasses/omnihud/sec = 6)
 	..()
 
 /obj/machinery/vending/tool/New()
@@ -15,12 +15,12 @@
 	..()
 
 /obj/machinery/vending/engivend/New()
-	products += list(/obj/item/clothing/glasses/omnihud/eng = 4)
+	products += list(/obj/item/clothing/glasses/omnihud/eng = 6)
 	..()
 
 /obj/machinery/vending/medical/New()
 	products += list(/obj/item/weapon/storage/box/khcrystal = 4,/obj/item/weapon/backup_implanter = 3,
-					/obj/item/clothing/glasses/omnihud/med = 2, /obj/item/device/glasses_kit = 1)
+					/obj/item/clothing/glasses/omnihud/med = 4, /obj/item/device/glasses_kit = 1)
 	..()
 
 //Custom vendors
@@ -32,7 +32,7 @@
 	products = list(
 	/obj/item/weapon/tray = 8,
 	/obj/item/weapon/material/kitchen/utensil/fork = 6,
-	/obj/item/weapon/material/kitchen/utensil/knife = 6,
+	/obj/item/weapon/material/knife/plastic = 6,
 	/obj/item/weapon/material/kitchen/utensil/spoon = 6,
 	/obj/item/weapon/material/knife = 3,
 	/obj/item/weapon/material/kitchen/rollingpin = 2,
@@ -60,31 +60,70 @@
 	icon_deny = "boozeomat-deny"
 	products = list(/obj/item/weapon/tray = 8,
 					/obj/item/weapon/material/kitchen/utensil/fork = 6,
-					/obj/item/weapon/material/kitchen/utensil/knife = 6,
+					/obj/item/weapon/material/knife/plastic = 6,
 					/obj/item/weapon/material/kitchen/utensil/spoon = 6,
-					/obj/item/weapon/reagent_containers/food/drinks/bottle/orangejuice = 4,
-					/obj/item/weapon/reagent_containers/food/drinks/bottle/tomatojuice = 4,
-					/obj/item/weapon/reagent_containers/food/drinks/bottle/limejuice = 4,
-					/obj/item/weapon/reagent_containers/food/drinks/bottle/cream = 4,
-					/obj/item/weapon/reagent_containers/food/drinks/milk = 4,
-					/obj/item/weapon/reagent_containers/food/drinks/cans/cola = 8,
-					/obj/item/weapon/reagent_containers/food/drinks/cans/sodawater = 15,
-					/obj/item/weapon/reagent_containers/food/drinks/flask/barflask = 2,
-					/obj/item/weapon/reagent_containers/food/drinks/flask/vacuumflask = 2,
-					/obj/item/weapon/reagent_containers/food/drinks/ice = 9,
-					/obj/item/weapon/reagent_containers/food/drinks/tea = 10,
+					/obj/item/weapon/reagent_containers/food/snacks/tomatosoup = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/mushroomsoup = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/jellysandwich = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/taco = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/cheeseburger = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/grilledcheese = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/hotdog = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/loadedbakedpotato = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/omelette = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/pastatomato = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/tofuburger = 8,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/pizza/mushroompizza = 2,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/pizza/vegetablepizza = 2,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/pizza/margherita = 2,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/pizza/meatpizza = 2,
+					/obj/item/weapon/reagent_containers/food/snacks/waffles = 4,
+					/obj/item/weapon/reagent_containers/food/snacks/muffin = 4,
 					/obj/item/weapon/reagent_containers/food/snacks/appletart = 4,
-					/obj/item/weapon/reagent_containers/food/snacks/cheeseburger = 10,
-					/obj/item/weapon/reagent_containers/food/snacks/creamcheesebreadslice = 10,
-					/obj/item/weapon/reagent_containers/food/snacks/grilledcheese = 10,
-					/obj/item/weapon/reagent_containers/food/snacks/hotdog = 10,
-					/obj/item/weapon/reagent_containers/food/snacks/loadedbakedpotato = 10,
-					/obj/item/weapon/reagent_containers/food/snacks/margheritaslice = 10,
-					/obj/item/weapon/reagent_containers/food/snacks/muffin = 10,
-					/obj/item/weapon/reagent_containers/food/snacks/omelette = 10,
-					/obj/item/weapon/reagent_containers/food/snacks/pastatomato = 10,
-					/obj/item/weapon/reagent_containers/food/snacks/tofuburger = 10,
-					/obj/item/weapon/reagent_containers/food/snacks/waffles = 10
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/applecake = 2,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/bananabread = 2,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/creamcheesebread = 2
 					)
 	contraband = list(/obj/item/weapon/reagent_containers/food/snacks/mysterysoup = 10)
 	vend_delay = 15
+
+/obj/machinery/vending/food/arojoan //Fluff vendor for the lewd houseboat.
+	name = "Custom Food-O-Mat"
+	desc = "Do you think Joan cooks? Of course not. Lazy squirrel!"
+	icon_state = "boozeomat"
+	icon_deny = "boozeomat-deny"
+	products = list(/obj/item/weapon/tray = 6,
+					/obj/item/weapon/material/kitchen/utensil/fork = 6,
+					/obj/item/weapon/material/knife/plastic = 6,
+					/obj/item/weapon/material/kitchen/utensil/spoon = 6,
+					/obj/item/weapon/reagent_containers/food/snacks/hotandsoursoup = 3,
+					/obj/item/weapon/reagent_containers/food/snacks/kitsuneudon = 3,
+					/obj/item/weapon/reagent_containers/food/snacks/generalschicken = 3,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/sushi = 2,
+					/obj/item/weapon/reagent_containers/food/snacks/jellysandwich = 3,
+					/obj/item/weapon/reagent_containers/food/snacks/grilledcheese = 3,
+					/obj/item/weapon/reagent_containers/food/snacks/hotdog = 3,
+					/obj/item/weapon/storage/box/wings = 2,
+					/obj/item/weapon/reagent_containers/food/snacks/loadedbakedpotato = 3,
+					/obj/item/weapon/reagent_containers/food/snacks/omelette = 3,
+					/obj/item/weapon/reagent_containers/food/snacks/waffles = 3,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/pizza/mushroompizza = 1,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/pizza/vegetablepizza = 1,
+					/obj/item/weapon/reagent_containers/food/snacks/appletart = 2,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/applecake = 1,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/bananabread = 2,
+					/obj/item/weapon/reagent_containers/food/snacks/sliceable/creamcheesebread = 2
+					)
+	contraband = list(/obj/item/weapon/reagent_containers/food/snacks/mysterysoup = 10)
+	vend_delay = 15
+/* For later, then
+/obj/machinery/vending/weapon_machine
+	name = "Frozen Star Guns&Ammo"
+	desc = "A self-defense equipment vending machine. When you need to take care of that clown."
+	product_slogans = "The best defense is good offense!;Buy for your whole family today!;Nobody can outsmart bullet!;God created man - Frozen Star made them EQUAL!;Nobody can outsmart bullet!;Stupidity can be cured! By LEAD.;Dead kids can't bully your children!"
+	product_ads = "Stunning!;Take justice in your own hands!;LEADearship!"
+	icon_state = "weapon"
+	products = list(/obj/item/device/flash = 6,/obj/item/weapon/reagent_containers/spray/pepper = 6, /obj/item/weapon/gun/projectile/olivaw = 5, /obj/item/weapon/gun/projectile/giskard = 5, /obj/item/ammo_magazine/mg/cl32/rubber = 20)
+	contraband = list(/obj/item/weapon/reagent_containers/food/snacks/syndicake = 6)
+	prices = list(/obj/item/device/flash = 600,/obj/item/weapon/reagent_containers/spray/pepper = 800,  /obj/item/weapon/gun/projectile/olivaw = 1600, /obj/item/weapon/gun/projectile/giskard = 1200, /obj/item/ammo_magazine/mg/cl32/rubber = 200)
+*/

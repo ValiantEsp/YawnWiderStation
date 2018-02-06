@@ -1,5 +1,5 @@
 /obj/machinery/pros_fabricator
-	icon = 'icons/obj/robotics.dmi'
+	icon = 'icons/obj/robotics_vr.dmi' //VOREStation Edit - New icon
 	icon_state = "fab-idle"
 	name = "Prosthetics Fabricator"
 	desc = "A machine used for construction of prosthetics."
@@ -13,7 +13,7 @@
 
 	var/speed = 1
 	var/mat_efficiency = 1
-	var/list/materials = list(DEFAULT_WALL_MATERIAL = 0, "glass" = 0, "gold" = 0, "silver" = 0, "diamond" = 0, "phoron" = 0, "uranium" = 0, "plasteel" = 0)
+	var/list/materials = list(DEFAULT_WALL_MATERIAL = 0, "glass" = 0, "plastic" = 0, "gold" = 0, "silver" = 0, "osmium" = 0, "diamond" = 0, "phoron" = 0, "uranium" = 0, "plasteel" = 0)
 	var/res_max_amount = 200000
 
 	var/datum/research/files
@@ -239,7 +239,7 @@
 
 /obj/machinery/pros_fabricator/proc/can_build(var/datum/design/D)
 	for(var/M in D.materials)
-		if(materials[M] < D.materials[M])
+		if(materials[M] < (D.materials[M] * mat_efficiency))
 			return 0
 	return 1
 

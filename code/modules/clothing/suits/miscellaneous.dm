@@ -120,7 +120,7 @@
 	name = "red sweatervest"
 	icon_state = "sweatervest_red"
 */
-/obj/item/clothing/suit/apron/overalls
+/obj/item/clothing/suit/storage/apron/overalls
 	name = "coveralls"
 	desc = "A set of denim overalls."
 	icon_state = "overalls"
@@ -208,7 +208,7 @@
 
 /obj/item/clothing/suit/iasexy
 	name = "sexy internal affairs suit"
-	desc = "Now where's your pen?~..."
+	desc = "Now where's your pen?~"
 	icon_state = "iacost"
 	body_parts_covered = UPPER_TORSO|FEET|LOWER_TORSO|EYES
 	flags_inv = HIDEJUMPSUIT|HIDESHOES|HIDETIE|HIDEHOLSTER
@@ -257,6 +257,14 @@
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO|LEGS|FEET|ARMS|HANDS
 	flags_inv = HIDEGLOVES|HIDESHOES|HIDEJUMPSUIT|HIDETAIL|HIDETIE|HIDEHOLSTER
 
+/obj/item/clothing/suit/straight_jacket/attack_hand(mob/living/user as mob)
+	if(ishuman(user))
+		var/mob/living/carbon/human/H = user
+		if(src == H.wear_suit)
+			to_chat(H, "<span class='notice'>You need help taking this off!</span>")
+			return
+	..()
+
 /obj/item/clothing/suit/ianshirt
 	name = "worn shirt"
 	desc = "A worn out, curiously comfortable t-shirt with a picture of Ian. You wouldn't go so far as to say it feels like being hugged when you wear it but it's pretty close. Good for sleeping in."
@@ -264,6 +272,12 @@
 	item_state_slots = list(slot_r_hand_str = "labcoat", slot_l_hand_str = "labcoat") //placeholder -S2-
 	body_parts_covered = UPPER_TORSO|ARMS
 	flags_inv = HIDETIE|HIDEHOLSTER
+
+obj/item/clothing/suit/kimono
+	name = "kimono"
+	desc = "A traditional Japanese kimono."
+	icon_state = "kimono"
+	addblends = "kimono_a"
 
 /*
  * coats
@@ -327,6 +341,13 @@
 	item_state_slots = list(slot_r_hand_str = "leather_jacket", slot_l_hand_str = "leather_jacket")
 	flags_inv = HIDEHOLSTER
 
+obj/item/clothing/suit/storage/toggle/peacoat
+	name = "peacoat"
+	desc = "A well-tailored, stylish peacoat."
+	icon_state = "peacoat"
+	addblends = "peacoat_a"
+	item_state_slots = list(slot_r_hand_str = "peacoat", slot_l_hand_str = "peacoat")
+	flags_inv = HIDEHOLSTER
 /*
  * stripper
  */
@@ -358,12 +379,18 @@
 	desc = "A thick jacket with a rubbery, water-resistant shell."
 	icon_state = "pufferjacket"
 	item_state_slots = list(slot_r_hand_str = "chainmail", slot_l_hand_str = "chainmail")
+	body_parts_covered = UPPER_TORSO|LOWER_TORSO|ARMS
+	cold_protection = UPPER_TORSO|LOWER_TORSO|ARMS
+	min_cold_protection_temperature = SPACE_SUIT_MIN_COLD_PROTECTION_TEMPERATURE
+	flags_inv = HIDEHOLSTER
 
 /obj/item/clothing/suit/jacket/puffer/vest
 	name = "puffer vest"
 	desc = "A thick vest with a rubbery, water-resistant shell."
 	icon_state = "puffervest"
 	item_state_slots = list(slot_r_hand_str = "chainmail", slot_l_hand_str = "chainmail")
+	body_parts_covered = UPPER_TORSO|LOWER_TORSO
+	cold_protection = UPPER_TORSO|LOWER_TORSO
 
 /obj/item/clothing/suit/storage/miljacket
 	name = "military jacket"
@@ -391,8 +418,6 @@
 	desc = "A thick, well-worn WW2 leather bomber jacket."
 	icon_state = "bomber"
 	item_state_slots = list(slot_r_hand_str = "brown_jacket", slot_l_hand_str = "brown_jacket")
-	icon_open = "bomber_open"
-	icon_closed = "bomber"
 	allowed = list (/obj/item/weapon/pen, /obj/item/weapon/paper, /obj/item/device/flashlight, /obj/item/weapon/tank/emergency/oxygen, /obj/item/weapon/storage/fancy/cigarettes, /obj/item/weapon/storage/box/matches, /obj/item/weapon/reagent_containers/food/drinks/flask)
 	body_parts_covered = UPPER_TORSO|ARMS
 	flags_inv = HIDEHOLSTER
@@ -415,7 +440,6 @@
 	name = "leather jacket"
 	desc = "A black leather coat."
 	icon_state = "leather_jacket"
-	icon_open = "leather_jacket_open"
 	allowed = list (/obj/item/weapon/pen, /obj/item/weapon/paper, /obj/item/device/flashlight, /obj/item/weapon/tank/emergency/oxygen, /obj/item/weapon/storage/fancy/cigarettes, /obj/item/weapon/storage/box/matches, /obj/item/weapon/reagent_containers/food/drinks/flask)
 	body_parts_covered = UPPER_TORSO|ARMS
 	flags_inv = HIDEHOLSTER
@@ -424,8 +448,6 @@
 	name = "leather vest"
 	desc = "A black leather vest."
 	icon_state = "leather_jacket_sleeveless"
-	icon_open = "leather_jacket_sleeveless_open"
-	icon_closed = "leather_jacket_sleeveless"
 	body_parts_covered = UPPER_TORSO
 	item_state_slots = list(slot_r_hand_str = "leather_jacket", slot_l_hand_str = "leather_jacket")
 
@@ -439,16 +461,12 @@
 /obj/item/clothing/suit/storage/toggle/leather_jacket/nanotrasen
 	desc = "A black leather coat. A corporate logo is proudly displayed on the back."
 	icon_state = "leather_jacket_nt"
-	icon_closed = "leather_jacket_nt"
-	icon_open = "leather_jacket_nt_open"
 	item_state_slots = list(slot_r_hand_str = "leather_jacket", slot_l_hand_str = "leather_jacket")
 
 /obj/item/clothing/suit/storage/toggle/leather_jacket/nanotrasen/sleeveless
 	name = "leather vest"
 	desc = "A black leather vest. A corporate logo is proudly displayed on the back."
 	icon_state = "leather_jacket_nt_sleeveless"
-	icon_open = "leather_jacket_nt_sleeveless_open"
-	icon_closed = "leather_jacket_nt_sleeveless"
 	body_parts_covered = UPPER_TORSO
 	item_state_slots = list(slot_r_hand_str = "leather_jacket", slot_l_hand_str = "leather_jacket")
 
@@ -458,8 +476,6 @@
 	desc = "A brown leather coat."
 	icon_state = "brown_jacket"
 	item_state_slots = list(slot_r_hand_str = "brown_jacket", slot_l_hand_str = "brown_jacket")
-	icon_open = "brown_jacket_open"
-	icon_closed = "brown_jacket"
 	allowed = list (/obj/item/weapon/pen, /obj/item/weapon/paper, /obj/item/device/flashlight,/obj/item/weapon/tank/emergency/oxygen, /obj/item/weapon/storage/fancy/cigarettes, /obj/item/weapon/storage/box/matches, /obj/item/weapon/reagent_containers/food/drinks/flask)
 	body_parts_covered = UPPER_TORSO|ARMS
 	flags_inv = HIDEHOLSTER
@@ -468,8 +484,6 @@
 	name = "brown vest"
 	desc = "A brown leather vest."
 	icon_state = "brown_jacket_sleeveless"
-	icon_open = "brown_jacket_sleeveless_open"
-	icon_closed = "brown_jacket_sleeveless"
 	body_parts_covered = UPPER_TORSO
 	item_state_slots = list(slot_r_hand_str = "brown_jacket", slot_l_hand_str = "brown_jacket")
 
@@ -477,15 +491,11 @@
 	desc = "A brown leather coat. A corporate logo is proudly displayed on the back."
 	icon_state = "brown_jacket_nt"
 	item_state_slots = list(slot_r_hand_str = "brown_jacket", slot_l_hand_str = "brown_jacket")
-	icon_open = "brown_jacket_nt_open"
-	icon_closed = "brown_jacket_nt"
 
 /obj/item/clothing/suit/storage/toggle/brown_jacket/nanotrasen/sleeveless
 	name = "brown vest"
 	desc = "A brown leather vest. A corporate logo is proudly displayed on the back."
 	icon_state = "brown_jacket_nt_sleeveless"
-	icon_open = "brown_jacket_nt_open"
-	icon_closed = "brown_jacket_nt_sleeveless"
 	body_parts_covered = UPPER_TORSO
 	item_state_slots = list(slot_r_hand_str = "brown_jacket", slot_l_hand_str = "brown_jacket")
 
@@ -494,8 +504,6 @@
 	desc = "A denim coat."
 	icon_state = "denim_jacket"
 	item_state_slots = list(slot_r_hand_str = "denim_jacket", slot_l_hand_str = "denim_jacket")
-	icon_open = "denim_jacket_open"
-	icon_closed = "denim_jacket"
 	allowed = list (/obj/item/weapon/pen, /obj/item/weapon/paper, /obj/item/device/flashlight,/obj/item/weapon/tank/emergency/oxygen, /obj/item/weapon/storage/fancy/cigarettes, /obj/item/weapon/storage/box/matches, /obj/item/weapon/reagent_containers/food/drinks/flask)
 	body_parts_covered = UPPER_TORSO|ARMS
 	flags_inv = HIDEHOLSTER
@@ -504,8 +512,6 @@
 	name = "denim vest"
 	desc = "A denim vest."
 	icon_state = "denim_jacket_sleeveless"
-	icon_open = "denim_jacket_sleeveless_open"
-	icon_closed = "denim_jacket_sleeveless"
 	body_parts_covered = UPPER_TORSO
 	item_state_slots = list(slot_r_hand_str = "denim_jacket", slot_l_hand_str = "denim_jacket")
 
@@ -513,15 +519,11 @@
 	desc = "A denim coat. A corporate logo is proudly displayed on the back."
 	icon_state = "denim_jacket_nt"
 	item_state_slots = list(slot_r_hand_str = "denim_jacket", slot_l_hand_str = "denim_jacket")
-	icon_open = "denim_jacket_nt_open"
-	icon_closed = "denim_jacket_nt"
 
 /obj/item/clothing/suit/storage/toggle/denim_jacket/nanotrasen/sleeveless
 	name = "denim vest"
 	desc = "A denim vest. A corporate logo is proudly displayed on the back."
 	icon_state = "denim_jacket_nt_sleeveless"
-	icon_open = "denim_jacket_nt_open"
-	icon_closed = "denim_jacket_nt_sleeveless"
 	body_parts_covered = UPPER_TORSO
 	item_state_slots = list(slot_r_hand_str = "denim_jacket", slot_l_hand_str = "denim_jacket")
 
@@ -530,8 +532,6 @@
 	desc = "A warm, grey sweatshirt."
 	icon_state = "grey_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_grey", slot_l_hand_str = "suit_grey")
-	icon_open = "grey_hoodie_open"
-	icon_closed = "grey_hoodie"
 	min_cold_protection_temperature = T0C - 20
 	cold_protection = UPPER_TORSO|LOWER_TORSO|ARMS
 	flags_inv = HIDEHOLSTER
@@ -541,84 +541,70 @@
 	desc = "A warm, black sweatshirt."
 	icon_state = "black_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_black", slot_l_hand_str = "suit_black")
-	icon_open = "black_hoodie_open"
-	icon_closed = "black_hoodie"
 
 /obj/item/clothing/suit/storage/toggle/hoodie/red
 	name = "red hoodie"
 	desc = "A warm, red sweatshirt."
 	icon_state = "red_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_red", slot_l_hand_str = "suit_red")
-	icon_open = "red_hoodie_open"
-	icon_closed = "red_hoodie"
 
 /obj/item/clothing/suit/storage/toggle/hoodie/blue
 	name = "blue hoodie"
 	desc = "A warm, blue sweatshirt."
 	icon_state = "blue_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_blue", slot_l_hand_str = "suit_blue")
-	icon_open = "blue_hoodie_open"
-	icon_closed = "blue_hoodie"
 
 /obj/item/clothing/suit/storage/toggle/hoodie/green
 	name = "green hoodie"
 	desc = "A warm, green sweatshirt."
 	icon_state = "green_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_olive", slot_l_hand_str = "suit_olive")
-	icon_open = "green_hoodie_open"
-	icon_closed = "green_hoodie"
 
 /obj/item/clothing/suit/storage/toggle/hoodie/orange
 	name = "orange hoodie"
 	desc = "A warm, orange sweatshirt."
 	icon_state = "orange_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_orange", slot_l_hand_str = "suit_orange")
-	icon_open = "orange_hoodie_open"
-	icon_closed = "orange_hoodie"
 
 /obj/item/clothing/suit/storage/toggle/hoodie/yellow
 	name = "yellow hoodie"
 	desc = "A warm, yellow sweatshirt."
 	icon_state = "yellow_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_yellow", slot_l_hand_str = "suit_yellow")
-	icon_open = "yellow_hoodie_open"
-	icon_closed = "yellow_hoodie"
 
 /obj/item/clothing/suit/storage/toggle/hoodie/cti
 	name = "CTI hoodie"
 	desc = "A warm, black sweatshirt.  It bears the letters CTI on the back, a lettering to the prestigious university in Tau Ceti, Ceti Technical Institute.  There is a blue supernova embroidered on the front, the emblem of CTI."
 	icon_state = "cti_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_black", slot_l_hand_str = "suit_black")
-	icon_open = "cti_hoodie_open"
-	icon_closed = "cti_hoodie"
 
 /obj/item/clothing/suit/storage/toggle/hoodie/mu
 	name = "mojave university hoodie"
 	desc = "A warm, gray sweatshirt.  It bears the letters MU on the front, a lettering to the well-known public college, Mojave University."
 	icon_state = "mu_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_grey", slot_l_hand_str = "suit_grey")
-	icon_open = "mu_hoodie_open"
-	icon_closed = "mu_hoodie"
 
 /obj/item/clothing/suit/storage/toggle/hoodie/nt
 	name = "NT hoodie"
 	desc = "A warm, blue sweatshirt.  It proudly bears the silver NanoTrasen insignia lettering on the back.  The edges are trimmed with silver."
 	icon_state = "nt_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_blue", slot_l_hand_str = "suit_blue")
-	icon_open = "nt_hoodie_open"
-	icon_closed = "nt_hoodie"
 
 /obj/item/clothing/suit/storage/toggle/hoodie/smw
 	name = "Space Mountain Wind hoodie"
 	desc = "A warm, black sweatshirt.  It has the logo for the popular softdrink Space Mountain Wind on both the front and the back."
 	icon_state = "smw_hoodie"
 	item_state_slots = list(slot_r_hand_str = "suit_black", slot_l_hand_str = "suit_black")
-	icon_open = "smw_hoodie_open"
-	icon_closed = "smw_hoodie"
+
+/obj/item/clothing/suit/storage/toggle/hoodie/nrti
+	name = "New Reykjavik Technical Institute hoodie"
+	desc = "A warm, gray sweatshirt. It bears the letters NRT on the back, in reference to Sif's premiere technical institute."
+	icon_state = "nrti_hoodie"
+	item_state_slots = list(slot_r_hand_str = "suit_grey", slot_l_hand_str = "suit_grey")
 
 /obj/item/clothing/suit/whitedress
 	name = "white dress"
-	desc = "A fancy white dress."
+	desc = "A fancy dress."
 	icon_state = "white_dress"
 	item_state_slots = list(slot_r_hand_str = "white_dress", slot_l_hand_str = "white_dress")
 	body_parts_covered = UPPER_TORSO|LOWER_TORSO|LEGS
@@ -673,16 +659,16 @@
 	desc = "A heavy jacket made from 'synthetic' animal furs."
 	icon_state = "coatwinter"
 	item_state_slots = list(slot_r_hand_str = "coatwinter", slot_l_hand_str = "coatwinter")
-	body_parts_covered = UPPER_TORSO|LOWER_TORSO|ARMS
+	body_parts_covered = UPPER_TORSO|LOWER_TORSO|ARMS|LEGS
 	flags_inv = HIDEHOLSTER
-	cold_protection = UPPER_TORSO|LOWER_TORSO|ARMS
+	cold_protection = UPPER_TORSO|LOWER_TORSO|ARMS|LEGS
 	min_cold_protection_temperature = SPACE_SUIT_MIN_COLD_PROTECTION_TEMPERATURE
 	armor = list(melee = 0, bullet = 0, laser = 0,energy = 0, bomb = 0, bio = 10, rad = 0)
 	hooded = 1
-	hoodtype = /obj/item/clothing/head/winterhood
+	hoodtype = /obj/item/clothing/head/hood/winter
 	allowed = list (/obj/item/weapon/pen, /obj/item/weapon/paper, /obj/item/device/flashlight,/obj/item/weapon/tank/emergency/oxygen, /obj/item/weapon/storage/fancy/cigarettes, /obj/item/weapon/storage/box/matches, /obj/item/weapon/reagent_containers/food/drinks/flask)
 
-/obj/item/clothing/head/winterhood
+/obj/item/clothing/head/hood/winter
 	name = "winter hood"
 	desc = "A hood attached to a heavy winter jacket."
 	icon_state = "generic_hood"
@@ -696,9 +682,9 @@
 	icon_state = "coatcaptain"
 	item_state_slots = list(slot_r_hand_str = "coatcaptain", slot_l_hand_str = "coatcaptain")
 	armor = list(melee = 20, bullet = 15, laser = 20, energy = 10, bomb = 15, bio = 0, rad = 0)
-	hoodtype = /obj/item/clothing/head/winterhood/captain
+	hoodtype = /obj/item/clothing/head/hood/winter/captain
 
-/obj/item/clothing/head/winterhood/captain
+/obj/item/clothing/head/hood/winter/captain
 	name = "colony director's winter hood"
 	armor = list(melee = 20, bullet = 15, laser = 20, energy = 10, bomb = 15, bio = 0, rad = 0)
 
@@ -707,9 +693,9 @@
 	icon_state = "coatsecurity"
 	item_state_slots = list(slot_r_hand_str = "coatsecurity", slot_l_hand_str = "coatsecurity")
 	armor = list(melee = 25, bullet = 20, laser = 20, energy = 15, bomb = 20, bio = 0, rad = 0)
-	hoodtype = /obj/item/clothing/head/winterhood/security
+	hoodtype = /obj/item/clothing/head/hood/winter/security
 
-/obj/item/clothing/head/winterhood/security
+/obj/item/clothing/head/hood/winter/security
 	name = "security winter hood"
 	armor = list(melee = 25, bullet = 20, laser = 20, energy = 15, bomb = 20, bio = 0, rad = 0)
 
@@ -718,9 +704,9 @@
 	icon_state = "coatmedical"
 	item_state_slots = list(slot_r_hand_str = "coatmedical", slot_l_hand_str = "coatmedical")
 	armor = list(melee = 0, bullet = 0, laser = 0,energy = 0, bomb = 0, bio = 50, rad = 0)
-	hoodtype = /obj/item/clothing/head/winterhood/medical
+	hoodtype = /obj/item/clothing/head/hood/winter/medical
 
-/obj/item/clothing/head/winterhood/medical
+/obj/item/clothing/head/hood/winter/medical
 	name = "medical winter hood"
 	armor = list(melee = 0, bullet = 0, laser = 0,energy = 0, bomb = 0, bio = 50, rad = 0)
 
@@ -729,9 +715,9 @@
 	icon_state = "coatscience"
 	item_state_slots = list(slot_r_hand_str = "coatscience", slot_l_hand_str = "coatscience")
 	armor = list(melee = 0, bullet = 0, laser = 0,energy = 0, bomb = 10, bio = 0, rad = 0)
-	hoodtype = /obj/item/clothing/head/winterhood/science
+	hoodtype = /obj/item/clothing/head/hood/winter/science
 
-/obj/item/clothing/head/winterhood/science
+/obj/item/clothing/head/hood/winter/science
 	name = "science winter hood"
 	armor = list(melee = 0, bullet = 0, laser = 0,energy = 0, bomb = 10, bio = 0, rad = 0)
 
@@ -740,9 +726,9 @@
 	icon_state = "coatengineer"
 	item_state_slots = list(slot_r_hand_str = "coatengineer", slot_l_hand_str = "coatengineer")
 	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 20)
-	hoodtype = /obj/item/clothing/head/winterhood/engineering
+	hoodtype = /obj/item/clothing/head/hood/winter/engineering
 
-/obj/item/clothing/head/winterhood/engineering
+/obj/item/clothing/head/hood/winter/engineering
 	name = "engineering winter hood"
 	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 20)
 
@@ -750,27 +736,27 @@
 	name = "atmospherics winter coat"
 	icon_state = "coatatmos"
 	item_state_slots = list(slot_r_hand_str = "coatatmos", slot_l_hand_str = "coatatmos")
-	hoodtype = /obj/item/clothing/head/winterhood/engineering/atmos
+	hoodtype = /obj/item/clothing/head/hood/winter/engineering/atmos
 
-/obj/item/clothing/head/winterhood/engineering/atmos
+/obj/item/clothing/head/hood/winter/engineering/atmos
 	name = "atmospherics winter hood"
 
 /obj/item/clothing/suit/storage/hooded/wintercoat/hydro
 	name = "hydroponics winter coat"
 	icon_state = "coathydro"
 	item_state_slots = list(slot_r_hand_str = "coathydro", slot_l_hand_str = "coathydro")
-	hoodtype = /obj/item/clothing/head/winterhood/hydro
+	hoodtype = /obj/item/clothing/head/hood/winter/hydro
 
-/obj/item/clothing/head/winterhood/hydro
+/obj/item/clothing/head/hood/winter/hydro
 	name = "hydroponics winter hood"
 
 /obj/item/clothing/suit/storage/hooded/wintercoat/cargo
 	name = "cargo winter coat"
 	icon_state = "coatcargo"
 	item_state_slots = list(slot_r_hand_str = "coatcargo", slot_l_hand_str = "coatcargo")
-	hoodtype = /obj/item/clothing/head/winterhood/cargo
+	hoodtype = /obj/item/clothing/head/hood/winter/cargo
 
-/obj/item/clothing/head/winterhood/cargo
+/obj/item/clothing/head/hood/winter/cargo
 	name = "cargo winter hood"
 
 /obj/item/clothing/suit/storage/hooded/wintercoat/miner
@@ -778,11 +764,50 @@
 	icon_state = "coatminer"
 	item_state_slots = list(slot_r_hand_str = "coatminer", slot_l_hand_str = "coatminer")
 	armor = list(melee = 10, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0)
-	hoodtype = /obj/item/clothing/head/winterhood/miner
+	hoodtype = /obj/item/clothing/head/hood/winter/miner
 
-/obj/item/clothing/head/winterhood/miner
+/obj/item/clothing/head/hood/winter/miner
 	name = "mining winter hood"
 	armor = list(melee = 10, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 0, rad = 0)
+
+/obj/item/clothing/suit/storage/hooded/explorer
+	name = "explorer suit"
+	desc = "An armoured suit for exploring harsh environments."
+	icon_state = "explorer"
+	item_state = "explorer"
+	flags = THICKMATERIAL
+	body_parts_covered = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
+	min_cold_protection_temperature = SPACE_SUIT_MIN_COLD_PROTECTION_TEMPERATURE
+	cold_protection = UPPER_TORSO|LOWER_TORSO|LEGS|ARMS
+	hooded = TRUE
+	hoodtype = /obj/item/clothing/head/hood/explorer
+	siemens_coefficient = 0.9
+	armor = list(melee = 30, bullet = 20, laser = 20, energy = 20, bomb = 50, bio = 100, rad = 50) // Inferior to sec vests in bullet/laser but better for environmental protection.
+	allowed = list(
+		/obj/item/device/flashlight,
+		/obj/item/weapon/gun,
+		/obj/item/ammo_magazine,
+		/obj/item/weapon/melee,
+		/obj/item/weapon/material/knife,
+		/obj/item/weapon/tank,
+		/obj/item/device/radio,
+		/obj/item/weapon/pickaxe
+		)
+
+/obj/item/clothing/head/hood/explorer
+	name = "explorer hood"
+	desc = "An armoured hood for exploring harsh environments."
+	icon_state = "explorer"
+	brightness_on = 3
+	light_overlay = "hood_light"
+	action_button_name = "Toggle Head-light"
+	body_parts_covered = HEAD
+	cold_protection = HEAD
+	flags = THICKMATERIAL
+	flags_inv = HIDEEARS | BLOCKHAIR
+	min_cold_protection_temperature = SPACE_SUIT_MIN_COLD_PROTECTION_TEMPERATURE
+	siemens_coefficient = 0.9
+	armor = list(melee = 30, bullet = 20, laser = 20, energy = 20, bomb = 50, bio = 100, rad = 50)
 
 /obj/item/clothing/suit/varsity
 	name = "black varsity jacket"
@@ -813,44 +838,73 @@
 	icon_state = "varsity_brown"
 
 /*
+ * Department Jackets
+ */
+/obj/item/clothing/suit/storage/toggle/sec_dep_jacket
+	name = "department jacket, security"
+	desc = "A cozy jacket in security's colors. Show your department pride!"
+	icon_state = "sec_dep_jacket"
+	item_state_slots = list(slot_r_hand_str = "sec_dep_jacket", slot_l_hand_str = "sec_dep_jacket")
+	flags_inv = HIDEHOLSTER
+
+/obj/item/clothing/suit/storage/toggle/engi_dep_jacket
+	name = "department jacket, engineering"
+	desc = "A cozy jacket in engineering's colors. Show your department pride!"
+	icon_state = "engi_dep_jacket"
+	item_state_slots = list(slot_r_hand_str = "engi_dep_jacket", slot_l_hand_str = "engi_dep_jacket")
+	flags_inv = HIDEHOLSTER
+
+/obj/item/clothing/suit/storage/toggle/supply_dep_jacket
+	name = "department jacket, supply"
+	desc = "A cozy jacket in supply's colors. Show your department pride!"
+	icon_state = "supply_dep_jacket"
+	item_state_slots = list(slot_r_hand_str = "supply_dep_jacket", slot_l_hand_str = "supply_dep_jacket")
+	flags_inv = HIDEHOLSTER
+
+/obj/item/clothing/suit/storage/toggle/sci_dep_jacket
+	name = "department jacket, science"
+	desc = "A cozy jacket in science's colors. Show your department pride!"
+	icon_state = "sci_dep_jacket"
+	item_state_slots = list(slot_r_hand_str = "sci_dep_jacket", slot_l_hand_str = "sci_dep_jacket")
+	flags_inv = HIDEHOLSTER
+
+/obj/item/clothing/suit/storage/toggle/med_dep_jacket
+	name = "department jacket, medical"
+	desc = "A cozy jacket in medical's colors. Show your department pride!"
+	icon_state = "med_dep_jacket"
+	item_state_slots = list(slot_r_hand_str = "med_dep_jacket", slot_l_hand_str = "med_dep_jacket")
+	flags_inv = HIDEHOLSTER
+
+/*
  * Track Jackets
  */
 /obj/item/clothing/suit/storage/toggle/track
 	name = "track jacket"
-	desc = "a track jacket, for the athletic."
+	desc = "A track jacket, for the athletic."
 	icon_state = "trackjacket"
 	item_state_slots = list(slot_r_hand_str = "black_labcoat", slot_l_hand_str = "black_labcoat")
-	icon_open = "trackjacket_open"
-	icon_closed = "trackjacket"
 	allowed = list (/obj/item/weapon/pen, /obj/item/weapon/paper, /obj/item/device/flashlight,/obj/item/weapon/tank/emergency/oxygen, /obj/item/weapon/storage/fancy/cigarettes, /obj/item/weapon/storage/box/matches, /obj/item/weapon/reagent_containers/food/drinks/flask)
 
 /obj/item/clothing/suit/storage/toggle/track/blue
 	name = "blue track jacket"
 	icon_state = "trackjacketblue"
 	item_state_slots = list(slot_r_hand_str = "blue_labcoat", slot_l_hand_str = "blue_labcoat")
-	icon_open = "trackjacketblue_open"
-	icon_closed = "trackjacketblue"
+
 
 /obj/item/clothing/suit/storage/toggle/track/green
 	name = "green track jacket"
 	icon_state = "trackjacketgreen"
 	item_state_slots = list(slot_r_hand_str = "green_labcoat", slot_l_hand_str = "green_labcoat")
-	icon_open = "trackjacketgreen_open"
-	icon_closed = "trackjacketgreen"
 
 /obj/item/clothing/suit/storage/toggle/track/red
 	name = "red track jacket"
 	icon_state = "trackjacketred"
 	item_state_slots = list(slot_r_hand_str = "red_labcoat", slot_l_hand_str = "red_labcoat")
-	icon_open = "trackjacketred_open"
-	icon_closed = "trackjacketred"
 
 /obj/item/clothing/suit/storage/toggle/track/white
 	name = "white track jacket"
 	icon_state = "trackjacketwhite"
 	item_state_slots = list(slot_r_hand_str = "labcoat", slot_l_hand_str = "labcoat")
-	icon_open = "trackjacketwhite_open"
-	icon_closed = "trackjacketwhite"
 
 //Flannels
 
@@ -876,9 +930,11 @@
 
 	if(rolled == 0)
 		rolled = 1
+		body_parts_covered &= ~(ARMS)
 		usr << "<span class='notice'>You roll up the sleeves of your [src].</span>"
 	else
 		rolled = 0
+		body_parts_covered = initial(body_parts_covered)
 		usr << "<span class='notice'>You roll down the sleeves of your [src].</span>"
 	update_icon()
 
@@ -944,10 +1000,44 @@
 /obj/item/clothing/suit/storage/toggle/greengov
 	name = "green formal jacket"
 	desc = "A sleek proper formal jacket with gold buttons."
-	icon_state = "suitjacket_green_open"
+	icon_state = "suitjacket_green"
 	item_state_slots = list(slot_r_hand_str = "suit_olive", slot_l_hand_str = "suit_olive")
-	icon_open = "suitjacket_green_open"
-	icon_closed = "suitjacket_green"
 	blood_overlay_type = "coat"
 	body_parts_covered = UPPER_TORSO|ARMS
 	flags_inv = HIDEHOLSTER
+
+/obj/item/clothing/suit/storage/snowsuit
+	name = "snowsuit"
+	desc = "A suit made to keep you nice and toasty on cold winter days. Or at least alive."
+	icon_state = "snowsuit"
+	item_state_slots = list(slot_r_hand_str = "labcoat", slot_l_hand_str = "labcoat")
+	body_parts_covered = UPPER_TORSO|LOWER_TORSO|ARMS
+	flags_inv = HIDEHOLSTER
+	cold_protection = UPPER_TORSO|LOWER_TORSO|ARMS
+	min_cold_protection_temperature = SPACE_SUIT_MIN_COLD_PROTECTION_TEMPERATURE
+	armor = list(melee = 0, bullet = 0, laser = 0,energy = 0, bomb = 0, bio = 10, rad = 0)
+	allowed = list (/obj/item/weapon/pen, /obj/item/weapon/paper, /obj/item/device/flashlight,/obj/item/weapon/tank/emergency/oxygen, /obj/item/weapon/storage/fancy/cigarettes, /obj/item/weapon/storage/box/matches, /obj/item/weapon/reagent_containers/food/drinks/flask)
+
+/obj/item/clothing/suit/storage/snowsuit/command
+	name = "command snowsuit"
+	icon_state = "snowsuit_command"
+
+/obj/item/clothing/suit/storage/snowsuit/security
+	name = "security snowsuit"
+	icon_state = "snowsuit_security"
+
+/obj/item/clothing/suit/storage/snowsuit/medical
+	name = "medical snowsuit"
+	icon_state = "snowsuit_medical"
+
+/obj/item/clothing/suit/storage/snowsuit/engineering
+	name = "engineering snowsuit"
+	icon_state = "snowsuit_engineering"
+
+/obj/item/clothing/suit/storage/snowsuit/cargo
+	name = "cargo snowsuit"
+	icon_state = "snowsuit_cargo"
+
+/obj/item/clothing/suit/storage/snowsuit/science
+	name = "science snowsuit"
+	icon_state = "snowsuit_science"

@@ -1,6 +1,6 @@
-var/global/list/datum/pipe_network/pipe_networks = list()
+var/global/list/datum/pipe_network/pipe_networks = list()	// TODO - Move into SSmachines
 
-datum/pipe_network
+/datum/pipe_network
 	var/list/datum/gas_mixture/gases = list() //All of the gas_mixtures continuously connected in this network
 	var/volume = 0	//caches the total volume for atmos machines to use in gas calculations
 
@@ -11,10 +11,14 @@ datum/pipe_network
 	var/update = 1
 	//var/datum/gas_mixture/air_transient = null
 
-	New()
-		//air_transient = new()
-
-		..()
+	Destroy()
+		STOP_PROCESSING_PIPENET(src)
+		for(var/datum/pipeline/line_member in line_members)
+			line_member.network = null
+		for(var/obj/machinery/atmospherics/normal_member in normal_members)
+			normal_member.reassign_network(src, null)
+		gases.Cut()  // Do not qdel the gases, we don't own them
+		return ..()
 
 	proc/process()
 		//Equalize gases amongst pipe if called for
@@ -32,13 +36,14 @@ datum/pipe_network
 
 		if(!start_normal)
 			qdel(src)
+			return
 
 		start_normal.network_expand(src, reference)
 
 		update_network_gases()
 
 		if((normal_members.len>0)||(line_members.len>0))
-			pipe_networks += src
+			START_PROCESSING_PIPENET(src)
 		else
 			qdel(src)
 

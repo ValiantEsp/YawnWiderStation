@@ -1,3 +1,5 @@
+var/list/table_icon_cache = list()
+
 /obj/structure/table
 	name = "table frame"
 	icon = 'icons/obj/tables.dmi'
@@ -8,6 +10,7 @@
 	climbable = 1
 	layer = 2.8
 	throwpass = 1
+	surgery_odds = 66
 	var/flipped = 0
 	var/maxhealth = 10
 	var/health = 10
@@ -53,6 +56,9 @@
 		visible_message("<span class='warning'>\The [src] breaks down!</span>")
 		return break_to_parts() // if we break and form shards, return them to the caller to do !FUN! things with
 
+/obj/structure/table/blob_act()
+	take_damage(100)
+
 /obj/structure/table/initialize()
 	..()
 
@@ -67,7 +73,7 @@
 	// reset color/alpha, since they're set for nice map previews
 	color = "#ffffff"
 	alpha = 255
-	update_connections(1)
+	update_connections(ticker && ticker.current_state == GAME_STATE_PLAYING)
 	update_icon()
 	update_desc()
 	update_material()
@@ -78,7 +84,7 @@
 	update_connections(1) // Update tables around us to ignore us (material=null forces no connections)
 	for(var/obj/structure/table/T in oview(src, 1))
 		T.update_icon()
-	..()
+	. = ..()
 
 /obj/structure/table/examine(mob/user)
 	. = ..()
@@ -139,8 +145,8 @@
 		var/obj/item/weapon/weldingtool/F = W
 		if(F.welding)
 			user << "<span class='notice'>You begin reparing damage to \the [src].</span>"
-			playsound(src.loc, 'sound/items/Welder.ogg', 50, 1)
-			if(!do_after(user, 20) || !F.remove_fuel(1, user))
+			playsound(src, F.usesound, 50, 1)
+			if(!do_after(user, 20 * F.toolspeed) || !F.remove_fuel(1, user))
 				return
 			user.visible_message("<span class='notice'>\The [user] repairs some damage to \the [src].</span>",
 			                              "<span class='notice'>You repair some damage to \the [src].</span>")
@@ -157,6 +163,18 @@
 		return 1
 
 	return ..()
+
+/obj/structure/table/attack_hand(mob/user as mob)
+	if(istype(user, /mob/living/carbon/human))
+		var/mob/living/carbon/human/X = user
+		if(istype(X.species, /datum/species/xenos))
+			src.attack_alien(user)
+			return
+	..()
+
+/obj/structure/table/attack_alien(mob/user as mob)
+	visible_message("<span class='danger'>\The [user] tears apart \the [src]!</span>")
+	src.break_to_parts()
 
 /obj/structure/table/MouseDrop_T(obj/item/stack/material/what)
 	if(can_reinforce && isliving(usr) && (!usr.stat) && istype(what) && usr.get_active_hand() == what && Adjacent(usr))
@@ -228,7 +246,7 @@
 	                              "<span class='notice'>You begin removing the [type_holding] holding \the [src]'s [M.display_name] [what] in place.</span>")
 	if(sound)
 		playsound(src.loc, sound, 50, 1)
-	if(!do_after(user, 40))
+	if(!do_after(user, delay))
 		manipulating = 0
 		return M
 	user.visible_message("<span class='notice'>\The [user] removes the [M.display_name] [what] from \the [src].</span>",
@@ -238,18 +256,18 @@
 	return null
 
 /obj/structure/table/proc/remove_reinforced(obj/item/weapon/screwdriver/S, mob/user)
-	reinforced = common_material_remove(user, reinforced, 40, "reinforcements", "screws", 'sound/items/Screwdriver.ogg')
+	reinforced = common_material_remove(user, reinforced, 40 * S.toolspeed, "reinforcements", "screws", S.usesound)
 
 /obj/structure/table/proc/remove_material(obj/item/weapon/wrench/W, mob/user)
-	material = common_material_remove(user, material, 20, "plating", "bolts", 'sound/items/Ratchet.ogg')
+	material = common_material_remove(user, material, 20 * W.toolspeed, "plating", "bolts", W.usesound)
 
 /obj/structure/table/proc/dismantle(obj/item/weapon/wrench/W, mob/user)
 	if(manipulating) return
 	manipulating = 1
 	user.visible_message("<span class='notice'>\The [user] begins dismantling \the [src].</span>",
 	                              "<span class='notice'>You begin dismantling \the [src].</span>")
-	playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
-	if(!do_after(user, 20))
+	playsound(src, W.usesound, 50, 1)
+	if(!do_after(user, 20 * W.toolspeed))
 		manipulating = 0
 		return
 	user.visible_message("<span class='notice'>\The [user] dismantles \the [src].</span>",
@@ -292,37 +310,44 @@
 	qdel(src)
 	return shards
 
+/proc/get_table_image(var/icon/ticon,var/ticonstate,var/tdir,var/tcolor,var/talpha)
+	var/icon_cache_key = "\ref[ticon]-[ticonstate]-[tdir]-[tcolor]-[talpha]"
+	var/image/I = table_icon_cache[icon_cache_key]
+	if(!I)
+		I = image(icon = ticon, icon_state = ticonstate, dir = tdir)
+		if(tcolor)
+			I.color = tcolor
+		if(talpha)
+			I.alpha = talpha
+		table_icon_cache[icon_cache_key] = I
+
+	return I
+
 /obj/structure/table/update_icon()
 	if(flipped != 1)
 		icon_state = "blank"
 		overlays.Cut()
 
-		var/image/I
-
 		// Base frame shape. Mostly done for glass/diamond tables, where this is visible.
 		for(var/i = 1 to 4)
-			I = image(icon, dir = 1<<(i-1), icon_state = connections[i])
+			var/image/I = get_table_image(icon, connections[i], 1<<(i-1))
 			overlays += I
 
 		// Standard table image
 		if(material)
 			for(var/i = 1 to 4)
-				I = image(icon, "[material.icon_base]_[connections[i]]", dir = 1<<(i-1))
-				if(material.icon_colour) I.color = material.icon_colour
-				I.alpha = 255 * material.opacity
+				var/image/I = get_table_image(icon, "[material.icon_base]_[connections[i]]", 1<<(i-1), material.icon_colour, 255 * material.opacity)
 				overlays += I
 
 		// Reinforcements
 		if(reinforced)
 			for(var/i = 1 to 4)
-				I = image(icon, "[reinforced.icon_reinf]_[connections[i]]", dir = 1<<(i-1))
-				I.color = reinforced.icon_colour
-				I.alpha = 255 * reinforced.opacity
+				var/image/I = get_table_image(icon, "[reinforced.icon_reinf]_[connections[i]]", 1<<(i-1), reinforced.icon_colour, 255 * reinforced.opacity)
 				overlays += I
 
 		if(carpeted)
 			for(var/i = 1 to 4)
-				I = image(icon, "carpet_[connections[i]]", dir = 1<<(i-1))
+				var/image/I = get_table_image(icon, "carpet_[connections[i]]", 1<<(i-1))
 				overlays += I
 	else
 		overlays.Cut()

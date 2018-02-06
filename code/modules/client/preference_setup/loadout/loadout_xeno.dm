@@ -4,6 +4,11 @@
 	path = /obj/item/clothing/suit/tajaran/furs
 	sort_category = "Xenowear"
 
+/datum/gear/head/zhan_scarf
+	display_name = "Zhan headscarf"
+	path = /obj/item/clothing/head/tajaran/scarf
+	whitelisted = "Tajara"
+
 /datum/gear/suit/unathi_mantle
 	display_name = "hide mantle (Unathi)"
 	path = /obj/item/clothing/suit/unathi/mantle
@@ -38,33 +43,33 @@
 		bandtypes[initial(band.name)] = band
 	gear_tweaks += new/datum/gear_tweak/path(sortAssoc(bandtypes))
 
-/datum/gear/ears/skrell/cloth/male
-	display_name = "male headtail cloth selection (Skrell)"
-	path = /obj/item/clothing/ears/skrell/cloth_male
+/datum/gear/ears/skrell/cloth/short
+	display_name = "short headtail cloth (Skrell)"
+	path = /obj/item/clothing/ears/skrell/cloth_male/black
 	sort_category = "Xenowear"
 	whitelisted = "Skrell"
 
-/datum/gear/ears/skrell/cloth/male/New()
+/datum/gear/ears/skrell/cloth/short/New()
 	..()
-	var/list/clothtypes = list()
-	for(var/cloth_style in typesof(/obj/item/clothing/ears/skrell/cloth_male))
-		var/obj/item/clothing/ears/skrell/cloth_male/cloth = cloth_style
-		clothtypes[initial(cloth.name)] = cloth
-	gear_tweaks += new/datum/gear_tweak/path(sortAssoc(clothtypes))
+	var/list/shorttypes = list()
+	for(var/short_style in typesof(/obj/item/clothing/ears/skrell/cloth_male))
+		var/obj/item/clothing/ears/skrell/cloth_male/short = short_style
+		shorttypes[initial(short.name)] = short
+	gear_tweaks += new/datum/gear_tweak/path(sortAssoc(shorttypes))
 
-/datum/gear/ears/skrell/cloth/female
-	display_name = "female headtail cloth selection (Skrell)"
-	path = /obj/item/clothing/ears/skrell/cloth_female
+/datum/gear/ears/skrell/cloth/long
+	display_name = "long headtail cloth (Skrell)"
+	path = /obj/item/clothing/ears/skrell/cloth_female/black
 	sort_category = "Xenowear"
 	whitelisted = "Skrell"
 
-/datum/gear/ears/skrell/cloth/female/New()
+/datum/gear/ears/skrell/cloth/long/New()
 	..()
-	var/list/clothtypes = list()
-	for(var/cloth_style in typesof(/obj/item/clothing/ears/skrell/cloth_female))
-		var/obj/item/clothing/ears/skrell/cloth_female/cloth = cloth_style
-		clothtypes[initial(cloth.name)] = cloth
-	gear_tweaks += new/datum/gear_tweak/path(sortAssoc(clothtypes))
+	var/list/longtypes = list()
+	for(var/long_style in typesof(/obj/item/clothing/ears/skrell/cloth_female))
+		var/obj/item/clothing/ears/skrell/cloth_female/long = long_style
+		longtypes[initial(long.name)] = long
+	gear_tweaks += new/datum/gear_tweak/path(sortAssoc(longtypes))
 
 /datum/gear/ears/skrell/colored/band
 	display_name = "Colored bands (Skrell)"
@@ -86,31 +91,47 @@
 	..()
 	gear_tweaks = list(gear_tweak_free_color_choice)
 
-/datum/gear/uniform/teshari
-	display_name = "smock, grey (Teshari)"
-	path = /obj/item/clothing/under/seromi
+/datum/gear/uniform/smock
+	display_name = "smock selection (Teshari)"
+	path = /obj/item/clothing/under/seromi/smock
 	whitelisted = "Teshari"
 	sort_category = "Xenowear"
 
-/datum/gear/uniform/teshari/jumpsuit
-	display_name = "smock, yellow (Teshari)"
-	path = /obj/item/clothing/under/seromi/yellow
+/datum/gear/uniform/smock/New()
+	..()
+	var/list/smocks = list()
+	for(var/smock in typesof(/obj/item/clothing/under/seromi/smock))
+		var/obj/item/clothing/under/seromi/smock/smock_type = smock
+		smocks[initial(smock_type.name)] = smock_type
+	gear_tweaks += new/datum/gear_tweak/path(sortAssoc(smocks))
 
-/datum/gear/uniform/teshari/jumpsuit/red
-	display_name = "smock, red (Teshari)"
-	path = /obj/item/clothing/under/seromi/red
+/datum/gear/uniform/undercoat
+	display_name = "undercoat selection (Teshari)"
+	path = /obj/item/clothing/under/seromi/undercoat
+	whitelisted = "Teshari"
+	sort_category = "Xenowear"
 
-/datum/gear/uniform/teshari/jumpsuit/white
-	display_name = "smock, white (Teshari)"
-	path = /obj/item/clothing/under/seromi/white
+/datum/gear/uniform/undercoat/New()
+	..()
+	var/list/undercoats = list()
+	for(var/undercoat in typesof(/obj/item/clothing/under/seromi/undercoat))
+		var/obj/item/clothing/under/seromi/undercoat/undercoat_type = undercoat
+		undercoats[initial(undercoat_type.name)] = undercoat_type
+	gear_tweaks += new/datum/gear_tweak/path(sortAssoc(undercoats))
 
-/datum/gear/uniform/teshari/jumpsuit/medical
-	display_name = "smock, Medical (Teshari)"
-	path = /obj/item/clothing/under/seromi/medical
+/datum/gear/suit/cloak
+	display_name = "cloak selection (Teshari)"
+	path = /obj/item/clothing/suit/storage/seromi/cloak
+	whitelisted = "Teshari"
+	sort_category = "Xenowear"
 
-/datum/gear/uniform/teshari/jumpsuit/rainbow
-	display_name = "smock, rainbow (Teshari)"
-	path = /obj/item/clothing/under/seromi/rainbow
+/datum/gear/suit/cloak/New()
+	..()
+	var/list/cloaks = list()
+	for(var/cloak in typesof(/obj/item/clothing/suit/storage/seromi/cloak))
+		var/obj/item/clothing/suit/storage/seromi/cloak/cloak_type = cloak
+		cloaks[initial(cloak_type.name)] = cloak_type
+	gear_tweaks += new/datum/gear_tweak/path(sortAssoc(cloaks))
 
 /datum/gear/mask/ipc_monitor
 	display_name = "display monitor (Full Body Prosthetic)"
@@ -122,9 +143,8 @@
 	path = /obj/item/clothing/under/harness
 	sort_category = "Xenowear"
 
-/datum/gear/uniform/loincloth
-	display_name = "loincloth (Tajaran, Unathi)"
-	path = /obj/item/clothing/under/shorts/loincloth
+/datum/gear/shoes/footwraps
+	display_name = "cloth footwraps"
+	path = /obj/item/clothing/shoes/footwraps
 	sort_category = "Xenowear"
-	//whitelisted = list("Tajaran", "Unathi") //VORESTATION EDIT
-
+	cost = 1

@@ -30,16 +30,9 @@
 	var/turf/T = src.loc
 	T.contents += contents
 	if(beaker)
-		beaker.loc = get_step(src.loc, SOUTH) //Beaker is carefully ejected from the wreckage of the cryotube
-	..()
-
-/obj/machinery/atmospherics/unary/cryo_cell/initialize()
-	if(node) return
-	var/node_connect = dir
-	for(var/obj/machinery/atmospherics/target in get_step(src,node_connect))
-		if(target.initialize_directions & get_dir(target,src))
-			node = target
-			break
+		beaker.forceMove(get_step(loc, SOUTH)) //Beaker is carefully ejected from the wreckage of the cryotube
+		beaker = null
+	. = ..()
 
 /obj/machinery/atmospherics/unary/cryo_cell/process()
 	..()
@@ -96,7 +89,7 @@
 		occupantData["name"] = occupant.name
 		occupantData["stat"] = occupant.stat
 		occupantData["health"] = occupant.health
-		occupantData["maxHealth"] = occupant.maxHealth
+		occupantData["maxHealth"] = occupant.getMaxHealth()
 		occupantData["minHealth"] = config.health_threshold_dead
 		occupantData["bruteLoss"] = occupant.getBruteLoss()
 		occupantData["oxyLoss"] = occupant.getOxyLoss()
@@ -180,16 +173,22 @@
 		G.loc = src
 		user.visible_message("[user] adds \a [G] to \the [src]!", "You add \a [G] to \the [src]!")
 	else if(istype(G, /obj/item/weapon/grab))
-		if(!ismob(G:affecting))
+		var/obj/item/weapon/grab/grab = G
+		if(!ismob(grab.affecting))
 			return
-		for(var/mob/living/carbon/slime/M in range(1,G:affecting))
-			if(M.Victim == G:affecting)
-				usr << "[G:affecting:name] will not fit into the cryo because they have a slime latched onto their head."
+		for(var/mob/living/simple_animal/slime/M in range(1,grab.affecting))
+			if(M.victim == grab.affecting)
+				usr << "[grab.affecting.name] will not fit into the cryo because they have a slime latched onto their head."
 				return
-		var/mob/M = G:affecting
+		var/mob/M = grab.affecting
 		if(put_mob(M))
-			qdel(G)
+			qdel(grab)
 	return
+
+/obj/machinery/atmospherics/unary/cryo_cell/MouseDrop_T(var/mob/target, var/mob/user) //Allows borgs to put people into cryo without external assistance
+	if(user.stat || user.lying || !Adjacent(user) || !target.Adjacent(user)|| !ishuman(target))
+		return
+	put_mob(target)
 
 /obj/machinery/atmospherics/unary/cryo_cell/update_icon()
 	overlays.Cut()
@@ -338,8 +337,8 @@
 	set name = "Move Inside"
 	set category = "Object"
 	set src in oview(1)
-	for(var/mob/living/carbon/slime/M in range(1,usr))
-		if(M.Victim == usr)
+	for(var/mob/living/simple_animal/slime/M in range(1,usr))
+		if(M.victim == usr)
 			usr << "You're too busy getting your life sucked out of you."
 			return
 	if(usr.stat != 0)

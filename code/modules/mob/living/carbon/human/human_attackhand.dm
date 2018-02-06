@@ -1,5 +1,6 @@
 /mob/living/carbon/human/proc/get_unarmed_attack(var/mob/living/carbon/human/target, var/hit_zone)
 	// VOREStation Edit - Begin
+	if(nif && nif.flag_check(NIF_C_HARDCLAWS,NIF_FLAGS_COMBAT)){return unarmed_hardclaws}
 	if(src.default_attack && src.default_attack.is_usable(src, target, hit_zone))
 		if(pulling_punches)
 			var/datum/unarmed_attack/soft_type = src.default_attack.get_sparring_variant()
@@ -23,19 +24,25 @@
 		if(H.hand)
 			temp = H.organs_by_name["l_hand"]
 		if(!temp || !temp.is_usable())
-			H << "\red You can't use your hand."
+			H << "<font color='red'>You can't use your hand.</font>"
 			return
 	H.break_cloak()
 	..()
 
+	var/lacertusol = 0
+	for(var/datum/reagent/phororeagent/R in M.reagents.reagent_list)
+		if(R.id == "lacertusol")
+			lacertusol = 1
+			break
+
 	// Should this all be in Touch()?
 	if(istype(H))
-		if(get_accuracy_penalty(H))	//Should only trigger if they're not aiming well
+		if(get_accuracy_penalty(H) && H != src)	//Should only trigger if they're not aiming well
 			var/hit_zone = get_zone_with_miss_chance(H.zone_sel.selecting, src, get_accuracy_penalty(H))
 			if(!hit_zone)
 				H.do_attack_animation(src)
 				playsound(loc, 'sound/weapons/punchmiss.ogg', 25, 1, -1)
-				visible_message("\red <B>[H] reaches for [src], but misses!</B>")
+				visible_message("<font color='red'><B>[H] reaches for [src], but misses!</B></font>")
 				return 0
 
 		if(H != src && check_shields(0, null, H, H.zone_sel.selecting, H.name))
@@ -45,23 +52,29 @@
 		if(istype(H.gloves, /obj/item/clothing/gloves/boxing/hologlove))
 			H.do_attack_animation(src)
 			var/damage = rand(0, 9)
+			if(lacertusol)
+				damage = rand(5, 12)
 			if(!damage)
 				playsound(loc, 'sound/weapons/punchmiss.ogg', 25, 1, -1)
-				visible_message("\red <B>[H] has attempted to punch [src]!</B>")
+				visible_message("<font color='red'><B>[H] has attempted to punch [src]!</B></font>")
 				return 0
 			var/obj/item/organ/external/affecting = get_organ(ran_zone(H.zone_sel.selecting))
 			var/armor_block = run_armor_check(affecting, "melee")
+			var/armor_soak = get_armor_soak(affecting, "melee")
 
 			if(HULK in H.mutations)
 				damage += 5
 
 			playsound(loc, "punch", 25, 1, -1)
 
-			visible_message("\red <B>[H] has punched [src]!</B>")
+			visible_message("<font color='red'><B>[H] has punched [src]!</B></font>")
 
-			apply_damage(damage, HALLOSS, affecting, armor_block)
+			if(armor_soak >= damage)
+				return
+
+			apply_damage(damage, HALLOSS, affecting, armor_block, armor_soak)
 			if(damage >= 9)
-				visible_message("\red <B>[H] has weakened [src]!</B>")
+				visible_message("<font color='red'><B>[H] has weakened [src]!</B></font>")
 				apply_effect(4, WEAKEN, armor_block)
 
 			return
@@ -135,7 +148,9 @@
 
 			H.do_attack_animation(src)
 			playsound(loc, 'sound/weapons/thudswoosh.ogg', 50, 1, -1)
-			visible_message("<span class='warning'>[M] has grabbed [src] passively!</span>")
+			//VORESTATION EDIT
+			visible_message("<span class='warning'>[M] has grabbed [src] [(M.zone_sel.selecting == BP_L_HAND || M.zone_sel.selecting == BP_R_HAND)? "by [(gender==FEMALE)? "her" : ((gender==MALE)? "his": "their")] hands": "passively"]!</span>")
+			//VORESTATION END END
 			return 1
 
 		if(I_HURT)
@@ -155,6 +170,8 @@
 				return
 
 			var/rand_damage = rand(1, 5)
+			if(lacertusol)
+				rand_damage = rand(5, 12)
 			var/block = 0
 			var/accurate = 0
 			var/hit_zone = H.zone_sel.selecting
@@ -168,6 +185,8 @@
 				if(I_HELP)
 					// We didn't see this coming, so we get the full blow
 					rand_damage = 5
+					if(lacertusol)
+						rand_damage = 12
 					accurate = 1
 				if(I_HURT, I_GRAB)
 					// We're in a fighting stance, there's a chance we block
@@ -181,6 +200,8 @@
 			if(src.grabbed_by.len || src.buckled || !src.canmove || src==H)
 				accurate = 1 // certain circumstances make it impossible for us to evade punches
 				rand_damage = 5
+				if(lacertusol)
+					rand_damage = 12
 
 			// Process evasion and blocking
 			var/miss_type = 0
@@ -216,7 +237,7 @@
 					miss_type = 1
 
 				if(prob(80))
-					hit_zone = ran_zone(hit_zone)
+					hit_zone = ran_zone(hit_zone, 70) //70% chance to hit what you're aiming at seems fair?
 				if(prob(15) && hit_zone != BP_TORSO) // Missed!
 					if(!src.lying)
 						attack_message = "[H] attempted to strike [src], but missed!"
@@ -257,12 +278,13 @@
 				rand_damage *= 2
 			real_damage = max(1, real_damage)
 
-			var/armour = run_armor_check(affecting, "melee")
+			var/armour = run_armor_check(hit_zone, "melee")
+			var/soaked = get_armor_soak(hit_zone, "melee")
 			// Apply additional unarmed effects.
 			attack.apply_effects(H, src, armour, rand_damage, hit_zone)
 
 			// Finally, apply damage to target
-			apply_damage(real_damage, (attack.deal_halloss ? HALLOSS : BRUTE), affecting, armour, sharp=attack.sharp, edge=attack.edge)
+			apply_damage(real_damage, (attack.deal_halloss ? HALLOSS : BRUTE), hit_zone, armour, soaked, sharp=attack.sharp, edge=attack.edge)
 
 		if(I_DISARM)
 			M.attack_log += text("\[[time_stamp()]\] <font color='red'>Disarmed [src.name] ([src.ckey])</font>")
@@ -319,7 +341,7 @@
 						return
 
 			playsound(loc, 'sound/weapons/punchmiss.ogg', 25, 1, -1)
-			visible_message("\red <B>[M] attempted to disarm [src]!</B>")
+			visible_message("<font color='red'> <B>[M] attempted to disarm [src]!</B></font>")
 	return
 
 /mob/living/carbon/human/proc/afterattack(atom/target as mob|obj|turf|area, mob/living/user as mob|obj, inrange, params)
@@ -338,7 +360,8 @@
 	var/dam_zone = pick(organs_by_name)
 	var/obj/item/organ/external/affecting = get_organ(ran_zone(dam_zone))
 	var/armor_block = run_armor_check(affecting, "melee")
-	apply_damage(damage, BRUTE, affecting, armor_block)
+	var/armor_soak = get_armor_soak(affecting, "melee")
+	apply_damage(damage, BRUTE, affecting, armor_block, armor_soak)
 	updatehealth()
 	return 1
 

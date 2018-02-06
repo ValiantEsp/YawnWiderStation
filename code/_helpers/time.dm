@@ -11,7 +11,13 @@
 #define DAYS *864000
 
 #define TimeOfGame (get_game_time())
-#define TimeOfTick (world.tick_usage*0.01*world.tick_lag)
+#define TimeOfTick (TICK_USAGE*0.01*world.tick_lag)
+
+#define TICK *world.tick_lag
+#define TICKS *world.tick_lag
+
+#define DS2TICKS(DS) (DS/world.tick_lag)	// Convert deciseconds to ticks
+#define TICKS2DS(T) (T TICKS) 				// Convert ticks to deciseconds
 
 /proc/get_game_time()
 	var/global/time_offset = 0
@@ -19,7 +25,7 @@
 	var/global/last_usage = 0
 
 	var/wtime = world.time
-	var/wusage = world.tick_usage * 0.01
+	var/wusage = TICK_USAGE * 0.01
 
 	if(last_time < wtime && last_usage > 1)
 		time_offset += last_usage - 1
@@ -101,3 +107,31 @@ var/round_start_time = 0
 /hook/startup/proc/set_roundstart_hour()
 	roundstart_hour = pick(2,7,12,17)
 	return 1
+
+/var/midnight_rollovers = 0
+/var/rollovercheck_last_timeofday = 0
+/proc/update_midnight_rollover()
+	if (world.timeofday < rollovercheck_last_timeofday) //TIME IS GOING BACKWARDS!
+		return midnight_rollovers++
+	return midnight_rollovers
+
+//Increases delay as the server gets more overloaded,
+//as sleeps aren't cheap and sleeping only to wake up and sleep again is wasteful
+#define DELTA_CALC max(((max(TICK_USAGE, world.cpu) / 100) * max(Master.sleep_delta-1,1)), 1)
+
+//returns the number of ticks slept
+/proc/stoplag(initial_delay)
+	if (!Master || !(Master.current_runlevel & RUNLEVELS_DEFAULT))
+		sleep(world.tick_lag)
+		return 1
+	if (!initial_delay)
+		initial_delay = world.tick_lag
+	. = 0
+	var/i = DS2TICKS(initial_delay)
+	do
+		. += CEILING(i*DELTA_CALC, 1)
+		sleep(i*world.tick_lag*DELTA_CALC)
+		i *= 2
+	while (TICK_USAGE > min(TICK_LIMIT_TO_RUN, Master.current_ticklimit))
+
+#undef DELTA_CALC

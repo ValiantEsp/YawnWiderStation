@@ -33,7 +33,13 @@
 	name = "switchblade"
 	desc = "A classic switchblade with gold engraving. Just holding it makes you feel like a gangster."
 	icon_state = "switchblade"
-	unbreakable = 1
+
+/obj/item/weapon/material/butterfly/boxcutter
+	name = "box cutter"
+	desc = "A thin, inexpensive razor-blade knife designed to open cardboard boxes."
+	icon_state = "boxcutter"
+	force_divisor = 0.1 // 6 when wielded with hardness 60 (steel)
+	thrown_force_divisor = 0.2 // 4 when thrown with weight 20 (steel)
 
 /obj/item/weapon/material/butterfly/attack_self(mob/user)
 	active = !active
@@ -58,9 +64,8 @@
 	edge = 1
 	force_divisor = 0.15 // 9 when wielded with hardness 60 (steel)
 	matter = list(DEFAULT_WALL_MATERIAL = 12000)
-	origin_tech = "materials=1"
+	origin_tech = list(TECH_MATERIAL = 1)
 	attack_verb = list("slashed", "stabbed", "sliced", "torn", "ripped", "diced", "cut")
-	unbreakable = 1
 
 /obj/item/weapon/material/knife/suicide_act(mob/user)
 	viewers(user) << pick("<span class='danger'>\The [user] is slitting \his wrists with \the [src]! It looks like \he's trying to commit suicide.</span>", \
@@ -82,8 +87,30 @@
 
 /obj/item/weapon/material/knife/butch
 	name = "butcher's cleaver"
-	icon = 'icons/obj/kitchen.dmi'
 	icon_state = "butch"
 	desc = "A huge thing used for chopping and chopping up meat. This includes clowns and clown-by-products."
 	force_divisor = 0.25 // 15 when wielded with hardness 60 (steel)
 	attack_verb = list("cleaved", "slashed", "stabbed", "sliced", "torn", "ripped", "diced", "cut")
+
+/obj/item/weapon/material/knife/machete
+	name = "machete"
+	desc = "A sharp machete often found in survival kits."
+	icon_state = "machete"
+	force_divisor = 0.3 // 18 when hardness 60 (steel)
+	attack_verb = list("slashed", "chopped", "gouged", "ripped", "cut")
+	var/should_cleave = TRUE //Now hatchets inherit from the machete, and thus knives. Tables turned.
+
+// This cannot go into afterattack since some mobs delete themselves upon dying.
+/obj/item/weapon/material/knife/machete/pre_attack(var/mob/living/target, var/mob/living/user)
+	if(should_cleave && istype(target))
+		cleave(user, target)
+	..()
+
+/obj/item/weapon/material/knife/tacknife/survival
+	name = "survival knife"
+	desc = "A hunting grade survival knife."
+	icon = 'icons/obj/kitchen.dmi'
+	icon_state = "survivalknife"
+	item_state = "knife"
+	applies_material_colour = FALSE
+	toolspeed = 2 // Use a real axe if you want to chop logs.

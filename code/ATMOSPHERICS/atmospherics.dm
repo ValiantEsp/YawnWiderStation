@@ -10,9 +10,6 @@ Pipelines + Other Objects -> Pipe network
 
 */
 /obj/machinery/atmospherics
-
-	auto_init = 0
-
 	anchored = 1
 	idle_power_usage = 0
 	active_power_usage = 0
@@ -33,6 +30,7 @@ Pipelines + Other Objects -> Pipe network
 	var/obj/machinery/atmospherics/node2
 
 /obj/machinery/atmospherics/New()
+	..()
 	if(!icon_manager)
 		icon_manager = new()
 
@@ -42,7 +40,19 @@ Pipelines + Other Objects -> Pipe network
 
 	if(!pipe_color_check(pipe_color))
 		pipe_color = null
-	..()
+	init_dir()
+
+// This is used to set up what directions pipes will connect to.  Should be called inside New() and whenever a dir changes.
+/obj/machinery/atmospherics/proc/init_dir()
+	return
+
+// Initializes nodes by looking at neighboring atmospherics machinery to connect to.
+// When we're being constructed at runtime, atmos_init() is called by the construction code.
+// When dynamically loading a map atmos_init is called by the maploader (initTemplateBounds proc)
+// But during initial world creation its called by the master_controller.
+// TODO - Consolidate these different ways of being called once SSatoms is created.
+/obj/machinery/atmospherics/proc/atmos_init()
+	return
 
 /obj/machinery/atmospherics/attackby(atom/A, mob/user as mob)
 	if(istype(A, /obj/item/device/pipe_painter))
@@ -125,3 +135,10 @@ obj/machinery/atmospherics/proc/check_connect_types(obj/machinery/atmospherics/a
 
 /obj/machinery/atmospherics/update_icon()
 	return null
+
+/obj/machinery/atmospherics/proc/can_unwrench()
+	var/datum/gas_mixture/int_air = return_air()
+	var/datum/gas_mixture/env_air = loc.return_air()
+	if((int_air.return_pressure()-env_air.return_pressure()) > 2*ONE_ATMOSPHERE)
+		return 0
+	return 1

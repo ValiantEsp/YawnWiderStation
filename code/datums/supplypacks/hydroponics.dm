@@ -47,11 +47,11 @@
 	contains = list(
 			/obj/item/weapon/reagent_containers/spray/plantbgone = 4,
 			/obj/item/weapon/reagent_containers/glass/bottle/ammonia = 2,
-			/obj/item/weapon/material/hatchet,
+			/obj/item/weapon/material/knife/machete/hatchet,
 			/obj/item/weapon/material/minihoe,
 			/obj/item/device/analyzer/plant_analyzer,
 			/obj/item/clothing/gloves/botanic_leather,
-			/obj/item/clothing/suit/apron,
+			/obj/item/clothing/suit/storage/apron,
 			/obj/item/weapon/material/minihoe,
 			/obj/item/weapon/storage/box/botanydisk
 			)
@@ -110,12 +110,13 @@
 /datum/supply_packs/hydro/weedcontrol
 	name = "Weed control crate"
 	contains = list(
-			/obj/item/weapon/material/hatchet = 2,
+			/obj/item/weapon/material/knife/machete/hatchet = 2,
 			/obj/item/weapon/reagent_containers/spray/plantbgone = 4,
 			/obj/item/clothing/mask/gas = 2,
-			/obj/item/weapon/grenade/chem_grenade/antiweed = 2
+			/obj/item/weapon/grenade/chem_grenade/antiweed = 2,
+			/obj/item/weapon/material/twohanded/fireaxe/scythe
 			)
-	cost = 25
+	cost = 45
 	containertype = /obj/structure/closet/crate/hydroponics
 	containername = "Weed control crate"
 	access = access_hydroponics
@@ -141,9 +142,10 @@
 	access = access_hydroponics
 
 /datum/supply_packs/hydro/tray
-	name = "Empty hydroponics tray"
-	cost = 20
+	name = "Empty hydroponics trays"
+	cost = 50
 	containertype = /obj/structure/closet/crate/hydroponics
 	containername = "Hydroponics tray crate"
-	contains = list(/obj/machinery/portable_atmospherics/hydroponics{anchored = 0})
+	contains = list(/obj/machinery/portable_atmospherics/hydroponics{anchored = 0} = 3)
 	access = access_hydroponics
+

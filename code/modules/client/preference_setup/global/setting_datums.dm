@@ -60,10 +60,13 @@ var/list/_client_preferences_by_type
 	key = "SOUND_LOBBY"
 
 /datum/client_preference/play_lobby_music/toggled(var/mob/preference_mob, var/enabled)
+	if(!preference_mob.client || !preference_mob.client.media)
+		return
+
 	if(enabled)
-		preference_mob << sound(ticker.login_music, repeat = 0, wait = 0, volume = 85, channel = 1)
+		preference_mob.client.playtitlemusic()
 	else
-		preference_mob << sound(null, repeat = 0, wait = 0, volume = 85, channel = 1)
+		preference_mob.client.media.stop_music()
 
 /datum/client_preference/play_ambiance
 	description ="Play ambience"
@@ -73,6 +76,16 @@ var/list/_client_preferences_by_type
 	if(!enabled)
 		preference_mob << sound(null, repeat = 0, wait = 0, volume = 0, channel = 1)
 		preference_mob << sound(null, repeat = 0, wait = 0, volume = 0, channel = 2)
+
+/datum/client_preference/play_jukebox
+	description ="Play jukebox music"
+	key = "SOUND_JUKEBOX"
+
+/datum/client_preference/play_jukebox/toggled(var/mob/preference_mob, var/enabled)
+	if(!enabled)
+		preference_mob.stop_all_music()
+	else
+		preference_mob.update_music()
 
 /datum/client_preference/ghost_ears
 	description ="Ghost ears"
@@ -125,6 +138,12 @@ var/list/_client_preferences_by_type
 	key = "CHAT_DEAD"
 	enabled_description = "Show"
 	disabled_description = "Hide"
+
+/datum/client_preference/check_mention
+	description ="Emphasize Name Mention"
+	key = "CHAT_MENTION"
+	enabled_description = "Emphasize"
+	disabled_description = "Normal"
 
 /datum/client_preference/show_progress_bar
 	description ="Progress Bar"

@@ -177,8 +177,9 @@
 				if(M.brainmob.mind)
 					for(var/mob/observer/dead/G in player_list)
 						if(G.can_reenter_corpse && G.mind == M.brainmob.mind)
-							ghost_can_reenter = 1
-							break
+							ghost_can_reenter = 1 //May come in use again at another point.
+							to_chat(user, "<span class='notice'>\The [W] is completely unresponsive; though it may be able to auto-resuscitate.</span>") //Jamming a ghosted brain into a borg is likely detrimental, and may result in some problems.
+							return
 				if(!ghost_can_reenter)
 					user << "<span class='notice'>\The [W] is completely unresponsive; there's no point.</span>"
 					return
@@ -207,6 +208,9 @@
 				O.mind.store_memory("In case you look at this after being borged, the objectives are only here until I find a way to make them not show up for you, as I can't simply delete them without screwing up round-end reporting. --NeoFite")
 
 			O.job = "Cyborg"
+
+			for(var/datum/language/L in M.brainmob.languages)
+				O.add_language(L.name)
 
 			O.cell = chest.cell
 			O.cell.loc = O

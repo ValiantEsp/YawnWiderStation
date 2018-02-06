@@ -46,6 +46,7 @@
 	throw_speed = 4
 	throw_range = 5
 	force = 5
+	preserve_item = 1
 	origin_tech = list(TECH_COMBAT = 1)
 	attack_verb = list("struck", "hit", "bashed")
 	zoomdevicename = "scope"
@@ -86,6 +87,36 @@
 	var/obj/item/dnalockingchip/attached_lock
 
 	var/last_shot = 0			//records the last shot fired
+
+//VOREStation Add - /tg/ icon system
+	var/charge_sections = 4
+	var/shaded_charge = FALSE
+	var/ammo_x_offset = 2
+	var/ammo_y_offset = 0
+	var/can_flashlight = FALSE
+	var/gun_light = FALSE
+	var/light_state = "flight"
+	var/light_brightness = 4
+	var/flight_x_offset = 0
+	var/flight_y_offset = 0
+
+/obj/item/weapon/gun/CtrlClick(mob/user)
+	if(can_flashlight && ishuman(user) && src.loc == usr && !user.incapacitated(INCAPACITATION_ALL))
+		toggle_flashlight()
+	else
+		return ..()
+
+/obj/item/weapon/gun/proc/toggle_flashlight()
+	if(gun_light)
+		set_light(0)
+		gun_light = FALSE
+	else
+		set_light(light_brightness)
+		gun_light = TRUE
+
+	playsound(src, 'sound/machines/button.ogg', 25)
+	update_icon()
+//VOREStation Add End
 
 /obj/item/weapon/gun/New()
 	..()
@@ -182,7 +213,11 @@
 	if (A == user && user.zone_sel.selecting == O_MOUTH && !mouthshoot)
 		handle_suicide(user)
 	else if(user.a_intent == I_HURT) //point blank shooting
-		Fire(A, user, pointblank=1)
+		if(user && user.client && user.aiming && user.aiming.active && user.aiming.aiming_at != A && A != user)
+			PreFire(A,user) //They're using the new gun system, locate what they're aiming at.
+			return
+		else
+			Fire(A, user, pointblank=1)
 	else
 		return ..() //Pistolwhippin'
 
@@ -204,7 +239,8 @@
 	if(istype(A, /obj/item/weapon/screwdriver))
 		if(dna_lock && attached_lock && !attached_lock.controller_lock)
 			user << "<span class='notice'>You begin removing \the [attached_lock] from \the [src].</span>"
-			if(do_after(user, 25))
+			playsound(src, A.usesound, 50, 1)
+			if(do_after(user, 25 * A.toolspeed))
 				user << "<span class='notice'>You remove \the [attached_lock] from \the [src].</span>"
 				user.put_in_hands(attached_lock)
 				dna_lock = 0
@@ -222,6 +258,38 @@
 		attached_lock.controller_lock = 0
 		attached_lock.stored_dna = list()
 		return 1
+
+/obj/item/weapon/gun/MouseDrop(obj/over_object as obj)
+	if(!canremove)
+		return
+
+	if (ishuman(usr) || issmall(usr)) //so monkeys can take off their backpacks -- Urist
+
+		if (istype(usr.loc,/obj/mecha)) // stops inventory actions in a mech. why?
+			return
+
+		if (!( istype(over_object, /obj/screen) ))
+			return ..()
+
+		//makes sure that the thing is equipped, so that we can't drag it into our hand from miles away.
+		//there's got to be a better way of doing this.
+		if (!(src.loc == usr) || (src.loc && src.loc.loc == usr))
+			return
+
+		if (( usr.restrained() ) || ( usr.stat ))
+			return
+
+		if ((src.loc == usr) && !(istype(over_object, /obj/screen)) && !usr.unEquip(src))
+			return
+
+		switch(over_object.name)
+			if("r_hand")
+				usr.u_equip(src)
+				usr.put_in_r_hand(src)
+			if("l_hand")
+				usr.u_equip(src)
+				usr.put_in_l_hand(src)
+		src.add_fingerprint(usr)
 
 /obj/item/weapon/gun/proc/Fire(atom/target, mob/living/user, clickparams, pointblank=0, reflex=0)
 	if(!user || !target) return
@@ -294,8 +362,15 @@
 	user.setMoveCooldown(move_delay)
 	next_fire_time = world.time + fire_delay
 
+	accuracy = initial(accuracy)	//Reset the gun's accuracy
+
 	if(muzzle_flash)
-		set_light(0)
+		//VOREStation Edit - Flashlights
+		if(gun_light)
+			set_light(light_brightness)
+		else
+			set_light(0)
+		//VOREStation Edit End
 
 // Similar to the above proc, but does not require a user, which is ideal for things like turrets.
 /obj/item/weapon/gun/proc/Fire_userless(atom/target)
@@ -364,6 +439,8 @@
 	//update timing
 	next_fire_time = world.time + fire_delay
 
+	accuracy = initial(accuracy)	//Reset the gun's accuracy
+
 	if(muzzle_flash)
 		set_light(0)
 
@@ -393,21 +470,21 @@
 /obj/item/weapon/gun/proc/handle_post_fire(mob/user, atom/target, var/pointblank=0, var/reflex=0)
 	if(silenced)
 		playsound(user, fire_sound, 10, 1)
+		to_chat(user, "<span class='warning'>You fire \the [src][pointblank ? " point blank at \the [target]":""][reflex ? " by reflex!":""]</span>")
+		for(var/mob/living/L in oview(2,user))
+			if(L.stat)
+				continue
+			if(L.blinded)
+				to_chat(L, "You hear a [fire_sound_text]!")
+				continue
+			to_chat(L, "<span class='warning'>[user] fires \the [src][pointblank ? " point blank at \the [target]":""][reflex ? " by reflex!":""]</span>")
 	else
 		playsound(user, fire_sound, 50, 1)
-
-		if(reflex)
-			user.visible_message(
-				"<span class='reflex_shoot'><b>\The [user] fires \the [src][pointblank ? " point blank at \the [target]":""] by reflex!</b></span>",
-				"<span class='reflex_shoot'>You fire \the [src] by reflex!</span>",
-				"You hear a [fire_sound_text]!"
-			)
-		else
-			user.visible_message(
-				"<span class='danger'>\The [user] fires \the [src][pointblank ? " point blank at \the [target]":""]!</span>",
-				"<span class='warning'>You fire \the [src]!</span>",
-				"You hear a [fire_sound_text]!"
-				)
+		user.visible_message(
+			"<span class='warning'>[user] fires \the [src][pointblank ? " point blank at \the [target]":""][reflex ? " by reflex!":""]</span>",
+			"<span class='warning'>You fire \the [src][pointblank ? " point blank at \the [target]":""][reflex ? " by reflex!":""]</span>",
+			"You hear a [fire_sound_text]!"
+		)
 
 		if(muzzle_flash)
 			set_light(muzzle_flash)
@@ -439,7 +516,7 @@
 				damage_mult = 1.5
 	P.damage *= damage_mult
 
-/obj/item/weapon/gun/proc/process_accuracy(obj/projectile, mob/user, atom/target, acc_mod, dispersion)
+/obj/item/weapon/gun/proc/process_accuracy(obj/projectile, mob/living/user, atom/target, acc_mod, dispersion)
 	var/obj/item/projectile/P = projectile
 	if(!istype(P))
 		return //default behaviour only applies to true projectiles
@@ -450,11 +527,11 @@
 
 	// Certain statuses make it harder to aim, blindness especially.  Same chances as melee, however guns accuracy uses multiples of 15.
 	if(user.eye_blind)
-		accuracy -= 5
+		P.accuracy -= 5
 	if(user.eye_blurry)
-		accuracy -= 2
+		P.accuracy -= 2
 	if(user.confused)
-		accuracy -= 3
+		P.accuracy -= 3
 
 	//accuracy bonus from aiming
 	if (aim_targets && (target in aim_targets))
@@ -462,6 +539,13 @@
 		//Kinda balanced by fact you need like 2 seconds to aim
 		//As opposed to no-delay pew pew
 		P.accuracy += 2
+
+	// Some modifiers make it harder or easier to hit things.
+	for(var/datum/modifier/M in user.modifiers)
+		if(!isnull(M.accuracy))
+			P.accuracy += M.accuracy
+		if(!isnull(M.accuracy_dispersion))
+			P.dispersion = max(P.dispersion + M.accuracy_dispersion, 0)
 
 //does the actual launching of the projectile
 /obj/item/weapon/gun/proc/process_projectile(obj/projectile, mob/user, atom/target, var/target_zone, var/params=null)
@@ -501,9 +585,9 @@
 	var/mob/living/carbon/human/M = user
 
 	mouthshoot = 1
-	M.visible_message("\red [user] sticks their gun in their mouth, ready to pull the trigger...")
+	M.visible_message("<font color='red'>[user] sticks their gun in their mouth, ready to pull the trigger...</font>")
 	if(!do_after(user, 40))
-		M.visible_message("\blue [user] decided life was worth living")
+		M.visible_message("<font color='blue'>[user] decided life was worth living</font>")
 		mouthshoot = 0
 		return
 	var/obj/item/projectile/in_chamber = consume_next_projectile()

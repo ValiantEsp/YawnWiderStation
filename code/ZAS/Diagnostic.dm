@@ -1,14 +1,20 @@
 client/proc/ZoneTick()
 	set category = "Debug"
 	set name = "Process Atmos"
+	set desc = "Manually run a single tick of the air subsystem"
+
+	// TODO - This might be a useful diagnostic tool.  However its complicated to do with StonedMC
+	// Therefore it is left unimplemented for now until its use actually becomes required. ~Leshana
+	/*
+	if(!check_rights(R_DEBUG)) return
 
 	var/result = air_master.Tick()
 	if(result)
-		src << "Sucessfully Processed."
+		src << "Successfully Processed."
 
 	else
 		src << "Failed to process! ([air_master.tick_progress])"
-
+	*/
 
 client/proc/Zone_Info(turf/T as null|turf)
 	set category = "Debug"
@@ -39,6 +45,10 @@ client/proc/Test_ZAS_Connection(var/turf/simulated/T as turf)
 	"South" = SOUTH,\
 	"East" = EAST,\
 	"West" = WEST,\
+	#ifdef MULTIZAS
+	"Up" = UP,\
+	"Down" = DOWN,\
+	#endif
 	"N/A" = null)
 	var/direction = input("What direction do you wish to test?","Set direction") as null|anything in direction_list
 	if(!direction)

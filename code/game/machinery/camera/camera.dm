@@ -1,7 +1,7 @@
 /obj/machinery/camera
 	name = "security camera"
 	desc = "It's used to monitor rooms."
-	icon = 'icons/obj/monitors.dmi'
+	icon = 'icons/obj/monitors_vr.dmi' //VOREStation Edit - New Icons
 	icon_state = "camera"
 	use_power = 2
 	idle_power_usage = 5
@@ -13,7 +13,7 @@
 	var/c_tag_order = 999
 	var/status = 1
 	anchored = 1.0
-	var/invuln = null
+	var/invuln = 0
 	var/bugged = 0
 	var/obj/item/weapon/camera_assembly/assembly = null
 
@@ -37,6 +37,8 @@
 
 	var/client_huds = list()
 
+	var/list/camera_computers_using_this = list()
+
 /obj/machinery/camera/New()
 	wires = new(src)
 	assembly = new(src)
@@ -56,7 +58,12 @@
 			error("[src.name] in [get_area(src)]has errored. [src.network?"Empty network list":"Null network list"]")
 		ASSERT(src.network)
 		ASSERT(src.network.len > 0)
+	// VOREStation Edit Start - Make mapping with cameras easier
+	if(!c_tag)
+		var/area/A = get_area(src)
+		c_tag = "[A ? A.name : "Unknown"] #[rand(111,999)]"
 	..()
+	// VOREStation Edit End
 
 /obj/machinery/camera/Destroy()
 	deactivate(null, 0) //kick anyone viewing out
@@ -104,6 +111,11 @@
 
 	..() //and give it the regular chance of being deleted outright
 
+/obj/machinery/camera/blob_act()
+	if((stat & BROKEN) || invuln)
+		return
+	destroy()
+
 /obj/machinery/camera/hitby(AM as mob|obj)
 	..()
 	if (istype(AM, /obj))
@@ -123,7 +135,7 @@
 	if(user.species.can_shred(user))
 		set_status(0)
 		user.do_attack_animation(src)
-		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+		user.setClickCooldown(user.get_attack_speed())
 		visible_message("<span class='warning'>\The [user] slashes at [src]!</span>")
 		playsound(src.loc, 'sound/weapons/slash.ogg', 100, 1)
 		add_hiddenprint(user)
@@ -138,7 +150,7 @@
 		panel_open = !panel_open
 		user.visible_message("<span class='warning'>[user] screws the camera's panel [panel_open ? "open" : "closed"]!</span>",
 		"<span class='notice'>You screw the camera's panel [panel_open ? "open" : "closed"].</span>")
-		playsound(src.loc, 'sound/items/Screwdriver.ogg', 50, 1)
+		playsound(src.loc, W.usesound, 50, 1)
 
 	else if((iswirecutter(W) || ismultitool(W)) && panel_open)
 		interact(user)
@@ -203,10 +215,10 @@
 			src.bugged = 1
 
 	else if(W.damtype == BRUTE || W.damtype == BURN) //bashing cameras
-		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+		user.setClickCooldown(user.get_attack_speed(W))
 		if (W.force >= src.toughness)
 			user.do_attack_animation(src)
-			visible_message("<span class='warning'><b>[src] has been [pick(W.attack_verb)] with [W] by [user]!</b></span>")
+			visible_message("<span class='warning'><b>[src] has been [W.attack_verb.len? pick(W.attack_verb) : "attacked"] with [W] by [user]!</b></span>")
 			if (istype(W, /obj/item)) //is it even possible to get into attackby() with non-items?
 				var/obj/item/I = W
 				if (I.hitsound)
@@ -372,10 +384,10 @@
 
 	// Do after stuff here
 	user << "<span class='notice'>You start to weld the [src]..</span>"
-	playsound(src.loc, 'sound/items/Welder.ogg', 50, 1)
+	playsound(src.loc, WT.usesound, 50, 1)
 	WT.eyecheck(user)
 	busy = 1
-	if(do_after(user, 100))
+	if(do_after(user, 100 * WT.toolspeed))
 		busy = 0
 		if(!WT.isOn())
 			return 0

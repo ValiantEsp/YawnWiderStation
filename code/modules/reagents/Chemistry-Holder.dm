@@ -23,7 +23,7 @@
 			chemical_reagents_list[D.id] = D
 
 /datum/reagents/Destroy()
-	..()
+	. = ..()
 	if(chemistryProcess)
 		chemistryProcess.active_holders -= src
 
@@ -74,16 +74,11 @@
 	total_volume = 0
 	for(var/datum/reagent/R in reagent_list)
 		if(R.volume < MINIMUM_CHEMICAL_VOLUME)
+			R.on_remove(my_atom)
 			del_reagent(R.id)
 		else
 			total_volume += R.volume
 	return
-
-/datum/reagents/proc/delete()
-	for(var/datum/reagent/R in reagent_list)
-		R.holder = null
-	if(my_atom)
-		my_atom.reagents = null
 
 /datum/reagents/proc/handle_reactions()
 	if(chemistryProcess)
@@ -266,8 +261,10 @@
 
 	for(var/datum/reagent/current in reagent_list)
 		var/amount_to_transfer = current.volume * part
-		target.add_reagent(current.id, amount_to_transfer * multiplier, current.get_data(), safety = 1) // We don't react until everything is in place
-		if(!copy)
+		var/should_transfer = current.on_transfer(amount_to_transfer)
+		if(should_transfer)
+			target.add_reagent(current.id, amount_to_transfer * multiplier, current.get_data(), safety = 1) // We don't react until everything is in place
+		if(!copy || should_transfer)
 			remove_reagent(current.id, amount_to_transfer, 1)
 
 	if(!copy)
@@ -387,10 +384,6 @@
 		if(type == CHEM_TOUCH)
 			var/datum/reagents/R = C.touching
 			return trans_to_holder(R, amount, multiplier, copy)
-	else if(isxeno(target))
-		var/mob/living/simple_animal/xeno/X = target
-		var/datum/reagents/R = X.reagents
-		return trans_to_holder(R, amount, multiplier, copy)
 	else
 		var/datum/reagents/R = new /datum/reagents(amount)
 		. = trans_to_holder(R, amount, multiplier, copy)

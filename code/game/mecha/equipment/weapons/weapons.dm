@@ -117,20 +117,18 @@
 	projectile = /obj/item/projectile/beam/stun
 	fire_sound = 'sound/weapons/Taser.ogg'
 
-/* Commenting this out rather than removing it because it may be useful for reference.
+/*
 /obj/item/mecha_parts/mecha_equipment/weapon/honker
-	name = "\improper HoNkER BlAsT 5000"
+	name = "sound emission device"
 	icon_state = "mecha_honker"
-	energy_drain = 200
+	energy_drain = 300
 	equip_cooldown = 150
 	range = MELEE|RANGED
-	construction_time = 500
-	construction_cost = list("metal"=20000,"bananium"=10000)
+	origin_tech = list(TECH_MATERIAL = 2, TECH_COMBAT = 4, TECH_ILLEGAL = 1)
 
-	can_attach(obj/mecha/combat/honker/M as obj)
-		if(!istype(M))
-			return 0
-		return ..()
+		var/ear_safety = 0
+		if(iscarbon(M))
+			ear_safety = M.get_ear_protection()
 
 	action(target)
 		if(!chassis)
@@ -140,25 +138,22 @@
 		if(!equip_ready)
 			return 0
 
-		playsound(chassis, 'sound/items/AirHorn.ogg', 100, 1)
-		chassis.occupant_message("<font color='red' size='5'>HONK</font>")
+		playsound(chassis, 'sound/effects/bang.ogg', 30, 1, 30)
+		chassis.occupant_message("<span class='warning'>You emit a high-pitched noise from the mech.</span>")
 		for(var/mob/living/carbon/M in ohearers(6, chassis))
 			if(istype(M, /mob/living/carbon/human))
 				var/mob/living/carbon/human/H = M
-				if(istype(H.l_ear, /obj/item/clothing/ears/earmuffs) || istype(H.r_ear, /obj/item/clothing/ears/earmuffs))
-					continue
-			M << "<font color='red' size='7'>HONK</font>"
+				if(ear_safety > 0)
+					return
+			to_chat(M, "<span class='warning'>\Your ears feel like they're bleeding!</span>")
+			playsound(M, 'sound/effects/bang.ogg', 70, 1, 30)
 			M.sleeping = 0
-			M.stuttering += 20
 			M.ear_deaf += 30
+			M.ear_damage += rand(5, 20)
 			M.Weaken(3)
-			if(prob(30))
-				M.Stun(10)
-				M.Paralyse(4)
-			else
-				M.make_jittery(500)
+			M.Stun(5)
 		chassis.use_power(energy_drain)
-		log_message("Honked from [src.name]. HONK!")
+		log_message("Used a sound emission device.")
 		do_after_cooldown()
 		return
 */
@@ -291,3 +286,79 @@
 
 /obj/item/mecha_parts/mecha_equipment/weapon/ballistic/missile_rack/flashbang/clusterbang/limited/rearm()
 	return//Extra bit of security
+
+//////////////
+//Fire-based//
+//////////////
+
+/obj/item/mecha_parts/mecha_equipment/weapon/ballistic/incendiary
+	name = "\improper DR-AC 3"
+	desc = "Dual-barrel rotary machinegun that fires small, incendiary rounds. Ages ten and up."
+	description_fluff = "A weapon designed by Hephaestus Industries, the DR-AC 3's design was plagued by prototype faults including but not limited to: Spontaneous combustion, spontaneous detonation, and excessive collateral conflagration."
+	icon_state = "mecha_drac3"
+	equip_cooldown = 20
+	projectile = /obj/item/projectile/bullet/incendiary
+	fire_sound = 'sound/weapons/machinegun.ogg'
+	projectiles = 30
+	projectiles_per_shot = 2
+	deviation = 0.4
+	projectile_energy_cost = 40
+	fire_cooldown = 3
+	origin_tech = list(TECH_MATERIAL = 4, TECH_COMBAT = 5, TECH_PHORON = 2, TECH_ILLEGAL = 1)
+
+/obj/item/mecha_parts/mecha_equipment/weapon/energy/flamer
+	equip_cooldown = 30
+	name = "\improper CR-3 Mark 8"
+	desc = "An imposing device, this weapon hurls balls of fire."
+	description_fluff = "A weapon designed by Hephaestus for anti-infantry combat, the CR-3 is capable of outputting a large volume of synthesized fuel. Initially designed by a small company, later purchased by Aether, on Earth as a device made for clearing underbrush and co-operating with firefighting operations. Obviously, Hephaestus has found an 'improved' use for the Aether designs."
+	icon_state = "mecha_cremate"
+
+	energy_drain = 30
+
+	projectile = /obj/item/projectile/bullet/incendiary/flamethrower/large
+	fire_sound = 'sound/weapons/towelwipe.ogg'
+
+	origin_tech = list(TECH_MATERIAL = 4, TECH_COMBAT = 6, TECH_PHORON = 4, TECH_ILLEGAL = 4)
+
+/obj/item/mecha_parts/mecha_equipment/weapon/energy/flamer/rigged
+	name = "\improper AA-CR-1 Mark 4"
+	description_fluff = "A firefighting tool maintained by Aether Atmospherics, whose initial design originated from a small Earth company. This one seems to have been jury rigged."
+
+	energy_drain = 50
+	required_type = list(/obj/mecha/combat, /obj/mecha/working)
+
+	projectile = /obj/item/projectile/bullet/incendiary/flamethrower
+
+	origin_tech = list(TECH_MATERIAL = 3, TECH_COMBAT = 3, TECH_PHORON = 3, TECH_ILLEGAL = 2)
+
+//////////////
+//Defensive//
+//////////////
+
+/obj/item/mecha_parts/mecha_equipment/shocker
+	name = "exosuit electrifier"
+	desc = "A device to electrify the external portions of a mecha in order to increase its defensive capabilities."
+	icon_state = "mecha_coil"
+	equip_cooldown = 10
+	energy_drain = 100
+	range = RANGED
+	origin_tech = list(TECH_COMBAT = 3, TECH_POWER = 6)
+	var/shock_damage = 15
+	var/active
+
+/obj/item/mecha_parts/mecha_equipment/shocker/can_attach(obj/mecha/M as obj)
+	if(..())
+		if(!M.proc_res["dynattackby"] && !M.proc_res["dynattackhand"] && !M.proc_res["dynattackalien"])
+			return 1
+	return 0
+
+/obj/item/mecha_parts/mecha_equipment/shocker/attach(obj/mecha/M as obj)
+	..()
+	chassis.proc_res["dynattackby"] = src
+	return
+
+/obj/item/mecha_parts/mecha_equipment/shocker/proc/dynattackby(obj/item/weapon/W, mob/living/user)
+	if(!action_checks(user) || !active)
+		return
+	user.electrocute_act(shock_damage, src)
+	return chassis.dynattackby(W,user)

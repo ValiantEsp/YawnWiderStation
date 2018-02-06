@@ -4,7 +4,7 @@
 /obj/machinery/atmospherics/unary/heater
 	name = "gas heating system"
 	desc = "Heats gas when connected to a pipe network"
-	icon = 'icons/obj/Cryogenic2.dmi'
+	icon = 'icons/obj/Cryogenic2_vr.dmi'
 	icon_state = "heater_0"
 	density = 1
 	anchored = 1
@@ -23,7 +23,6 @@
 
 /obj/machinery/atmospherics/unary/heater/New()
 	..()
-	initialize_directions = dir
 	component_parts = list()
 	component_parts += new /obj/item/weapon/stock_parts/matter_bin(src)
 	component_parts += new /obj/item/weapon/stock_parts/capacitor(src)
@@ -32,7 +31,7 @@
 
 	RefreshParts()
 
-/obj/machinery/atmospherics/unary/heater/initialize()
+/obj/machinery/atmospherics/unary/heater/atmos_init()
 	if(node)
 		return
 

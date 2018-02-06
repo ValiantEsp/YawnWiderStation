@@ -8,11 +8,16 @@
 	Returns
 	standard 0 if fail
 */
-/mob/living/proc/apply_damage(var/damage = 0,var/damagetype = BRUTE, var/def_zone = null, var/blocked = 0, var/used_weapon = null, var/sharp = 0, var/edge = 0)
+/mob/living/proc/apply_damage(var/damage = 0,var/damagetype = BRUTE, var/def_zone = null, var/blocked = 0, var/soaked = 0, var/used_weapon = null, var/sharp = 0, var/edge = 0)
 	if(Debug2)
 		world.log << "## DEBUG: apply_damage() was called on [src], with [damage] damage, and an armor value of [blocked]."
 	if(!damage || (blocked >= 100))
 		return 0
+	if(soaked)
+		if(soaked >= round(damage*0.8))
+			damage -= round(damage*0.8)
+		else
+			damage -= soaked
 	blocked = (100-blocked)/100
 	switch(damagetype)
 		if(BRUTE)
@@ -29,6 +34,8 @@
 			adjustCloneLoss(damage * blocked)
 		if(HALLOSS)
 			adjustHalLoss(damage * blocked)
+		if(ELECTROCUTE)
+			electrocute_act(damage, used_weapon, 1.0, def_zone)
 	flash_weak_pain()
 	updatehealth()
 	return 1
@@ -82,7 +89,7 @@
 	return 1
 
 
-/mob/living/proc/apply_effects(var/stun = 0, var/weaken = 0, var/paralyze = 0, var/irradiate = 0, var/stutter = 0, var/eyeblur = 0, var/drowsy = 0, var/agony = 0, var/blocked = 0)
+/mob/living/proc/apply_effects(var/stun = 0, var/weaken = 0, var/paralyze = 0, var/irradiate = 0, var/stutter = 0, var/eyeblur = 0, var/drowsy = 0, var/agony = 0, var/blocked = 0, var/ignite = 0, var/flammable = 0)
 	if(blocked >= 100)
 		return 0
 	if(stun)		apply_effect(stun, STUN, blocked)
@@ -93,4 +100,6 @@
 	if(eyeblur)		apply_effect(eyeblur, EYE_BLUR, blocked)
 	if(drowsy)		apply_effect(drowsy, DROWSY, blocked)
 	if(agony)		apply_effect(agony, AGONY, blocked)
+	if(flammable)	adjust_fire_stacks(flammable)
+	if(ignite)		IgniteMob()
 	return 1

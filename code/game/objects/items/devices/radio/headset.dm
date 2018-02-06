@@ -13,7 +13,7 @@
 	var/translate_hive = 0
 	var/obj/item/device/encryptionkey/keyslot1 = null
 	var/obj/item/device/encryptionkey/keyslot2 = null
-	var/ks1type = /obj/item/device/encryptionkey
+	var/ks1type = null
 	var/ks2type = null
 
 /obj/item/device/radio/headset/New()
@@ -74,6 +74,15 @@
 	origin_tech = list(TECH_ILLEGAL = 3)
 	syndie = 1
 	ks1type = /obj/item/device/encryptionkey/syndicate
+
+/obj/item/device/radio/headset/raider
+	origin_tech = list(TECH_ILLEGAL = 2)
+	syndie = 1
+	ks1type = /obj/item/device/encryptionkey/raider
+
+/obj/item/device/radio/headset/raider/initialize()
+	..()
+	set_frequency(RAID_FREQ)
 
 /obj/item/device/radio/headset/binary
 	origin_tech = list(TECH_ILLEGAL = 3)
@@ -167,6 +176,13 @@
 /obj/item/device/radio/headset/heads/captain/alt
 	name = "colony director's bowman headset"
 	desc = "The headset of the boss."
+	icon_state = "com_headset_alt"
+	item_state = "headset"
+	ks2type = /obj/item/device/encryptionkey/heads/captain
+
+/obj/item/device/radio/headset/heads/captain/sfr
+	name = "SFR headset"
+	desc = "A headset belonging to a Sif Free Radio DJ. SFR, best tunes in the wilderness."
 	icon_state = "com_headset_alt"
 	item_state = "headset"
 	ks2type = /obj/item/device/encryptionkey/heads/captain
@@ -289,6 +305,7 @@
 	desc = "The headset of the boss's boss."
 	icon_state = "com_headset"
 	item_state = "headset"
+	centComm = 1
 //	freerange = 1
 	ks2type = /obj/item/device/encryptionkey/ert
 
@@ -300,12 +317,29 @@
 //	freerange = 1
 	ks2type = /obj/item/device/encryptionkey/ert
 
+/obj/item/device/radio/headset/omni		//Only for the admin intercoms
+	ks2type = /obj/item/device/encryptionkey/omni
+
 /obj/item/device/radio/headset/ia
 	name = "internal affair's headset"
 	desc = "The headset of your worst enemy."
 	icon_state = "com_headset"
 	item_state = "headset"
 	ks2type = /obj/item/device/encryptionkey/heads/hos
+
+/obj/item/device/radio/headset/mmi_radio
+	name = "brain-integrated radio"
+	desc = "MMIs and synthetic brains are often equipped with these."
+	icon = 'icons/obj/robot_component.dmi'
+	icon_state = "radio"
+	item_state = "headset"
+	var/mmiowner = null
+	var/radio_enabled = 1
+
+/obj/item/device/radio/headset/mmi_radio/receive_range(freq, level)
+	if (!radio_enabled || istype(src.loc.loc, /mob/living/silicon) || istype(src.loc.loc, /obj/item/organ/internal))
+		return -1 //Transciever Disabled.
+	return ..(freq, level, 1)
 
 /obj/item/device/radio/headset/attackby(obj/item/weapon/W as obj, mob/user as mob)
 //	..()
@@ -338,6 +372,7 @@
 
 			recalculateChannels()
 			user << "You pop out the encryption keys in the headset!"
+			playsound(src, W.usesound, 50, 1)
 
 		else
 			user << "This headset doesn't have any encryption keys!  How useless..."

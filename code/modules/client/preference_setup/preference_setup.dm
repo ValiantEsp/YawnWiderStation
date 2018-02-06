@@ -32,10 +32,15 @@
 	name = "Loadout"
 	sort_order = 5
 	category_item_type = /datum/category_item/player_setup_item/loadout
-
+/* //VOREStation Removal
+/datum/category_group/player_setup_category/trait_preferences
+	name = "Traits"
+	sort_order = 6
+	category_item_type = /datum/category_item/player_setup_item/traits
+*/ //VOREStation Removal End
 /datum/category_group/player_setup_category/global_preferences
 	name = "Global"
-	sort_order = 6
+	sort_order = 6 //VOREStation Edit due to above commented out
 	category_item_type = /datum/category_item/player_setup_item/player_global
 
 /****************************
@@ -263,13 +268,14 @@
 /datum/category_item/player_setup_item/proc/get_FBP_type()
 	if(!is_FBP())
 		return 0 // Not a robot.
-	switch(pref.organ_data["brain"])
-		if("assisted")
-			return PREF_FBP_CYBORG
-		if("mechanical")
-			return PREF_FBP_POSI
-		if("digital")
-			return PREF_FBP_SOFTWARE
+	if(O_BRAIN in pref.organ_data)
+		switch(pref.organ_data[O_BRAIN])
+			if("assisted")
+				return PREF_FBP_CYBORG
+			if("mechanical")
+				return PREF_FBP_POSI
+			if("digital")
+				return PREF_FBP_SOFTWARE
 	return 0 //Something went wrong!
 
 /datum/category_item/player_setup_item/proc/get_min_age()

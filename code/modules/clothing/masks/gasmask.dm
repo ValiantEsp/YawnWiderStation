@@ -1,6 +1,7 @@
 /obj/item/clothing/mask/gas
 	name = "gas mask"
 	desc = "A face-covering mask that can be connected to an air supply. Filters harmful gases from the air."
+	//icon = 'icons/obj/clothing/masks_vr.dmi' // Vorestation Edit?
 	icon_state = "gas_alt"
 	item_flags = BLOCK_GAS_SMOKE_EFFECT | AIRTIGHT
 	flags_inv = HIDEEARS|HIDEEYES|HIDEFACE
@@ -15,17 +16,17 @@
 	armor = list(melee = 0, bullet = 0, laser = 0, energy = 0, bomb = 0, bio = 75, rad = 0)
 
 /obj/item/clothing/mask/gas/filter_air(datum/gas_mixture/air)
-	var/datum/gas_mixture/filtered = new
+	var/datum/gas_mixture/gas_filtered = new
 
 	for(var/g in filtered_gases)
 		if(air.gas[g])
-			filtered.gas[g] = air.gas[g] * gas_filter_strength
-			air.gas[g] -= filtered.gas[g]
+			gas_filtered.gas[g] = air.gas[g] * gas_filter_strength
+			air.gas[g] -= gas_filtered.gas[g]
 
 	air.update_values()
-	filtered.update_values()
+	gas_filtered.update_values()
 
-	return filtered
+	return gas_filtered
 
 /obj/item/clothing/mask/gas/half
 	name = "face mask"
@@ -67,6 +68,15 @@
 	icon_state = "swat"
 	siemens_coefficient = 0.7
 
+/obj/item/clothing/mask/gas/explorer
+	name = "explorer gas mask"
+	desc = "A military-grade gas mask that can be connected to an air supply."
+	icon_state = "explorer"
+	item_state_slots = list(slot_r_hand_str = "gas", slot_l_hand_str = "gas")
+	armor = list(melee = 10, bullet = 5, laser = 5,energy = 5, bomb = 0, bio = 50, rad = 0)
+	body_parts_covered = HEAD|FACE|EYES
+	siemens_coefficient = 0.9
+
 /obj/item/clothing/mask/gas/clown_hat
 	name = "clown wig and mask"
 	desc = "A true prankster's facial attire. A clown is incomplete without their wig and mask."
@@ -104,9 +114,9 @@
 	flags_inv = HIDEEARS|HIDEFACE
 	item_state_slots = list(slot_r_hand_str = "mime", slot_l_hand_str = "mime")
 
-/obj/item/clothing/mask/gas/death_commando
-	name = "Death Commando Mask"
-	icon_state = "death_commando_mask"
+/obj/item/clothing/mask/gas/commando
+	name = "commando mask"
+	icon_state = "fullgas"
 	item_state_slots = list(slot_r_hand_str = "swat", slot_l_hand_str = "swat")
 	siemens_coefficient = 0.2
 

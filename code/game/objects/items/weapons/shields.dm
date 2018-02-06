@@ -32,6 +32,7 @@
 /obj/item/weapon/shield
 	name = "shield"
 	var/base_block_chance = 50
+	preserve_item = 1
 	item_icons = list(
 				slot_l_hand_str = 'icons/mob/items/lefthand_melee.dmi',
 				slot_r_hand_str = 'icons/mob/items/righthand_melee.dmi',
@@ -130,7 +131,7 @@
 	. = ..()
 
 	if(.)
-		var/datum/effect/effect/system/spark_spread/spark_system = PoolOrNew(/datum/effect/effect/system/spark_spread)
+		var/datum/effect/effect/system/spark_spread/spark_system = new /datum/effect/effect/system/spark_spread()
 		spark_system.set_up(5, 0, user.loc)
 		spark_system.start()
 		playsound(user.loc, 'sound/weapons/blade1.ogg', 50, 1)

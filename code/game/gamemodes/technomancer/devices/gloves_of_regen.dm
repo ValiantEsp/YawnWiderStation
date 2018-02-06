@@ -19,7 +19,6 @@
 	min_cold_protection_temperature = GLOVES_MIN_COLD_PROTECTION_TEMPERATURE
 	heat_protection = HANDS
 	max_heat_protection_temperature = GLOVES_MAX_HEAT_PROTECTION_TEMPERATURE
-	var/mob/living/carbon/human/wearer = null
 
 /obj/item/clothing/gloves/regen/equipped(var/mob/living/carbon/human/H)
 	if(H && H.gloves == src)
@@ -44,7 +43,7 @@
 /obj/item/clothing/gloves/regen/Destroy()
 	wearer = null
 	processing_objects -= src
-	..()
+	return ..()
 
 /obj/item/clothing/gloves/regen/process()
 	if(!wearer || wearer.isSynthetic() || wearer.stat == DEAD || wearer.nutrition <= 10)

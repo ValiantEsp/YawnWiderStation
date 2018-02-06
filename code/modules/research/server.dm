@@ -1,6 +1,6 @@
 /obj/machinery/r_n_d/server
 	name = "R&D Server"
-	icon = 'icons/obj/machines/research.dmi'
+	icon = 'icons/obj/machines/research_vr.dmi' //VOREStation Edit - New Icon
 	icon_state = "server"
 	var/datum/research/files
 	var/health = 100
@@ -79,7 +79,7 @@
 	griefProtection()
 	..()
 
-//Backup files to centcomm to help admins recover data after greifer attacks
+//Backup files to CentCom to help admins recover data after greifer attacks
 /obj/machinery/r_n_d/server/proc/griefProtection()
 	for(var/obj/machinery/r_n_d/server/centcom/C in machines)
 		for(var/datum/tech/T in files.known_tech)

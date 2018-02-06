@@ -11,7 +11,7 @@
 # item_path: /obj/item/toy/plushie
 # item_name: ugly plush toy
 # item_icon: flagmask     
-# item_desc: It's truly hideous.
+# item_defsc: It's truly hideous.
 # req_titles: Assistant, Security Officer
 # req_access: 1
 # }
@@ -42,6 +42,12 @@
 
 # ######## 0-9 CKEYS
 # ######## A CKEYS
+{
+ckey: admiraldragon
+character_name: Tikorak Korgask
+item_path: /obj/item/weapon/storage/box/fluff/tikorak
+}
+
 # ######## B CKEYS
 {
 ckey: blackangelsace
@@ -53,6 +59,24 @@ item_path: /obj/item/weapon/storage/box/fluff/madoka
 ckey: blackangelsace
 character_name: Wolfgang Jaeger
 item_path: /obj/item/weapon/storage/box/fluff/mauser
+}
+
+{
+ckey: blackangelsace
+character_name: Aurora Goldtail
+item_path: /obj/item/clothing/glasses/omnihud/prescription/aurora
+}
+
+{
+ckey: blackangelsace
+character_name: Strix Hades
+item_path: /obj/item/clothing/suit/storage/seromi/cloak/fluff/strix
+}
+
+{
+ckey: blackangelsace
+character_name: Strix Hades
+item_path: /obj/item/clothing/under/seromi/undercoat/fluff/strix
 }
 
 # ######## C CKEYS
@@ -79,7 +103,36 @@ ckey: cynicaltester
 character_name: Zeta Blackwell
 item_path: /obj/item/clothing/accessory/fluff/zeta_blackwell_1
 }
+
+{
+ckey: championfire
+character_name: Anoki Windroar
+item_path: /obj/item/weapon/storage/box/fluff/anoki
+}
+
+{
+ckey: championfire
+character_name: Ivy Kaeire
+item_path: /obj/item/weapon/storage/box/fluff/ivy
+}
+
+{
+ckey: championfire
+character_name: Kita
+item_path: /obj/item/clothing/suit/storage/seromi/cloak/fluff/kita
+}
 # ######## D CKEYS
+{
+ckey: dawidoe
+character_name: Melissa Krutz
+item_path: /obj/item/weapon/storage/box/fluff/melissa
+}
+
+{
+ckey: deathty
+character_name: Arthur Schutz
+item_path: /obj/item/weapon/storage/box/fluff/art
+}
 # ######## E CKEYS
 # ######## F CKEYS
 # ######## G CKEYS
@@ -87,6 +140,30 @@ item_path: /obj/item/clothing/accessory/fluff/zeta_blackwell_1
 ckey: generalpantsu
 character_name: Amara Faell
 item_path: /obj/item/weapon/storage/box/fluff/amara
+}
+
+{
+ckey: generalpantsu
+character_name: Zara Venlee
+item_path: /obj/item/weapon/storage/box/fluff/zara
+}
+
+{
+ckey: generalpantsu
+character_name: Samantha Quzix
+item_path: /obj/item/weapon/storage/box/fluff/samantha
+}
+
+{
+ckey: generalpantsu
+character_name: Aien Waesmaer
+item_path: /obj/item/weapon/storage/box/fluff/aien
+}
+
+{
+ckey: generalpantsu
+character_name: Nika Domashev
+item_path: /obj/item/weapon/storage/box/fluff/nika
 }
 # ######## H CKEYS
 # ######## I CKEYS
@@ -97,9 +174,33 @@ item_path: /obj/item/weapon/storage/box/fluff/ally
 }
 
 {
+ckey: izac112
+character_name: Raja Bastet
+item_path: /obj/item/weapon/storage/box/fluff/raja
+}
+
+{
+ckey: izac112
+character_name: Shel Nargol
+item_path: /obj/item/weapon/storage/box/fluff/shel
+}
+
+{
+ckey: izac112
+character_name: Alva Karlholm
+item_path: /obj/item/weapon/storage/box/fluff/alva
+}
+
+{
 ckey: ivymoomoo
 character_name: Ivy Baladeva
 item_path: /obj/item/weapon/storage/backpack/messenger/sec/fluff/ivymoomoo
+}
+
+{
+ckey: VanesaFancyFin
+character_name: Ire
+item_path: /obj/item/weapon/bikehorn/fluff/chew_ire
 }
 
 # ######## J CKEYS
@@ -117,12 +218,30 @@ item_path: /obj/item/weapon/storage/box/fluff/John
 
 # ######## K CKEYS
 # ######## L CKEYS
+{
+ckey: lukevale
+character_name: Mira Rezus
+item_path: /obj/item/weapon/storage/box/fluff/mira
+}
+
+{
+ckey: lukevale
+character_name: Natalya Vospit
+item_path: /obj/item/weapon/storage/box/fluff/natalya
+}
+
 # ######## M CKEYS
 # ######## N CKEYS
 # ######## O CKEYS
 # ######## P CKEYS
 # ######## Q CKEYS
 # ######## R CKEYS
+{
+ckey: radiantflash
+character_name: Vasharr Zahirn
+item_path: /obj/item/weapon/storage/box/fluff/vasharr
+}
+
 {
 ckey: randysavage205
 character_name: Alex Wolf
@@ -132,6 +251,12 @@ item_path: /obj/item/clothing/accessory/fluff/alex_wolf_1
 # ######## S CKEYS
 # ######## T CKEYS
 # ######## U CKEYS
+{
+ckey: unleashedmana
+character_name: Eviriik Vin'cir
+item_path: /obj/item/clothing/suit/storage/hoodie/fluff/eviriik_4
+}
+
 {
 ckey: unleashedmana
 character_name: Ike Eio'ni
@@ -257,6 +382,18 @@ item_path: /obj/item/clothing/accessory/fluff/wolf_erikson_1
 ckey: valhallaviking01
 character_name: Hans Jaeger
 item_path: /obj/item/weapon/storage/box/fluff/mauser
+}
+
+{
+ckey: vanesafancyfin
+character_name: Vanesa FancyFin
+item_path: /obj/item/weapon/storage/box/fluff/vanesaf
+}
+
+{
+ckey: vitorhks
+character_name: Jessica Mayer
+item_path: /obj/item/weapon/storage/box/fluff/jessica
 }
 
 # ######## W CKEYS

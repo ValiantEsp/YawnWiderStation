@@ -1,9 +1,8 @@
 // It.. uses a lot of power.  Everything under power is engineering stuff, at least.
 
 /obj/machinery/computer/gravity_control_computer
-	name = "Gravity Generator Control"
+	name = "gravity generator control"
 	desc = "A computer to control a local gravity generator.  Qualified personnel only."
-	icon = 'icons/obj/computer.dmi'
 	icon_state = "airtunnel0e"
 	anchored = 1
 	density = 1
@@ -11,7 +10,7 @@
 
 
 /obj/machinery/gravity_generator/
-	name = "Gravitational Generator"
+	name = "gravitational generator"
 	desc = "A device which produces a gravaton field when set up."
 	icon = 'icons/obj/singularity.dmi'
 	icon_state = "TheSingGen"
@@ -95,7 +94,7 @@
 			else
 				dat += "<tt><font color=red>[A]</tt></font><br>"
 
-		dat += "<br><tt>Maintainence Functions:</tt><br>"
+		dat += "<br><tt>Maintenance Functions:</tt><br>"
 		if(gravity_generator:on)
 			dat += "<a href='byond://?src=\ref[src];gentoggle=1'><font color=red> TURN GRAVITY GENERATOR OFF. </font></a>"
 		else

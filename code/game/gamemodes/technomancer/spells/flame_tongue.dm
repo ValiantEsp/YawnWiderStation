@@ -22,12 +22,12 @@
 	welder.setWelding(1)
 
 /obj/item/weapon/spell/flame_tongue/Destroy()
-	qdel(welder)
-	welder = null
-	..()
+	qdel_null(welder)
+	return ..()
 
 /obj/item/weapon/weldingtool/spell
 	name = "flame"
+	eye_safety_modifier = 3
 
 /obj/item/weapon/weldingtool/spell/process()
 	return

@@ -19,6 +19,8 @@
 
 	var/label_text = ""
 
+	var/list/prefill = null	//Reagents to fill the container with on New(), formatted as "reagentID" = quantity
+
 	var/list/can_be_placed_into = list(
 		/obj/machinery/chem_master/,
 		/obj/machinery/chemical_dispenser,
@@ -36,18 +38,22 @@
 		/obj/machinery/disease2/incubator,
 		/obj/machinery/disposal,
 		/mob/living/simple_animal/cow,
-		/mob/living/simple_animal/hostile/retaliate/goat,
+		/mob/living/simple_animal/retaliate/goat,
 		/obj/machinery/computer/centrifuge,
 		/obj/machinery/sleeper,
 		/obj/machinery/smartfridge/,
 		/obj/machinery/biogenerator,
 		/obj/structure/frame,
-		/obj/machinery/radiocarbon_spectrometer,
-		/obj/machinery/xenobio2/manualinjector
+		/obj/machinery/radiocarbon_spectrometer
 		)
 
 /obj/item/weapon/reagent_containers/glass/New()
 	..()
+	if(LAZYLEN(prefill))
+		for(var/R in prefill)
+			reagents.add_reagent(R,prefill[R])
+		prefill = null
+		update_icon()
 	base_name = name
 	base_desc = desc
 
@@ -55,62 +61,76 @@
 	if(!..(user, 2))
 		return
 	if(reagents && reagents.reagent_list.len)
-		user << "<span class='notice'>It contains [reagents.total_volume] units of liquid.</span>"
+		to_chat(user, "<span class='notice'>It contains [reagents.total_volume] units of liquid.</span>")
 	else
-		user << "<span class='notice'>It is empty.</span>"
+		to_chat(user, "<span class='notice'>It is empty.</span>")
 	if(!is_open_container())
-		user << "<span class='notice'>Airtight lid seals it completely.</span>"
+		to_chat(user, "<span class='notice'>Airtight lid seals it completely.</span>")
 
 /obj/item/weapon/reagent_containers/glass/attack_self()
 	..()
 	if(is_open_container())
-		usr << "<span class = 'notice'>You put the lid on \the [src].</span>"
+		to_chat(usr, "<span class = 'notice'>You put the lid on \the [src].</span>")
 		flags ^= OPENCONTAINER
 	else
-		usr << "<span class = 'notice'>You take the lid off \the [src].</span>"
+		to_chat(usr, "<span class = 'notice'>You take the lid off \the [src].</span>")
 		flags |= OPENCONTAINER
 	update_icon()
 
-/obj/item/weapon/reagent_containers/glass/do_surgery(mob/living/carbon/M, mob/living/user)
-	if(user.a_intent != I_HELP) //in case it is ever used as a surgery tool
-		return ..()
-	afterattack(M, user, 1)
-	return 1
+/obj/item/weapon/reagent_containers/glass/attack(mob/M as mob, mob/user as mob, def_zone)
+	if(force && !(flags & NOBLUDGEON) && user.a_intent == I_HURT)
+		return	..()
+
+	if(standard_feed_mob(user, M))
+		return
+
+	return 0
+
+/obj/item/weapon/reagent_containers/glass/standard_feed_mob(var/mob/user, var/mob/target)
+	if(!is_open_container())
+		to_chat(user, "<span class='notice'>You need to open \the [src] first.</span>")
+		return 1
+	if(user.a_intent == I_HURT)
+		return 1
+	return ..()
+
+/obj/item/weapon/reagent_containers/glass/self_feed_message(var/mob/user)
+	to_chat(user, "<span class='notice'>You swallow a gulp from \the [src].</span>")
 
 /obj/item/weapon/reagent_containers/glass/afterattack(var/obj/target, var/mob/user, var/proximity)
-
-	if(!is_open_container() || !proximity)
-		return
-
-	for(var/type in can_be_placed_into)
+	if(!is_open_container() || !proximity) //Is the container open & are they next to whatever they're clicking?
+		return 1 //If not, do nothing.
+	for(var/type in can_be_placed_into) //Is it something it can be placed into?
 		if(istype(target, type))
-			return
-
-	if(standard_splash_mob(user, target))
+			return 1
+	if(standard_dispenser_refill(user, target)) //Are they clicking a water tank/some dispenser?
+		return 1
+	if(standard_pour_into(user, target)) //Pouring into another beaker?
 		return
-	if(standard_dispenser_refill(user, target))
-		return
-	if(standard_pour_into(user, target))
-		return
-
-	if(reagents && reagents.total_volume)
-		user << "<span class='notice'>You splash the solution onto [target].</span>"
-		reagents.splash(target, reagents.total_volume)
-		return
+	if(user.a_intent == I_HURT)
+		if(standard_splash_mob(user,target))
+			return 1
+		if(reagents && reagents.total_volume)
+			to_chat(user, "<span class='notice'>You splash the solution onto [target].</span>") //They are on harm intent, aka wanting to spill it.
+			reagents.splash(target, reagents.total_volume)
+			return 1
+	..()
 
 /obj/item/weapon/reagent_containers/glass/attackby(obj/item/weapon/W as obj, mob/user as mob)
 	if(istype(W, /obj/item/weapon/pen) || istype(W, /obj/item/device/flashlight/pen))
 		var/tmp_label = sanitizeSafe(input(user, "Enter a label for [name]", "Label", label_text), MAX_NAME_LEN)
 		if(length(tmp_label) > 50)
-			user << "<span class='notice'>The label can be at most 50 characters long.</span>"
+			to_chat(user, "<span class='notice'>The label can be at most 50 characters long.</span>")
 		else if(length(tmp_label) > 10)
-			user << "<span class='notice'>You set the label.</span>"
+			to_chat(user, "<span class='notice'>You set the label.</span>")
 			label_text = tmp_label
 			update_name_label()
 		else
-			user << "<span class='notice'>You set the label to \"[tmp_label]\".</span>"
+			to_chat(user, "<span class='notice'>You set the label to \"[tmp_label]\".</span>")
 			label_text = tmp_label
 			update_name_label()
+	if(istype(W,/obj/item/weapon/storage/bag))
+		..()
 
 /obj/item/weapon/reagent_containers/glass/proc/update_name_label()
 	if(label_text == "")
@@ -207,19 +227,16 @@
 	icon_state = "vial"
 	matter = list("glass" = 250)
 	volume = 30
+	w_class = ITEMSIZE_TINY
 	amount_per_transfer_from_this = 10
-	possible_transfer_amounts = list(5,10,15,25)
+	possible_transfer_amounts = list(5,10,15,30)
 	flags = OPENCONTAINER
 
-/obj/item/weapon/reagent_containers/glass/beaker/cryoxadone/New()
-	..()
-	reagents.add_reagent("cryoxadone", 30)
-	update_icon()
+/obj/item/weapon/reagent_containers/glass/beaker/cryoxadone
+	prefill = list("cryoxadone" = 30)
 
-/obj/item/weapon/reagent_containers/glass/beaker/sulphuric/New()
-		..()
-		reagents.add_reagent("sacid", 60)
-		update_icon()
+/obj/item/weapon/reagent_containers/glass/beaker/sulphuric
+	prefill = list("sacid" = 60)
 
 /obj/item/weapon/reagent_containers/glass/bucket
 	desc = "It's a bucket."
@@ -243,12 +260,18 @@
 		user.drop_from_inventory(src)
 		qdel(src)
 		return
-	else if(istype(D, /obj/item/weapon/mop))
+	else if(istype(D, /obj/item/weapon/wirecutters))
+		to_chat(user, "<span class='notice'>You cut a big hole in \the [src] with \the [D].  It's kinda useless as a bucket now.</span>")
+		user.put_in_hands(new /obj/item/clothing/head/helmet/bucket)
+		user.drop_from_inventory(src)
+		qdel(src)
+		return
+	else if(istype(D, /obj/item/weapon/mop) || istype(D, /obj/item/weapon/soap) || istype(D, /obj/item/weapon/reagent_containers/glass/rag))  //VOREStation Edit - "Allows soap and rags to be used on buckets"
 		if(reagents.total_volume < 1)
-			user << "<span class='warning'>\The [src] is empty!</span>"
+			to_chat(user, "<span class='warning'>\The [src] is empty!</span>")
 		else
 			reagents.trans_to_obj(D, 5)
-			user << "<span class='notice'>You wet \the [D] in \the [src].</span>"
+			to_chat(user, "<span class='notice'>You wet \the [D] in \the [src].</span>")
 			playsound(loc, 'sound/effects/slosh.ogg', 25, 1)
 		return
 	else
@@ -259,6 +282,41 @@
 	if (!is_open_container())
 		var/image/lid = image(icon, src, "lid_[initial(icon_state)]")
 		overlays += lid
+
+obj/item/weapon/reagent_containers/glass/bucket/wood
+	desc = "An old wooden bucket."
+	name = "wooden bucket"
+	icon = 'icons/obj/janitor.dmi'
+	icon_state = "woodbucket"
+	item_state = "woodbucket"
+	matter = list("wood" = 50)
+	w_class = ITEMSIZE_LARGE
+	amount_per_transfer_from_this = 20
+	possible_transfer_amounts = list(10,20,30,60,120)
+	volume = 120
+	flags = OPENCONTAINER
+	unacidable = 0
+
+/obj/item/weapon/reagent_containers/glass/bucket/wood/attackby(var/obj/D, mob/user as mob)
+	if(isprox(D))
+		user << "This wooden bucket doesn't play well with electronics."
+		return
+	else if(istype(D, /obj/item/weapon/material/knife/machete/hatchet))
+		to_chat(user, "<span class='notice'>You cut a big hole in \the [src] with \the [D].  It's kinda useless as a bucket now.</span>")
+		user.put_in_hands(new /obj/item/clothing/head/helmet/bucket/wood)
+		user.drop_from_inventory(src)
+		qdel(src)
+		return
+	else if(istype(D, /obj/item/weapon/mop))
+		if(reagents.total_volume < 1)
+			to_chat(user, "<span class='warning'>\The [src] is empty!</span>")
+		else
+			reagents.trans_to_obj(D, 5)
+			to_chat(user, "<span class='notice'>You wet \the [D] in \the [src].</span>")
+			playsound(loc, 'sound/effects/slosh.ogg', 25, 1)
+		return
+	else
+		return ..()
 
 /obj/item/weapon/reagent_containers/glass/cooler_bottle
 	desc = "A bottle for a water-cooler."
