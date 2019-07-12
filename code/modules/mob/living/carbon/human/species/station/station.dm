@@ -22,6 +22,9 @@
 	spawn_flags = SPECIES_CAN_JOIN
 	appearance_flags = HAS_HAIR_COLOR | HAS_SKIN_TONE | HAS_LIPS | HAS_UNDERWEAR | HAS_EYE_COLOR
 
+	inherent_verbs = list(
+		/mob/living/carbon/human/proc/tie_hair)
+
 /datum/species/human/get_bodytype(var/mob/living/carbon/human/H)
 	return SPECIES_HUMAN
 
@@ -82,7 +85,7 @@
 */
 	body_temperature = T20C
 
-	spawn_flags = SPECIES_CAN_JOIN | SPECIES_IS_WHITELISTED
+	spawn_flags = SPECIES_CAN_JOIN
 	appearance_flags = HAS_HAIR_COLOR | HAS_LIPS | HAS_UNDERWEAR | HAS_SKIN_COLOR | HAS_EYE_COLOR
 
 	flesh_color = "#34AF10"
@@ -152,7 +155,7 @@
 	metabolic_rate = 1.1
 	gluttonous = 1
 	num_alternate_languages = 3
-	secondary_langs = list(LANGUAGE_SIIK, LANGUAGE_AKHANI)
+	secondary_langs = list(LANGUAGE_SIIK, LANGUAGE_AKHANI, LANGUAGE_ALAI)
 	name_language = LANGUAGE_SIIK
 	species_language = LANGUAGE_SIIK
 	health_hud_intensity = 2.5
@@ -193,7 +196,7 @@
 */
 	primitive_form = SPECIES_MONKEY_TAJ
 
-	spawn_flags = SPECIES_CAN_JOIN | SPECIES_IS_WHITELISTED
+	spawn_flags = SPECIES_CAN_JOIN
 	appearance_flags = HAS_HAIR_COLOR | HAS_LIPS | HAS_UNDERWEAR | HAS_SKIN_COLOR | HAS_EYE_COLOR
 
 	flesh_color = "#AFA59E"
@@ -256,7 +259,7 @@
 
 	ambiguous_genders = TRUE
 
-	spawn_flags = SPECIES_CAN_JOIN | SPECIES_IS_WHITELISTED
+	spawn_flags = SPECIES_CAN_JOIN
 	appearance_flags = HAS_HAIR_COLOR | HAS_LIPS | HAS_UNDERWEAR | HAS_SKIN_COLOR
 
 	flesh_color = "#8CD7A3"
@@ -375,7 +378,7 @@
 	body_temperature = T0C + 15		//make the plant people have a bit lower body temperature, why not
 
 	flags = NO_SCAN | IS_PLANT | NO_PAIN | NO_SLIP | NO_MINOR_CUT
-	spawn_flags = SPECIES_CAN_JOIN | SPECIES_IS_WHITELISTED
+	spawn_flags = SPECIES_CAN_JOIN
 
 	blood_color = "#004400"
 	flesh_color = "#907E4A"

@@ -111,7 +111,7 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 	allowmobvore = json_from_file["allowmobvore"]
 	vore_taste = json_from_file["vore_taste"]
 	can_be_drop_prey = json_from_file["can_be_drop_prey"]
-	can_be_drop_prey = json_from_file["can_be_drop_pred"]
+	can_be_drop_pred = json_from_file["can_be_drop_pred"]
 	belly_prefs = json_from_file["belly_prefs"]
 
 	//Quick sanitize
@@ -149,9 +149,14 @@ V::::::V           V::::::VO:::::::OOO:::::::ORR:::::R     R:::::REE::::::EEEEEE
 		return 0
 	
 	//Write it out
+#ifdef RUST_G
+	call(RUST_G, "file_write")(json_to_file, path)
+#else
+	// Fall back to using old format if we are not using rust-g
 	if(fexists(path))
 		fdel(path) //Byond only supports APPENDING to files, not replacing.
-	text2file(json_to_file,path)
+	text2file(json_to_file, path)
+#endif
 	if(!fexists(path))
 		log_debug("Saving: [path] failed file write")
 		return 0
